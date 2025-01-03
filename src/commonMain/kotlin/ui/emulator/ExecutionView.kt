@@ -25,7 +25,7 @@ import ui.uilib.UIState
 import ui.uilib.label.CLabel
 
 @Composable
-fun ExecutionView(architecture: Architecture<*,*>?, highlighter: HighlightProvider?, baseStyle: TextStyle, codeStyle: TextStyle) {
+fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvider?, baseStyle: TextStyle, codeStyle: TextStyle) {
 
     val disassembler = remember { architecture?.disassembler }
 
@@ -54,8 +54,10 @@ fun ExecutionView(architecture: Architecture<*,*>?, highlighter: HighlightProvid
                 }
                 if (dest == null) return@mapNotNull null
 
-                Triple(src, dest, theme.getRandom())
+                Pair(src, dest)
             }
+        }.groupBy { it.second }.map { targetGroup ->
+            Triple(targetGroup.value.map { it.first }, targetGroup.key, theme.getRandom())
         }
 
         Column(Modifier.fillMaxSize()) {
@@ -73,13 +75,9 @@ fun ExecutionView(architecture: Architecture<*,*>?, highlighter: HighlightProvid
                     Text("LABEL", fontFamily = baseStyle.fontFamily, fontSize = baseStyle.fontSize, color = theme.COLOR_FG_1)
                 }
                 Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-                Box(Modifier.weight(0.5f))
-                Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text("DECODED", fontFamily = baseStyle.fontFamily, fontSize = baseStyle.fontSize, color = theme.COLOR_FG_1)
                 }
-                Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-                Box(Modifier.weight(0.3f))
                 Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text("TARGET", fontFamily = baseStyle.fontFamily, fontSize = baseStyle.fontSize, color = theme.COLOR_FG_1)
@@ -97,7 +95,8 @@ fun ExecutionView(architecture: Architecture<*,*>?, highlighter: HighlightProvid
                     "${it.first.addr.toString(16)}:${it.second.offset.toString(16)}"
                 }) { (segment, decoded) ->
                     val address = segment.addr + decoded.offset
-                    val destOf = targetLinks.firstOrNull { it.first == decoded }
+                    val targets = targetLinks.firstOrNull { it.first.contains(decoded) }
+                    val destOf = targetLinks.firstOrNull { it.second == decoded }
                     val pcPointsOn = architecture.pcState.value.toBigInt() == address
 
                     val interactionSource = remember { MutableInteractionSource() }
@@ -119,13 +118,11 @@ fun ExecutionView(architecture: Architecture<*,*>?, highlighter: HighlightProvid
                             Text(decoded.data.zeroPaddedHex(), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = if (pcPointsOn) theme.COLOR_GREEN else theme.COLOR_FG_0)
                         }
                         Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-                        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                            Text(segment.labels.filter { it.offset == decoded.offset }.joinToString(", ") { it.name + ":" }, fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = theme.COLOR_FG_0)
-                        }
-                        Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-                        Row(Modifier.weight(0.5f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                            targetLinks.filter { it.second == decoded }.forEach { (source, dest, color) ->
-                                Icon(icons.chevronRight, "dest", Modifier.size(scale.SIZE_CONTROL_SMALL).background(color, RoundedCornerShape(scale.SIZE_CORNER_RADIUS)), tint = theme.COLOR_BG_0)
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                            Text(segment.labels.filter { it.offset == decoded.offset }.joinToString(", ") { it.name + ":" }, fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = destOf?.third ?: theme.COLOR_FG_0)
+                            Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
+                            destOf?.let {
+                                Icon(icons.chevronRight, "dest", Modifier.size(scale.SIZE_CONTROL_SMALL).background(it.third, RoundedCornerShape(scale.SIZE_CORNER_RADIUS)), tint = theme.COLOR_BG_0)
                             }
                         }
                         Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
@@ -134,15 +131,13 @@ fun ExecutionView(architecture: Architecture<*,*>?, highlighter: HighlightProvid
                             Text(AnnotatedString(decoded.disassembled, hls.spanStyles()), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = theme.COLOR_FG_0)
                         }
                         Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-                        Row(Modifier.weight(0.3f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                            targetLinks.filter { it.first == decoded }.forEach { (source, dest, color) ->
-                                Icon(icons.chevronRight, "src", Modifier.size(scale.SIZE_CONTROL_SMALL).background(color, RoundedCornerShape(scale.SIZE_CORNER_RADIUS)), tint = theme.COLOR_BG_0)
-                            }
-                        }
-                        Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-                        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                             val targetName = decodedRenderingLabels[decoded.target]?.name ?: decoded.target?.zeroPaddedHex() ?: ""
-                            Text(targetName, fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = destOf?.third ?: theme.COLOR_FG_1)
+                            targets?.let {
+                                Icon(icons.chevronRight, "src", Modifier.size(scale.SIZE_CONTROL_SMALL).background(it.third, RoundedCornerShape(scale.SIZE_CORNER_RADIUS)), tint = theme.COLOR_BG_0)
+                            }
+                            Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
+                            Text(targetName, fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = targets?.third ?: theme.COLOR_FG_1)
                         }
                     }
 
