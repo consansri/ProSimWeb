@@ -19,7 +19,7 @@ plugins {
     kotlin("multiplatform") version "2.1.0"
     id("org.jetbrains.dokka") version "1.9.20"
     kotlin("plugin.compose") version "2.1.0"
-    id("org.jetbrains.compose") version "1.7.1"
+    id("org.jetbrains.compose") version "1.7.3"
     kotlin("plugin.serialization") version "2.1.0"
     distribution
 }
