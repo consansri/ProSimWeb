@@ -95,7 +95,7 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
                     "${it.first.addr.toString(16)}:${it.second.offset.toString(16)}"
                 }) { (segment, decoded) ->
                     val address = segment.addr + decoded.offset
-                    val targets = targetLinks.firstOrNull { it.first.contains(decoded) }
+                    val pointsOn = targetLinks.firstOrNull { it.first.contains(decoded) }
                     val destOf = targetLinks.firstOrNull { it.second == decoded }
                     val pcPointsOn = architecture.pcState.value.toBigInt() == address
 
@@ -133,11 +133,11 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
                         Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                             val targetName = decodedRenderingLabels[decoded.target]?.name ?: decoded.target?.zeroPaddedHex() ?: ""
-                            targets?.let {
+                            pointsOn?.let {
                                 Icon(icons.chevronRight, "src", Modifier.size(scale.SIZE_CONTROL_SMALL).background(it.third, RoundedCornerShape(scale.SIZE_CORNER_RADIUS)), tint = theme.COLOR_BG_0)
                             }
                             Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-                            Text(targetName, fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = targets?.third ?: theme.COLOR_FG_1)
+                            Text(targetName, fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = pointsOn?.third ?: theme.COLOR_FG_1)
                         }
                     }
 
