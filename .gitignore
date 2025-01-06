@@ -11,3 +11,4 @@ premu/
 *.userlibraries
 /qodana.yaml
 /prosimweb/
+.qodo
