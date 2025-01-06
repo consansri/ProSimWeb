@@ -237,7 +237,7 @@ class RVDisassembler(private val addrConstrained: BigInt.() -> BigInt) : Disasse
                 EBREAK -> Decoded(offset, binary, "ebreak")
                 BEQ, BNE, BLT, BGE, BLTU, BGEU -> {
                     val target = (segmentAddr + offset.toLong() + bTypeOffset.toLong()).addrConstrained()
-                    Decoded(offset, binary, "${type.lc6char} ${rs1Name()}, ${rs2Name()}, ${jTypeOffset.toInt64()}", target)
+                    Decoded(offset, binary, "${type.lc6char} ${rs1Name()}, ${rs2Name()}, ${bTypeOffset.toInt64()}", target)
                 }
 
                 LB, LH, LW, LD, LBU, LHU, LWU -> {
