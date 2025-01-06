@@ -1,5 +1,6 @@
 package ui
 
+import Performance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -226,7 +227,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
                     })
                     CButton(icon = icons.continuousExe, onClick = {
                         architecture?.exeContinuous()
-                    })
+                    }, tooltip = "${Performance.MAX_INSTR_EXE_AMOUNT}")
                     CButton(modifier = Modifier
                         .scrollable(orientation = Orientation.Vertical,
                             state = rememberScrollableState { delta ->
@@ -251,7 +252,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
                                     stepCount = stepCount.dec().coerceAtLeast(1U) // Scroll down to decrease, ensure it's >= 1
                                 }
                             }
-                        }, icon = icons.stepMultiple, text = stepCount.toString(), onClick = {
+                        }, icon = icons.stepMultiple, tooltip = stepCount.toString(), onClick = {
                         architecture?.exeMultiStep(stepCount.toLong())
                     })
                     CButton(icon = icons.stepOver, onClick = {
