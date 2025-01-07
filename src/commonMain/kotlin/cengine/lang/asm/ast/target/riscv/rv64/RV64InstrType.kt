@@ -180,7 +180,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                 }
 
                 val imm12 = imm.toInt32().toUInt32().lowest(12)
-                
+
                 val funct3 = when (this) {
                     LB -> RVConst.FUNCT3_LOAD_B
                     LH -> RVConst.FUNCT3_LOAD_H
@@ -343,7 +343,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                     csrs[0].numericalValue.toUInt32()
                 }
 
-                if(csr shr 12 != UInt32.ZERO){
+                if (csr shr 12 != UInt32.ZERO) {
                     instr.addError("Invalid CSR Offset 0x${csr.toString(16)}")
                 }
 
@@ -371,7 +371,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                     csrs[0].numericalValue.toUInt32()
                 }
 
-                if(csr shr 12 != UInt32.ZERO){
+                if (csr shr 12 != UInt32.ZERO) {
                     instr.addError("Invalid CSR Offset 0x${csr.toString(16)}")
                 }
 
@@ -416,7 +416,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                         // resized = upper + lower
                         // upper = resized - lower
                         val lower = imm32.lowest(12)
-                        val upper = (imm32 - lower)
+                        val upper = imm32 - lower.signExtend(12)
 
                         val imm20 = upper.shr(12)
                         val imm12 = lower.lowest(12)
@@ -520,7 +520,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                     else -> {
                         val resized = try {
                             imm.toInt64().toUInt64()
-                        } catch (e: Exception){
+                        } catch (e: Exception) {
                             imm.toUInt64()
                         }
                         if (DebugTools.RV64_showLIDecisions) nativeLog("Decided 64 Bit Signed for ${resized.toString(16)}")
@@ -680,7 +680,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                     csrs[0].numericalValue.toUInt32()
                 }
 
-                if(csr shr 12 != UInt32.ZERO){
+                if (csr shr 12 != UInt32.ZERO) {
                     instr.addError("Invalid CSR Offset 0x${csr.toString(16)}")
                 }
 
@@ -699,7 +699,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                     csrs[0].numericalValue.toUInt32()
                 }
 
-                if(csr shr 12 != UInt32.ZERO){
+                if (csr shr 12 != UInt32.ZERO) {
                     instr.addError("Invalid CSR Offset 0x${csr.toString(16)}")
                 }
 
@@ -820,7 +820,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                 if (!targetAddr.fitsInSignedOrUnsigned(64)) {
                     expr.addError("$targetAddr exceeds 64 bits")
                 }
-                
+
                 val relative = targetAddr.toUInt64() - section.thisAddr(index)
                 if (!relative.fitsInSignedOrUnsigned(12)) {
                     expr.addError("$relative exceeds 12 bits")
@@ -858,7 +858,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                 }
 
                 val result = targetAddr.toInt32().toUInt32()
-                
+
                 val lo12 = result.mask32Lo12()
                 var hi20 = result.mask32Hi20()
 
@@ -891,7 +891,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
 
                 val target = targetAddr.toInt64().toUInt64()
                 val relative = target - section.thisAddr(index)
-                
+
                 if (!relative.fitsInSignedOrUnsigned(12)) {
                     expr.addError("$relative exceeds 12 bits")
                 }
