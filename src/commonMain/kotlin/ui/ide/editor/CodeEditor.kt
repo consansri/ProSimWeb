@@ -32,6 +32,7 @@ import cengine.project.Project
 import cengine.psi.core.PsiElement
 import cengine.psi.core.PsiFile
 import cengine.psi.core.PsiReference
+import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
 import emulator.kit.nativeLog
 import emulator.kit.nativeWarn
@@ -55,6 +56,8 @@ fun CodeEditor(
     codeSmallStyle: TextStyle,
     baseSmallStyle: TextStyle,
     modifier: Modifier = Modifier,
+    onElementSelected: (VirtualFile, List<PsiElement>) -> Unit = { _, _ -> },
+    onInputLag: (Duration) -> Unit = {},
 ) {
 
     val theme = UIState.Theme.value
@@ -70,10 +73,6 @@ fun CodeEditor(
     val scrollVertical = rememberScrollState()
     val scrollHorizontal = rememberScrollState()
     val scrollPadding by remember { mutableStateOf(30) }
-
-    // Performance
-
-    var inputLag by remember { mutableStateOf(Duration.ZERO) }
 
     // Content State
 
@@ -198,7 +197,7 @@ fun CodeEditor(
 
             textFieldValue = new.copy(fetchStyledContent(newText.text))
         }
-        if (time.inWholeMilliseconds > 0) inputLag = time
+        if (time.inWholeNanoseconds > 0) onInputLag(time)
     }
 
     suspend fun locatePSIElement() {
@@ -619,25 +618,12 @@ fun CodeEditor(
                                     val line = textLayout?.getLineForOffset(selection.start) ?: 0
                                     val column = selection.start - (textLayout?.getLineStart(line) ?: 0)
 
-                                    Text("${inputLag.inWholeMilliseconds}ms", fontFamily = baseSmallStyle.fontFamily, fontSize = baseSmallStyle.fontSize, color = theme.COLOR_FG_1)
-
-                                    Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-
-                                    currentElement?.let { element ->
-                                        val path = service?.path(element) ?: return@let
-                                        Text(path.joinToString(" > ") { it.pathName }, fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = theme.COLOR_FG_1)
-
-                                        Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-                                    }
-
                                     Text("${line + 1}:${column + 1}", fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = theme.COLOR_FG_1)
                                 }
 
                                 Spacer(Modifier.height(scale.SIZE_SCROLL_THUMB))
                             }
-
                         }
-
                     }
                 )
             }
@@ -735,6 +721,8 @@ fun CodeEditor(
             } else {
                 service?.findReferences(root) ?: emptyList()
             }
+
+            onElementSelected(file, service?.path(element) ?: emptyList())
         }
     }
 }

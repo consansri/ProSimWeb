@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import cengine.project.Project
+import cengine.psi.core.PsiElement
+import cengine.vfs.FPath
+import cengine.vfs.VirtualFile
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import ui.ide.analyze.PsiAnalyzerView
@@ -23,6 +26,7 @@ import ui.uilib.interactable.CButton
 import ui.uilib.interactable.CToggle
 import ui.uilib.label.CLabel
 import ui.uilib.layout.*
+import kotlin.time.Duration
 
 @Composable
 fun IDEView(
@@ -52,6 +56,9 @@ fun IDEView(
         }.toTypedArray())
     }
     var fileEditorSelectedIndex by remember { mutableStateOf(0) }
+
+    var fileAndPsiPath by remember { mutableStateOf<Pair<VirtualFile, List<PsiElement>>?>(null) }
+    var inputLag by remember { mutableStateOf<Duration>(Duration.ZERO) }
 
     var leftContentType by remember { mutableStateOf(ideState.leftContent) }
     var rightContentType by remember { mutableStateOf(ideState.rightContent) }
@@ -145,6 +152,7 @@ fun IDEView(
                             TabbedPane(fileEditors, closeable = true, content = { index ->
                                 // Display File Content
                                 key(fileEditors[index].value.path) {
+                                    fileAndPsiPath = fileEditors[index].value to emptyList()
                                     when {
                                         fileEditors[index].value.name.endsWith(".o") -> {
                                             ObjectEditor(
@@ -162,8 +170,13 @@ fun IDEView(
                                                 project,
                                                 codeStyle,
                                                 codeSmallStyle,
-                                                baseSmallStyle
-                                            )
+                                                baseSmallStyle,
+                                                onElementSelected = { vfile, psiPath ->
+                                                    fileAndPsiPath = vfile to psiPath
+                                                },
+                                                onInputLag = { newInputLag ->
+                                                    inputLag = newInputLag
+                                                })
                                         }
                                     }
                                 }
@@ -233,10 +246,14 @@ fun IDEView(
         bottom = {
             HorizontalToolBar(
                 left = {
+                    val items = fileAndPsiPath?.let { fileAndPsiPath ->
+                        fileAndPsiPath.first.path + fileAndPsiPath.second.map { it.pathName }
+                    } ?: listOf("-")
 
+                    CLabel(text = items.joinToString(" > "), textStyle = UIState.BaseSmallStyle.current)
                 },
                 right = {
-
+                    CLabel(text = "${inputLag.inWholeMilliseconds} ms", textStyle = UIState.BaseSmallStyle.current, color = theme.COLOR_FG_1)
                 }
             )
         },

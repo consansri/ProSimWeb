@@ -14,7 +14,6 @@ class FPath(vararg val names: String) : Collection<String> {
         fun of(vfs: VFileSystem, vararg names: String): FPath = FPath(vfs.root.name, *names)
 
         fun delimited(delimitedPath: String) = FPath(*delimitedPath.split(DELIMITER).toTypedArray())
-
     }
 
     operator fun get(index: Int) = names[index]
@@ -63,7 +62,6 @@ class FPath(vararg val names: String) : Collection<String> {
     override fun isEmpty(): Boolean = names.isEmpty()
 
     override fun iterator(): Iterator<String> = names.iterator()
-
 
     override fun toString(): String {
         return names.joinToString(DELIMITER) { it }
