@@ -227,7 +227,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
                     })
                     CButton(icon = icons.continuousExe, onClick = {
                         architecture?.exeContinuous()
-                    }, tooltip = "${Performance.MAX_INSTR_EXE_AMOUNT}")
+                    })
                     CButton(modifier = Modifier
                         .scrollable(orientation = Orientation.Vertical,
                             state = rememberScrollableState { delta ->
@@ -280,7 +280,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
 
                 },
                 right = {
-
+                    CLabel(textStyle = UIState.BaseSmallStyle.current, text = "execution limit: ${Performance.MAX_INSTR_EXE_AMOUNT}" )
                 }
             )
         },

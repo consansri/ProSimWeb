@@ -40,9 +40,6 @@ fun CLabel(
     val scaling by UIState.Scale
     val theme by UIState.Theme
 
-    val text = remember { text }
-    val icon = remember { icon }
-
     Row(
         modifier
             .background(Color.Transparent, shape = RoundedCornerShape(scaling.SIZE_CORNER_RADIUS))
