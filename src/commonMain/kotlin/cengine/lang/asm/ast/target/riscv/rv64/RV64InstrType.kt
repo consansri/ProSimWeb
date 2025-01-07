@@ -435,7 +435,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
 
                     imm.fitsInSigned(44) -> {
                         val resized = imm.toInt64()
-                        if (DebugTools.RV64_showLIDecisions) nativeLog("Decided 44 Bit Signed for 0x${resized.toString(16)}")
+
                         /**
                          *  val64 = lui + addiw + addi3 + addi2 + addi1
                          *
@@ -446,7 +446,13 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                          */
                         val l1 = resized.lowest(12).toUInt32()
                         val l2 = resized.shr(12).lowest(12).toUInt32() + l1.bit(11)
-                        val l3 = resized.shr(12 + 12).lowest(12).toUInt32() + l2.bit(11)
+                        val l3 = resized.shr(12 + 12).lowest(20).toUInt32() + l2.bit(11)
+
+                        if (DebugTools.RV64_showLIDecisions) nativeLog("Decided 44 Bit Signed for 0x${resized.toString(16)}:\n" +
+                                "\tl1: ${l1.toString(16)}\n" +
+                                "\tl2: ${l2.toString(16)}\n" +
+                                "\tl3: ${l3.toString(16)}\n")
+
 
                         // Build LUI Bundle
                         val luiBundle = (l3 shl 12) or (rd shl 7) or RVConst.OPC_LUI
@@ -487,6 +493,8 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                         val l3 = resized.shr(12 + 12).lowest(12).toUInt32() + l2.bit(11)
                         val l4 = resized.shr(12 + 12 + 12).lowest(20).toUInt32() + l3.bit(11)
 
+                        var shiftNeeded = UInt32.ZERO
+
                         // Build LUI Bundle
                         val luiBundle = (l4 shl 12) or (rd shl 7) or RVConst.OPC_LUI
                         builder.currentSection.content.put(luiBundle)
@@ -497,17 +505,24 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                             builder.currentSection.content.put(addiwBundle)
                         }
 
-                        // Build SLLI Bundle
-                        val slliBundle = (UInt32.ZERO shl 25) or (0xCU.toUInt32() shl 20) or (rd shl 15) or (RVConst.FUNCT3_SHIFT_LEFT shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
-                        builder.currentSection.content.put(slliBundle)
+                        shiftNeeded += 0xC
 
                         if (l2 != UInt32.ZERO) {
+                            // Build SLLI Bundle
+                            val slliBundle = (UInt32.ZERO shl 25) or (shiftNeeded shl 20) or (rd shl 15) or (RVConst.FUNCT3_SHIFT_LEFT shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
+                            builder.currentSection.content.put(slliBundle)
+
+                            shiftNeeded = UInt32.ZERO
+
                             // Build ADDI Bundle
                             val addiBundle1 = (l2 shl 20) or (rd shl 15) or (RVConst.FUNCT3_OPERATION shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
                             builder.currentSection.content.put(addiBundle1)
                         }
 
+                        shiftNeeded += 0xC
+
                         // Build SLLI Bundle
+                        val slliBundle = (UInt32.ZERO shl 25) or (shiftNeeded shl 20) or (rd shl 15) or (RVConst.FUNCT3_SHIFT_LEFT shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
                         builder.currentSection.content.put(slliBundle)
 
                         if (l1 != UInt32.ZERO) {
@@ -547,32 +562,46 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                         val luiBundle = (l5 shl 12) or (rd shl 7) or RVConst.OPC_LUI
                         builder.currentSection.content.put(luiBundle)
 
+                        var shiftNeeded: UInt32 = UInt32.ZERO
+
                         if (l4 != UInt32.ZERO) {
                             // Build ADDIW Bundle
                             val addiwBundle = (l4 shl 20) or (rd shl 15) or (RVConst.FUNCT3_OPERATION shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM_WORD
                             builder.currentSection.content.put(addiwBundle)
                         }
 
-                        // Build SLLI Bundle
-                        val slliBundleC = (UInt32.ZERO shl 25) or (0xCU.toUInt32() shl 20) or (rd shl 15) or (RVConst.FUNCT3_SHIFT_LEFT shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
-                        builder.currentSection.content.put(slliBundleC)
+                        shiftNeeded += 0xC
 
                         if (l3 != UInt32.ZERO) {
+                            // Build SLLI Bundle
+                            val slliBundleC = (UInt32.ZERO shl 25) or (shiftNeeded shl 20) or (rd shl 15) or (RVConst.FUNCT3_SHIFT_LEFT shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
+                            builder.currentSection.content.put(slliBundleC)
+
+                            shiftNeeded = UInt32.ZERO
+
                             // Build ADDI Bundle
                             val addiBundle1 = (l3 shl 20) or (rd shl 15) or (RVConst.FUNCT3_OPERATION shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
                             builder.currentSection.content.put(addiBundle1)
                         }
 
-                        // Build SLLI Bundle
-                        builder.currentSection.content.put(slliBundleC)
+                        shiftNeeded += 0xC
 
                         if (l2 != UInt32.ZERO) {
+                            // Build SLLI Bundle
+                            val slliBundleC = (UInt32.ZERO shl 25) or (shiftNeeded shl 20) or (rd shl 15) or (RVConst.FUNCT3_SHIFT_LEFT shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
+                            builder.currentSection.content.put(slliBundleC)
+
+                            shiftNeeded = UInt32.ZERO
+
                             // Build ADDI Bundle
                             val addiBundle2 = (l2 shl 20) or (rd shl 15) or (RVConst.FUNCT3_OPERATION shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
                             builder.currentSection.content.put(addiBundle2)
                         }
 
+                        shiftNeeded += 0xC
+
                         // Build SLLI Bundle
+                        val slliBundleC = (UInt32.ZERO shl 25) or (shiftNeeded shl 20) or (rd shl 15) or (RVConst.FUNCT3_SHIFT_LEFT shl 12) or (rd shl 7) or RVConst.OPC_ARITH_IMM
                         builder.currentSection.content.put(slliBundleC)
 
                         if (l1 != UInt32.ZERO) {
