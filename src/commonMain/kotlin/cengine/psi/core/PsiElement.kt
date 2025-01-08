@@ -3,7 +3,7 @@ package cengine.psi.core
 import cengine.editor.annotation.Annotation
 
 /**
- * Base Element for all PSI elements
+ * Base Element for all Elements in a PSI tree.
  */
 interface PsiElement : Interval {
 

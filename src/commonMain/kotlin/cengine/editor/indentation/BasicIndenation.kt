@@ -3,6 +3,12 @@ package cengine.editor.indentation
 import cengine.editor.text.Editable
 import cengine.editor.text.Informational
 
+/**
+ * A very basic indentation provider. It simply inserts or deletes spaces at the given location.
+ * It will not indent or unindent any blocks of text.
+ *
+ * @property spaces The number of spaces to indent or unindent with.
+ */
 class BasicIndenation(private val editable: Editable, private val informational: Informational, override val spaces: Int = 4) : IndentationProvider {
 
     override fun indentAtIndex(index: Int): Int {

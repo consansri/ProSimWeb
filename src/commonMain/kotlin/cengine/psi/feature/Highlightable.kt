@@ -2,6 +2,9 @@ package cengine.psi.feature
 
 import cengine.lang.asm.CodeStyle
 
+/**
+ * Interface to mark a [PsiElement] as having a defined highlighting color.
+ */
 interface Highlightable {
     val style: CodeStyle?
 

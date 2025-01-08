@@ -1,7 +1,13 @@
 package cengine.util.string
 
 
-fun String.lineAndColumn(index: Int): Pair<Int, Int>{
+/**
+ * Returns the line and column of the given index in the given string.
+ *
+ * @param index index in the string
+ * @return line and column of the index, 0-indexed
+ */
+fun String.lineAndColumn(index: Int): Pair<Int, Int> {
     val relString = substring(0, index)
     if (relString.isEmpty()) {
         return 0 to 0

@@ -1,5 +1,8 @@
 package cengine.util.integer
 
+/**
+ * Provides logical operations for [IntNumber]s
+ */
 interface LogicOperationProvider<in T: IntNumber<*>, out U: IntNumber<*>> {
 
     val bitWidth: Int

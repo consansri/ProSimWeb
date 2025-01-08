@@ -1,5 +1,8 @@
 package cengine.util.integer
 
+/**
+ * Provides arithmetic operations for [IntNumber]s
+ */
 interface ArithOperationProvider<in T: IntNumber<*>, out U: IntNumber<*>> {
 
     operator fun plus(other: T): U

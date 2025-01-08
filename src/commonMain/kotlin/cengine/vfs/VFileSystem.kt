@@ -47,6 +47,9 @@ class VFileSystem(absRootPath: String) {
      * File System Modification
      */
 
+    /**
+     * Converts an [absolutePath] to a relative [FPath].
+     */
     fun toRelative(absolutePath: String): FPath = FPath.of(this, *absolutePath.removePrefix(absRootPath).split(FPath.DELIMITER).filter { it.isNotEmpty() }.toTypedArray())
 
     /**
@@ -198,26 +201,51 @@ class VFileSystem(absRootPath: String) {
         changeListeners.clear()
     }
 
+    /**
+     * A special [VirtualFile] that represents the root directory of the virtual file system.
+     *
+     * @property name The name of the root directory.
+     */
     inner class RootDirectory(override val name: String) : VirtualFile {
         override val path: FPath = FPath(name)
         override val isDirectory: Boolean = true
         override val parent: VirtualFile? = null
         override var onDiskChange: () -> Unit = {}
 
+        /**
+         * Returns a list of all files and directories in the root directory.
+         */
         override fun getChildren(): List<VirtualFile> {
             // nativeLog("getChildren($path)")
             return actualFileSystem.listDirectory(path).map { getOrCreateFile(path + it, this) }
         }
 
+        /**
+         * Returns an empty byte array, as the root directory does not have any content.
+         */
         override fun getContent(): ByteArray = ByteArray(0)
 
+        /**
+         * Throws an [UnsupportedOperationException], as the root directory cannot be modified.
+         */
         override fun setContent(content: ByteArray) {
             throw UnsupportedOperationException()
         }
 
+        /**
+         * Returns the name of the root directory.
+         */
         override fun toString(): String = name
     }
 
+    /**
+     * Implementation of [VirtualFile] that uses the [ActualFileSystem] to access the file system.
+     *
+     * @property name The name of the file or directory.
+     * @property path The path of the file or directory.
+     * @property isDirectory If this is a directory.
+     * @property parent The parent directory of this file or directory, or null if this is the root directory.
+     */
     inner class VirtualFileImpl(
         override val name: String,
         override val path: FPath,
@@ -226,6 +254,11 @@ class VFileSystem(absRootPath: String) {
     ) : VirtualFile {
         override var onDiskChange: () -> Unit = {}
 
+        /**
+         * Returns a list of all files and directories in this directory.
+         *
+         * @return A list of [VirtualFile] objects.
+         */
         override fun getChildren(): List<VirtualFile> {
             // nativeLog("getChildren($path)")
             return if (isDirectory) {
@@ -235,6 +268,11 @@ class VFileSystem(absRootPath: String) {
             }
         }
 
+        /**
+         * Returns the content of this file as a byte array.
+         *
+         * @return A byte array containing the content of this file.
+         */
         override fun getContent(): ByteArray {
             return if (isDirectory) {
                 ByteArray(0)
@@ -243,15 +281,29 @@ class VFileSystem(absRootPath: String) {
             }
         }
 
+        /**
+         * Sets the content of this file.
+         *
+         * @param content The new content of this file as a byte array.
+         */
         override fun setContent(content: ByteArray) {
             if (!isDirectory) {
                 actualFileSystem.writeFile(path, content)
             }
         }
 
+        /**
+         * @return filename ([name])
+         */
         override fun toString(): String = name
     }
 
+
+    /**
+     * Returns the root directory of this file system.
+     *
+     * @return [root] filename
+     */
     override fun toString(): String {
         return root.toString()
     }

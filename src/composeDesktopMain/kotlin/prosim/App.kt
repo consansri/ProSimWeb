@@ -4,7 +4,7 @@ import Constants
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.window.*
-import ui.ProSimApp
+import ui.AppLauncher
 import ui.uilib.UIState
 
 fun main(){
@@ -16,7 +16,7 @@ fun main(){
         )
 
         Window(::exitApplication, windowState, title = Constants.TITLE, icon = iconPainter){
-            ProSimApp.launch()
+            AppLauncher()
         }
 
     }

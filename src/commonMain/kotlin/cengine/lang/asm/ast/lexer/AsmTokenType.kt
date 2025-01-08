@@ -1,6 +1,5 @@
 package cengine.lang.asm.ast.lexer
 
-import Settings
 import cengine.lang.asm.CodeStyle
 import cengine.psi.lexer.core.TokenType
 
@@ -29,10 +28,10 @@ enum class AsmTokenType(
     INSTRNAME(style = CodeStyle.keyWordInstr),
     SYMBOL(Regex("""[a-zA-Z$._][a-zA-Z0-9$._]*""")),
     L_LABEL_REF(Regex("[0-9]+[bf](?![0-9a-f])", RegexOption.IGNORE_CASE)),
-    INT_BIN(Regex("${Regex.escape(Settings.PRESTRING_BINARY)}([01]+)", RegexOption.IGNORE_CASE), CodeStyle.altInt, isNumberLiteral = true),
-    INT_HEX(Regex("${Regex.escape(Settings.PRESTRING_HEX)}([0-9a-f]+)", RegexOption.IGNORE_CASE), CodeStyle.altInt, isNumberLiteral = true),
-    INT_OCT(Regex("${Regex.escape(Settings.PRESTRING_OCT)}([0-7]+)", RegexOption.IGNORE_CASE), CodeStyle.altInt, isNumberLiteral = true),
-    INT_DEC(Regex("${Regex.escape(Settings.PRESTRING_DECIMAL)}([0-9]+)", RegexOption.IGNORE_CASE), CodeStyle.integer, isNumberLiteral = true),
+    INT_BIN(Regex("0b([01]+)", RegexOption.IGNORE_CASE), CodeStyle.altInt, isNumberLiteral = true),
+    INT_HEX(Regex("0x([0-9a-f]+)", RegexOption.IGNORE_CASE), CodeStyle.altInt, isNumberLiteral = true),
+    INT_OCT(Regex("0([0-7]+)", RegexOption.IGNORE_CASE), CodeStyle.altInt, isNumberLiteral = true),
+    INT_DEC(Regex("([0-9]+)", RegexOption.IGNORE_CASE), CodeStyle.integer, isNumberLiteral = true),
     STRING_ML(Regex("\"\"\"(?:\\.|[^\"])*\"\"\""), CodeStyle.string, isStringLiteral = true),
     STRING_SL(Regex(""""(\\.|[^\\"])*""""), CodeStyle.string, isStringLiteral = true),
     CHAR(Regex("""'(\\.|[^\\'])"""), CodeStyle.char, isCharLiteral = true),

@@ -4,6 +4,12 @@ import cengine.util.Endianness
 import cengine.util.integer.*
 import cengine.util.integer.Int8.Companion.toInt8
 
+/**
+ * Base class for all [IntNumber] buffer types
+ *
+ * @property endianness The endianness for all operations
+ * @property type The type of the elements in the buffer
+ */
 abstract class Buffer<T : IntNumber<*>>(endianness: Endianness, val type: IntNumberStatic<T>) : Collection<T> {
 
     protected val data: MutableList<T> = mutableListOf()
