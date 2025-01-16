@@ -13,6 +13,7 @@ import cengine.project.Project
 import cengine.psi.PsiManager
 import cengine.psi.core.PsiElement
 import cengine.psi.core.PsiFile
+import cengine.psi.core.PsiService
 import cengine.vfs.VirtualFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,6 +27,7 @@ interface CodeEditor : Editable {
         fun create(file: VirtualFile, project: Project, invalidateContent: (CodeEditor) -> Unit, invalidateAnalytics: (CodeEditor) -> Unit): CodeEditor {
             return object : CodeEditor {
                 override val psiManager: PsiManager<*,*>? = project.getManager(file)
+                override val lang: LanguageService? = project.getLang(file)
                 override val file: VirtualFile = file
                 override val textModel: TextModel = RopeModel(file.getAsUTF8String())
                 override val selector: Selector = Selector(textModel)
@@ -47,6 +49,7 @@ interface CodeEditor : Editable {
     }
 
     val psiManager: PsiManager<*,*>?
+    val lang: LanguageService?
     val file: VirtualFile
     val textModel: TextModel
     val textStateModel: TextStateModel
@@ -54,7 +57,6 @@ interface CodeEditor : Editable {
     val indentationProvider: IndentationProvider
     var currentElement: PsiElement?
     var annotations: Set<Annotation>
-    val lang: LanguageService? get() = psiManager?.lang
     val psiFile: PsiFile? get() = psiManager?.getPsiFile(file)
 
     fun saveToFile() {
@@ -92,7 +94,7 @@ interface CodeEditor : Editable {
         withContext(Dispatchers.Main) {
             invalidateContent(this@CodeEditor)
         }
-        annotations = psiManager?.lang?.psiService?.collectNotations(psiFile) ?: emptySet()
+        annotations = PsiService.collectNotations(psiFile)
         invalidateAnalytics(this)
     }
 

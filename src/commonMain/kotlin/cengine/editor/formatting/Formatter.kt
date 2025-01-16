@@ -8,5 +8,5 @@ import cengine.psi.core.PsiFile
  * The most common use case is to format the code in the file when it is saved.
  */
 interface Formatter {
-    fun formatted(psiFile: PsiFile): String?
+    suspend fun formatted(psiFile: PsiFile): String?
 }

@@ -11,72 +11,76 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import cengine.lang.obj.InvalObjFile
+import cengine.lang.obj.ObjPsiFile
 import cengine.lang.obj.elf.*
-import cengine.project.Project
+import cengine.psi.PsiManager
 import cengine.vfs.VirtualFile
-import kotlinx.coroutines.Job
 import ui.uilib.UIState
 import ui.uilib.interactable.CToggle
 
 @Composable
-fun ObjectEditor(
+fun BinaryEditor(
     file: VirtualFile,
-    project: Project,
+    manager: PsiManager<*, *>,
     codeStyle: TextStyle,
     titleStyle: TextStyle,
     baseStyle: TextStyle,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val scale = UIState.Scale.value
-
-    val fileContent by remember {
-        mutableStateOf(file.getContent())
-    }
-
-    var elfReader by remember { mutableStateOf(ELFFile.parse(file.name, fileContent)) }
 
     val scrollVertical = rememberScrollState()
     val scrollHorizontal = rememberScrollState()
 
-    val coroutineScope = rememberCoroutineScope()
-    var processJob by remember { mutableStateOf<Job?>(null) }
+    val objFile = manager.psiCache[file.path]
+
+    manager.queueUpdate(file)
 
     Box(
         modifier
             .fillMaxSize()
             .verticalScroll(scrollVertical)
     ) {
-        elfReader?.let { elfReader ->
-            Column(
-                Modifier
-                    .padding(scale.SIZE_INSET_MEDIUM)
-                    .fillMaxWidth()
-            ) {
+        when (objFile) {
+            is ObjPsiFile -> {
+                when (objFile) {
+                    is ELFFile -> {
+                        Column(
+                            Modifier
+                                .padding(scale.SIZE_INSET_MEDIUM)
+                                .fillMaxWidth()
+                        ) {
 
-                // Draw Header Info
-                ELFHeaderInfos(elfReader, fileContent, codeStyle, titleStyle, baseStyle)
+                            // Draw Header Info
+                            ELFHeaderInfos(objFile,  codeStyle, titleStyle, baseStyle)
 
-                // Draw Sections wrapped in ProgramHeaders
-                ELFSectionInfos(elfReader, fileContent, codeStyle, baseStyle)
+                            // Draw Sections wrapped in ProgramHeaders
+                            ELFSectionInfos(objFile,  codeStyle, baseStyle)
+                        }
+                    }
+
+                    is InvalObjFile -> {
+                        val fileContent = objFile.file.getContent()
+                        ByteRange(fileContent, fileContent.indices, 16, codeStyle)
+                    }
+                }
+            }
+
+            else -> {
+                val fileContent = file.getContent()
+                ByteRange(fileContent, fileContent.indices, 16, codeStyle)
             }
         }
-
-        if (elfReader == null) ByteRange(fileContent, fileContent.indices, 16, codeStyle, baseStyle)
-
-    }
-
-    LaunchedEffect(fileContent) {
-        elfReader = ELFFile.parse(file.name, fileContent)
     }
 }
 
 @Composable
 fun ELFHeaderInfos(
     elfReader: ELFFile,
-    fileContent: ByteArray,
     codeStyle: TextStyle,
     titleStyle: TextStyle,
-    baseStyle: TextStyle
+    baseStyle: TextStyle,
 ) {
     val theme = UIState.Theme.value
     val scale = UIState.Scale.value
@@ -634,13 +638,13 @@ fun ELFHeaderInfos(
                     .height(scale.SIZE_BORDER_THICKNESS)
             )
 
-            ByteRange(fileContent, 0..<ehdr.e_ehsize.toInt(), 16, codeStyle, baseStyle)
+            ByteRange(elfReader.bytes, 0..<ehdr.e_ehsize.toInt(), 16, codeStyle)
         }
     }
 }
 
 @Composable
-fun ELFSectionInfos(elfReader: ELFFile, fileContent: ByteArray, codeStyle: TextStyle, baseStyle: TextStyle) {
+fun ELFSectionInfos(elfReader: ELFFile, codeStyle: TextStyle, baseStyle: TextStyle) {
 
     val theme = UIState.Theme.value
     val scale = UIState.Scale.value
@@ -706,7 +710,7 @@ fun ELFSectionInfos(elfReader: ELFFile, fileContent: ByteArray, codeStyle: TextS
                                 .height(scale.SIZE_BORDER_THICKNESS)
                         )
 
-                        ByteRange(fileContent, range, 16, codeStyle, baseStyle)
+                        ByteRange(elfReader.bytes, range, 16, codeStyle)
                     }
                 }
             }
@@ -859,7 +863,7 @@ fun ELFSectionInfos(elfReader: ELFFile, fileContent: ByteArray, codeStyle: TextS
                                             .height(scale.SIZE_BORDER_THICKNESS)
                                     )
 
-                                    ByteRange(fileContent, range, 16, codeStyle, baseStyle)
+                                    ByteRange(elfReader.bytes, range, 16, codeStyle)
                                 }
                             }
                         }
@@ -874,7 +878,7 @@ fun ELFSectionInfos(elfReader: ELFFile, fileContent: ByteArray, codeStyle: TextS
 }
 
 @Composable
-fun ByteRange(byteArray: ByteArray, range: IntRange, chunkSize: Int, codeStyle: TextStyle, baseStyle: TextStyle) {
+fun ByteRange(byteArray: ByteArray, range: IntRange, chunkSize: Int, codeStyle: TextStyle) {
 
     val theme = UIState.Theme.value
     val scale = UIState.Scale.value

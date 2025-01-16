@@ -217,8 +217,8 @@ class MifConverter(val depth: Double, val wordSize: IntNumberStatic<*>) {
         }
 
         private fun parseElf32(file: ELF32File): MifConverter {
-            val builder = MifConverter(UInt8, UInt32, file.name)
-            val bytes = file.content
+            val builder = MifConverter(UInt8, UInt32, file.id)
+            val bytes = file.bytes
 
             file.programHeaders.forEach {
                 if (it !is ELF32_Phdr) return@forEach
@@ -234,8 +234,8 @@ class MifConverter(val depth: Double, val wordSize: IntNumberStatic<*>) {
         }
 
         private fun parseElf64(file: ELF64File): MifConverter {
-            val builder = MifConverter(UInt8, UInt64, file.name)
-            val bytes = file.content
+            val builder = MifConverter(UInt8, UInt64, file.id)
+            val bytes = file.bytes
 
             file.programHeaders.forEach {
                 if (it !is ELF64_Phdr) return@forEach

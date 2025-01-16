@@ -47,11 +47,11 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "convert") {
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
 
-                val elfFile = ELFFile.parse(file.name, file.getContent())
-                if (elfFile != null) {
-                    val fileContent = MifConverter.parseElf(elfFile).build()
-                    outputFile.setAsUTF8String(fileContent)
-                }
+                val manager = project.getManager(file) ?: return
+                val objFile = manager.getPsiFile(file) as? ELFFile ?: return
+
+                val fileContent = MifConverter.parseElf(objFile).build()
+                outputFile.setAsUTF8String(fileContent)
             }
         }
     }

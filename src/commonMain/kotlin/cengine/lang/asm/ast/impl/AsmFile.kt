@@ -2,12 +2,13 @@ package cengine.lang.asm.ast.impl
 
 import cengine.editor.annotation.Annotation
 import cengine.lang.asm.AsmLang
+import cengine.psi.PsiManager
 import cengine.psi.core.PsiElement
 import cengine.psi.core.PsiElementVisitor
 import cengine.psi.core.PsiFile
 import cengine.vfs.VirtualFile
 
-class AsmFile(override val file: VirtualFile, override val lang: AsmLang, program: ASNode.Program) : PsiFile {
+class AsmFile(override val file: VirtualFile, override val manager: PsiManager<*, *>, program: ASNode.Program) : PsiFile {
 
     var program: ASNode.Program = program
         private set
@@ -24,7 +25,7 @@ class AsmFile(override val file: VirtualFile, override val lang: AsmLang, progra
         get() = program.parent
     override val children: List<PsiElement> get() = program.children
 
-    override var range: IntRange  = program.range
+    override var range: IntRange = program.range
         set(value) {
             program.range = value
             field = value
@@ -35,12 +36,5 @@ class AsmFile(override val file: VirtualFile, override val lang: AsmLang, progra
 
     override fun accept(visitor: PsiElementVisitor) {
         visitor.visitFile(this)
-    }
-
-    override fun update() {
-        // Reparse the file and update children
-        val newFile = lang.psiParser.parse(file)
-        program = newFile.program
-        range = newFile.range
     }
 }

@@ -1,6 +1,7 @@
 package cengine.lang.asm.ast.impl
 
 import cengine.editor.annotation.Annotation
+import cengine.lang.asm.AsmPsiParser
 import cengine.lang.asm.ast.AsmCodeGenerator
 import cengine.lang.asm.ast.Component.*
 import cengine.lang.asm.ast.DirTypeInterface
@@ -9,6 +10,8 @@ import cengine.lang.asm.ast.TargetSpec
 import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.asm.ast.lexer.AsmTokenType
 import cengine.lang.obj.elf.Shdr
+import cengine.vfs.FPath
+import cengine.vfs.VFileSystem
 
 enum class ASDirType(
     val contentStartsDirectly: Boolean = false,
@@ -1118,7 +1121,7 @@ enum class ASDirType(
         return null
     }
 
-    override fun build(builder: AsmCodeGenerator<*>, dir: ASNode.Directive) {
+    override suspend fun build(builder: AsmCodeGenerator<*>, dir: ASNode.Directive) {
         /**
          * Check Semantic
          */
@@ -1233,7 +1236,6 @@ enum class ASDirType(
                     return
                 }
 
-                // val symbolIndex = builder.symTab.getOrCreate(identifier, builder.currentSection)
                 val expr = dir.additionalNodes.firstOrNull()
 
                 if (expr == null) {
@@ -1246,10 +1248,6 @@ enum class ASDirType(
                         val evaluated = expr.evaluate(builder)
                         try {
                             builder.getOrCreateAbsSymbolInCurrentSection(identifier, evaluated)
-                            /*val symbol = builder.symTab[symbolIndex]
-                            symbol.setValue(evaluated.toULong())
-                            symbol.st_info = Sym.ELF_ST_INFO(Sym.STB_NUM, Sym.STT_NUM)
-                            builder.symTab.update(symbol, symbolIndex)*/
                         } catch (e: Exception) {
                             dir.addError(e.message.toString())
                         }
@@ -1275,12 +1273,6 @@ enum class ASDirType(
                 builder.symbols.firstOrNull { it.name == identifier }?.let {
                     it.binding = AsmCodeGenerator.Symbol.Binding.GLOBAL
                 }
-
-                /*val index = builder.symTab.getOrCreate(identifier, builder.currentSection)
-                val sym = builder.symTab[index]
-                val type = Sym.ELF_ST_TYPE(sym.st_info)
-                sym.st_info = Sym.ELF_ST_INFO(Sym.STB_GLOBAL, type)
-                builder.symTab.update(sym, index)*/
             }
 
             GLOBL -> {
@@ -1290,12 +1282,6 @@ enum class ASDirType(
                 }?.let {
                     it.binding = AsmCodeGenerator.Symbol.Binding.GLOBAL
                 }
-
-                /*val index = builder.symTab.getOrCreate(identifier, builder.currentSection)
-                val sym = builder.symTab[index]
-                val type = Sym.ELF_ST_TYPE(sym.st_info)
-                sym.st_info = Sym.ELF_ST_INFO(Sym.STB_GLOBAL, type)
-                builder.symTab.update(sym, index)*/
             }
 
             GNU_ATTRIBUTE -> TODO()
@@ -1315,7 +1301,27 @@ enum class ASDirType(
 
             IDENT -> TODO()
             INCBIN -> TODO()
-            INCLUDE -> TODO()
+            INCLUDE -> {
+                val fileName = dir.additionalNodes.filterIsInstance<ASNode.StringExpr>()[0].evaluate(true)
+
+                if (fileName.isEmpty()) {
+                    dir.addError("expected a file name!")
+                }
+
+                val fpath = FPath.of(builder.psiManager.vfs, *fileName.split("/").toTypedArray())
+
+                val asmFile = builder.psiManager.findAndUpdate(fpath)
+
+                if (asmFile !is AsmFile) {
+                    dir.addError("Couldn't find include $fpath!")
+                    return
+                }
+
+                asmFile.program.getAllStatements().forEach {
+                    builder.execute(it)
+                }
+            }
+
             INT -> TODO()
             INTERNAL -> TODO()
             IRP -> TODO()

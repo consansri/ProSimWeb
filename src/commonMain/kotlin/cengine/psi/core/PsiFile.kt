@@ -2,13 +2,14 @@ package cengine.psi.core
 
 import cengine.editor.annotation.Severity
 import cengine.lang.LanguageService
+import cengine.psi.PsiManager
 import cengine.vfs.VirtualFile
 
 /**
  * Represents a file in the PSI structure
  */
 interface PsiFile : PsiElement {
-    val lang: LanguageService?
+    val manager: PsiManager<*, *>?
     val file: VirtualFile
 
     override val pathName: String
@@ -16,8 +17,6 @@ interface PsiFile : PsiElement {
 
     val content: String
         get() = file.getAsUTF8String()
-
-    fun update()
 
     fun hasErrors() = annotations.any { it.severity == Severity.ERROR }
 

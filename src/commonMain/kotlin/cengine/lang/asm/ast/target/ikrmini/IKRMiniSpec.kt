@@ -1,15 +1,18 @@
 package cengine.lang.asm.ast.target.ikrmini
 
+import cengine.lang.asm.AsmLang
 import cengine.lang.asm.ast.DirTypeInterface
 import cengine.lang.asm.ast.InstrTypeInterface
 import cengine.lang.asm.ast.RegTypeInterface
 import cengine.lang.asm.ast.TargetSpec
 import cengine.lang.asm.ast.impl.ASDirType
+import cengine.lang.asm.ast.impl.AsmFile
 import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.mif.MifGenerator
 import cengine.lang.obj.elf.E_IDENT
 import cengine.lang.obj.elf.Ehdr
 import cengine.lang.obj.elf.LinkerScript
+import cengine.psi.PsiManager
 import cengine.util.Endianness
 import cengine.util.buffer.Int16Buffer
 import cengine.util.integer.BigInt
@@ -36,12 +39,12 @@ data object IKRMiniSpec : TargetSpec<MifGenerator<Int16Buffer>> {
     override val allInstrs: List<InstrTypeInterface> = IKRMiniInstrType.entries
     override val allDirs: List<DirTypeInterface> = ASDirType.entries
 
-    override fun createGenerator(): MifGenerator<Int16Buffer> = MifGenerator(object : LinkerScript {
+    override fun createGenerator(manager: PsiManager<*, *>): MifGenerator<Int16Buffer> = MifGenerator(object : LinkerScript {
         override val textStart: BigInt = BigInt.ZERO
         override val dataStart: BigInt? = null
         override val rodataStart: BigInt? = null
         override val segmentAlign: UInt64 = 0x4000U.toUInt64()
-    }, Int16) {
+    }, manager, Int16) {
         Int16Buffer(Endianness.LITTLE)
     }
 

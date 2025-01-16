@@ -113,6 +113,7 @@ abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>> {
         }
         resetPC()
         initializer?.initialize(memory)
+        nativeLog("${this::class.simpleName} resetting!")
         console.exeInfo("resetting")
     }
 

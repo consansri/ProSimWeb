@@ -10,18 +10,24 @@ import cengine.lang.cown.psi.CownAnnotator
 import cengine.lang.cown.psi.CownCompleter
 import cengine.lang.cown.psi.CownPsiFile
 import cengine.lang.cown.psi.CownPsiParser
-import cengine.psi.core.PsiParser
-import cengine.psi.core.PsiService
-import cengine.psi.impl.PsiServiceImpl
+import cengine.psi.PsiManager
+import cengine.vfs.VFileSystem
 
 object CownLang: LanguageService() {
     override val name: String = "cown"
     override val fileSuffix: String = ".cown"
-    override val psiParser: PsiParser<CownPsiFile> = CownPsiParser(this)
-    override val psiService: PsiService = PsiServiceImpl(psiParser)
     override val runConfig: Runner<CownLang> = CownRunner
     override val completionProvider: CompletionProvider = CownCompleter()
     override val annotationProvider: AnnotationProvider = CownAnnotator()
     override val highlightProvider: HighlightProvider? = null
     override val formatter: Formatter? = null
+    override fun createManager(vfs: VFileSystem): PsiManager<CownLang, CownPsiFile> = PsiManager(
+        vfs,
+        PsiManager.Mode.TEXT,
+        fileSuffix,
+        CownPsiParser(),
+    ){
+        completionProvider.buildCompletionSet(it)
+        annotationProvider.updateAnnotations(it)
+    }
 }

@@ -4,9 +4,11 @@ import cengine.editor.annotation.AnnotationProvider
 import cengine.editor.completion.CompletionProvider
 import cengine.editor.formatting.Formatter
 import cengine.editor.highlighting.HighlightProvider
+import cengine.psi.PsiManager
 import cengine.psi.core.PsiFile
 import cengine.psi.core.PsiParser
 import cengine.psi.core.PsiService
+import cengine.vfs.VFileSystem
 
 
 /**
@@ -25,16 +27,6 @@ abstract class LanguageService {
      * The file suffix associated with this language service.
      */
     abstract val fileSuffix: String
-
-    /**
-     * The [PsiParser] associated with this language service.
-     */
-    abstract val psiParser: PsiParser<*>
-
-    /**
-     * The [PsiService] associated with this language service.
-     */
-    abstract val psiService: PsiService
 
     /**
      * The run configuration associated with this language service.
@@ -60,6 +52,11 @@ abstract class LanguageService {
      * The code [Formatter] associated with this language service.
      */
     abstract val formatter: Formatter?
+
+    /**
+     * Creates a [PsiManager] associated with this language service
+     */
+    abstract fun createManager(vfs: VFileSystem): PsiManager<*, *>
 
     /**
      * Updates the analytics associated with this language service for the given file.

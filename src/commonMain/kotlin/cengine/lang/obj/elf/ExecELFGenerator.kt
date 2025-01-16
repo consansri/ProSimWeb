@@ -1,6 +1,9 @@
 package cengine.lang.obj.elf
 
+import cengine.lang.asm.AsmLang
 import cengine.lang.asm.ast.TargetSpec
+import cengine.lang.asm.ast.impl.AsmFile
+import cengine.psi.PsiManager
 import cengine.psi.core.*
 import cengine.util.integer.UInt64
 import cengine.util.integer.UInt64.Companion.toUInt64
@@ -21,8 +24,9 @@ class ExecELFGenerator(
     ei_abiversion: Elf_Byte,
     e_machine: Elf_Half,
     e_flags: Elf_Word = Elf_Word.ZERO,
-    linkerScript: LinkerScript
-) : ELFGenerator(Ehdr.ET_EXEC, ei_class, ei_data, ei_osabi, ei_abiversion, e_machine, e_flags, linkerScript) {
+    linkerScript: LinkerScript,
+    psiManager: PsiManager<*, *>
+) : ELFGenerator(Ehdr.ET_EXEC, ei_class, ei_data, ei_osabi, ei_abiversion, e_machine, e_flags, linkerScript, psiManager) {
 
     private val segAlign get() = linkerScript.segmentAlign
 

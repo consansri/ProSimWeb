@@ -27,11 +27,14 @@ import cengine.editor.annotation.Annotation
 import cengine.editor.annotation.Severity
 import cengine.editor.completion.Completion
 import cengine.editor.highlighting.HighlightProvider.Companion.spanStyles
+import cengine.lang.LanguageService
 import cengine.lang.asm.CodeStyle
 import cengine.project.Project
+import cengine.psi.PsiManager
 import cengine.psi.core.PsiElement
 import cengine.psi.core.PsiFile
 import cengine.psi.core.PsiReference
+import cengine.psi.core.PsiService
 import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
 import emulator.kit.nativeLog
@@ -51,6 +54,8 @@ import kotlin.time.measureTime
 @Composable
 fun CodeEditor(
     file: VirtualFile,
+    lang: LanguageService,
+    manager: PsiManager<*,*>,
     project: Project,
     codeStyle: TextStyle,
     codeSmallStyle: TextStyle,
@@ -63,10 +68,6 @@ fun CodeEditor(
     val theme = UIState.Theme.value
     val scale = UIState.Scale.value
     val icon = UIState.Icon.value
-
-    val manager = project.getManager(file)
-    val lang = manager?.lang
-    val service = lang?.psiService
 
     val textMeasurer = rememberTextMeasurer()
     val coroutineScope = rememberCoroutineScope()
@@ -137,28 +138,27 @@ fun CodeEditor(
     fun fetchStyledContent(code: String): AnnotatedString {
         // Fast Lexing Highlighting
         val spanStyles = mutableListOf<AnnotatedString.Range<SpanStyle>>()
-        val hls = lang?.highlightProvider?.fastHighlight(code, visibleIndexRange) ?: emptyList()
+        val hls = lang.highlightProvider?.fastHighlight(code, visibleIndexRange) ?: emptyList()
         spanStyles.addAll(hls.spanStyles())
 
-        val psiFile = manager?.getPsiFile(file)
-
-        if (service == null || psiFile == null) return AnnotatedString(code, spanStyles)
+        val psiFile = manager.getPsiFile(file) ?: return AnnotatedString(code, spanStyles)
 
         // Visible Highlighting
+
+        // Highlight Styles
+        spanStyles.addAll(PsiService.collectHighlights(psiFile, visibleIndexRange).mapNotNull { (range, style) ->
+            if (!range.isEmpty()) {
+                AnnotatedString.Range(SpanStyle(color = theme.getColor(style)), range.first, range.last + 1)
+            } else null
+        })
+
         // Annotation Styles
-        allAnnotations = service.collectNotations(psiFile)
+        allAnnotations = PsiService.collectNotations(psiFile)
         spanStyles.addAll(allAnnotations.mapNotNull {
             val annoCodeStyle = it.severity.color ?: CodeStyle.BASE0
             val style = SpanStyle(textDecoration = TextDecoration.Underline, color = theme.getColor(annoCodeStyle))
             if (!it.range.isEmpty()) {
                 AnnotatedString.Range(style, it.range.first, it.range.last + 1)
-            } else null
-        })
-
-        // Highlight Styles
-        spanStyles.addAll(service.collectHighlights(psiFile, visibleIndexRange).mapNotNull { (range, style) ->
-            if (!range.isEmpty()) {
-                AnnotatedString.Range(SpanStyle(color = theme.getColor(style)), range.first, range.last + 1)
             } else null
         })
 
@@ -176,7 +176,7 @@ fun CodeEditor(
                     analyticsAreUpToDate = false
                     val startIndex = oldText.commonPrefixWith(newText).length
                     val length = newText.length - oldText.length
-                    manager?.inserted(file, startIndex, length)
+                    manager.inserted(file, startIndex, length)
                 }
 
                 newText.length < oldText.length -> {
@@ -184,7 +184,7 @@ fun CodeEditor(
                     analyticsAreUpToDate = false
                     val startIndex = newText.commonPrefixWith(oldText).length
                     val length = oldText.length - newText.length
-                    manager?.deleted(file, startIndex, startIndex + length)
+                    manager.deleted(file, startIndex, startIndex + length)
                 }
 
                 newText != oldText -> {
@@ -203,8 +203,8 @@ fun CodeEditor(
     suspend fun locatePSIElement() {
         val time = measureTime {
             val caretPosition = textFieldValue.selection.start
-            currentElement = manager?.getPsiFile(file)?.let {
-                lang?.psiService?.findElementAt(it, caretPosition)
+            currentElement = manager.getPsiFile(file)?.let {
+                PsiService.findElementAt(it, caretPosition)
             }
 
         }
@@ -212,7 +212,7 @@ fun CodeEditor(
     }
 
     suspend fun psiHasChanged(psiFile: PsiFile) {
-        allAnnotations = service?.collectNotations(psiFile) ?: emptySet()
+        allAnnotations = PsiService.collectNotations(psiFile)
         onTextChange(textFieldValue.copy(psiFile.content))
         locatePSIElement()
         analyticsAreUpToDate = true
@@ -221,9 +221,9 @@ fun CodeEditor(
     fun run() {
         coroutineScope.launch {
             withContext(Dispatchers.Default) {
-                lang?.runConfig?.onFile(project, file)
-                nativeLog("Run $manager ${manager?.printCache()} ${manager?.getPsiFile(file)}")
-                val psiFile = manager?.getPsiFile(file) ?: return@withContext
+                lang.runConfig.onFile(project, file)
+                nativeLog("Run $manager ${manager.printCache()} ${manager.getPsiFile(file)}")
+                val psiFile = manager.getPsiFile(file) ?: return@withContext
                 psiHasChanged(psiFile)
             }
         }
@@ -232,7 +232,7 @@ fun CodeEditor(
     fun analyze() {
         coroutineScope.launch {
             withContext(Dispatchers.Default) {
-                val psiFile = manager?.updatePsi(file) ?: return@withContext
+                val psiFile = manager.updatePsi(file)
                 psiHasChanged(psiFile)
             }
         }
@@ -260,7 +260,7 @@ fun CodeEditor(
                             val lineContentBefore = textFieldValue.annotatedString.substring(lineStart, textFieldValue.selection.start)
 
                             completions = if (showIfPrefixIsEmpty || lineContentBefore.isNotEmpty()) {
-                                lang?.completionProvider?.fetchCompletions(lineContentBefore, currentElement, manager.getPsiFile(file)) ?: emptyList()
+                                lang.completionProvider?.fetchCompletions(lineContentBefore, currentElement, manager.getPsiFile(file)) ?: emptyList()
                             } else {
                                 emptyList()
                             }
@@ -681,8 +681,8 @@ fun CodeEditor(
             hoverPosition?.let { hoverPosition ->
                 val inCodePosition = Offset(hoverPosition.x - rowHeaderWidth, hoverPosition.y)
                 val index = textLayout?.getOffsetForPosition(inCodePosition) ?: return@let
-                val psiFile = manager?.getPsiFile(file) ?: return@let
-                val annotations = service?.collectNotations(psiFile, index..index) ?: return@let
+                val psiFile = manager.getPsiFile(file) ?: return@let
+                val annotations = PsiService.collectNotations(psiFile, index..index)
                 localAnnotations = annotations
             }
         }
@@ -691,7 +691,7 @@ fun CodeEditor(
 
     LaunchedEffect(allAnnotations) {
         val time = measureTime {
-            val psiFile = manager?.getPsiFile(file) ?: return@LaunchedEffect
+            val psiFile = manager.getPsiFile(file) ?: return@LaunchedEffect
             allAnnotations.forEach {
                 nativeLog(it.createConsoleMessage(psiFile))
             }
@@ -719,10 +719,10 @@ fun CodeEditor(
             references = if (root == null) {
                 emptyList()
             } else {
-                service?.findReferences(root) ?: emptyList()
+                PsiService.findReferences(root)
             }
 
-            onElementSelected(file, service?.path(element) ?: emptyList())
+            onElementSelected(file, PsiService.path(element))
         }
     }
 }

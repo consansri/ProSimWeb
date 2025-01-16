@@ -1,8 +1,11 @@
 package cengine.lang.mif
 
+import cengine.lang.asm.AsmLang
 import cengine.lang.asm.ast.AsmCodeGenerator
+import cengine.lang.asm.ast.impl.AsmFile
 import cengine.lang.obj.elf.LinkerScript
 import cengine.lang.obj.elf.Shdr
+import cengine.psi.PsiManager
 import cengine.util.buffer.Buffer
 import cengine.util.integer.BigInt
 import cengine.util.integer.BigInt.Companion.toBigInt
@@ -11,7 +14,7 @@ import cengine.util.integer.UInt32
 import cengine.util.integer.UInt64
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
-class MifGenerator<T : Buffer<*>>(linkerScript: LinkerScript,private val addrSize: IntNumberStatic<*>, val bufferInit: () -> T) : AsmCodeGenerator<AsmCodeGenerator.Section>(linkerScript) {
+class MifGenerator<T : Buffer<*>>(linkerScript: LinkerScript, psiManager: PsiManager<*, *>,private val addrSize: IntNumberStatic<*>, val bufferInit: () -> T) : AsmCodeGenerator<AsmCodeGenerator.Section>(linkerScript, psiManager) {
     override val fileSuffix: String
         get() = ".mif"
 

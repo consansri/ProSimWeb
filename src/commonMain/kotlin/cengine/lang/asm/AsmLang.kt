@@ -7,12 +7,13 @@ import cengine.editor.highlighting.HighlightProvider
 import cengine.lang.LanguageService
 import cengine.lang.Runner
 import cengine.lang.asm.ast.TargetSpec
+import cengine.lang.asm.ast.impl.AsmFile
 import cengine.lang.asm.features.AsmAnnotator
 import cengine.lang.asm.features.AsmCompleter
 import cengine.lang.asm.features.AsmFormatter
 import cengine.lang.asm.features.AsmHighlighter
-import cengine.psi.core.PsiService
-import cengine.psi.impl.PsiServiceImpl
+import cengine.psi.PsiManager
+import cengine.vfs.VFileSystem
 
 class AsmLang(spec: TargetSpec<*>) : LanguageService() {
 
@@ -23,8 +24,6 @@ class AsmLang(spec: TargetSpec<*>) : LanguageService() {
     var spec: TargetSpec<*> = spec
         set(value) {
             field = value
-            psiParser = AsmPsiParser(value, this)
-            psiService = PsiServiceImpl(psiParser)
             completionProvider = AsmCompleter(value)
             highlightProvider = AsmHighlighter(value)
         }
@@ -33,9 +32,6 @@ class AsmLang(spec: TargetSpec<*>) : LanguageService() {
     
     override val name: String = "Assembly"
     override val fileSuffix: String = ".s"
-    override var psiParser: AsmPsiParser = AsmPsiParser(spec, this)
-    
-    override var psiService: PsiService = PsiServiceImpl(psiParser)
     
     override var completionProvider: CompletionProvider = AsmCompleter(spec)
     
@@ -44,4 +40,15 @@ class AsmLang(spec: TargetSpec<*>) : LanguageService() {
     override var highlightProvider: HighlightProvider = AsmHighlighter(spec)
     
     override val formatter: Formatter = AsmFormatter()
+
+    override fun createManager(vfs: VFileSystem): PsiManager<*, *> = PsiManager<AsmLang, AsmFile>(
+        vfs,
+        PsiManager.Mode.TEXT,
+        fileSuffix,
+        AsmPsiParser(spec, this)
+    ){
+        completionProvider.buildCompletionSet(it)
+        annotationProvider.updateAnnotations(it)
+    }
+
 }

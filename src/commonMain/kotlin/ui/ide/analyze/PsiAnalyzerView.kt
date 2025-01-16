@@ -10,6 +10,7 @@ import androidx.compose.ui.text.style.TextAlign
 import cengine.editor.annotation.Severity.*
 import cengine.psi.PsiManager
 import cengine.psi.core.PsiFile
+import cengine.psi.core.PsiService
 import ui.uilib.UIState
 import ui.uilib.interactable.CButton
 import ui.uilib.label.CLabel
@@ -27,7 +28,6 @@ fun PsiAnalyzerView(
     val scale = UIState.Scale.value
     val icons = UIState.Icon.value
 
-    val psiService = psiManager.lang.psiService
     val tabs = psiManager.psiCache.map { TabItem(it, icons.file, it.key.toString()) }
 
     TabbedPane(tabs, modifier = Modifier.fillMaxSize(), content = { tabIndex ->
@@ -35,8 +35,8 @@ fun PsiAnalyzerView(
         key(tabs[tabIndex].value.value.annotations) {
             val (path, psiFile) = tabs[tabIndex].value
             var annotations by remember {
-                mutableStateOf(psiService.annotationsMapped(psiFile).toList().sortedBy { it.first.range.first }.flatMap {
-                    val psiPath = psiService.path(it.first).joinToString(" > ") { element -> element.pathName }
+                mutableStateOf(PsiService.annotationsMapped(psiFile).toList().sortedBy { it.first.range.first }.flatMap {
+                    val psiPath = PsiService.path(it.first).joinToString(" > ") { element -> element.pathName }
                     it.second.map { annotation -> psiPath to annotation }
                 })
             }
@@ -58,8 +58,8 @@ fun PsiAnalyzerView(
 
                         CButton({
                             psiManager.queueUpdate(psiFile.file) {
-                                annotations = psiService.annotationsMapped(psiFile).toList().sortedBy { it.first.range.first }.flatMap {
-                                    val psiPath = psiService.path(it.first).joinToString(" > ") { element -> element.pathName }
+                                annotations = PsiService.annotationsMapped(psiFile).toList().sortedBy { it.first.range.first }.flatMap {
+                                    val psiPath = PsiService.path(it.first).joinToString(" > ") { element -> element.pathName }
                                     it.second.map { annotation -> psiPath to annotation }
                                 }
                             }

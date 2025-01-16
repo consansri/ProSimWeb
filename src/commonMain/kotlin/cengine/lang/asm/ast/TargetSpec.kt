@@ -1,5 +1,7 @@
 package cengine.lang.asm.ast
 
+import cengine.lang.asm.AsmLang
+import cengine.lang.asm.ast.impl.AsmFile
 import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.asm.ast.target.ikrmini.IKRMiniSpec
 import cengine.lang.asm.ast.target.ikrrisc2.IKRR2Spec
@@ -7,6 +9,7 @@ import cengine.lang.asm.ast.target.riscv.rv32.RV32Spec
 import cengine.lang.asm.ast.target.riscv.rv64.RV64Spec
 import cengine.lang.asm.ast.target.t6502.T6502Spec
 import cengine.lang.obj.elf.LinkerScript
+import cengine.psi.PsiManager
 import cengine.util.integer.IntNumberStatic
 import emulator.EmuLink
 
@@ -34,7 +37,7 @@ interface TargetSpec<T : AsmCodeGenerator<*>> {
     val allDirs: List<DirTypeInterface>
 
     fun createLexer(input: String): AsmLexer = AsmLexer(input, this)
-    fun createGenerator(): T
+    fun createGenerator(manager: PsiManager<*, *>): T
 
     override fun toString(): String
 

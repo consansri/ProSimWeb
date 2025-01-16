@@ -5,6 +5,7 @@ import cengine.lang.asm.Disassembler
 import cengine.lang.asm.Initializer
 import cengine.lang.mif.MifGenerator.Radix
 import cengine.lang.mif.MifLang
+import cengine.psi.PsiManager
 import cengine.psi.core.PsiElement
 import cengine.psi.core.PsiElementVisitor
 import cengine.psi.core.PsiFile
@@ -19,10 +20,12 @@ import kotlin.math.log2
 import kotlin.math.roundToInt
 
 class MifPsiFile(
-    override val file: VirtualFile, var program: MifNode.Program,
+    override val file: VirtualFile,
+    override val manager: PsiManager<*, *>,
+    var program: MifNode.Program,
 ) : PsiFile, Initializer {
 
-    override val lang: MifLang get() = MifLang
+
     override val children: List<PsiElement>
         get() = program.children
 
@@ -34,13 +37,6 @@ class MifPsiFile(
     override var range: IntRange = (children.minOf { it.range.first })..(children.maxOf { it.range.last })
 
     override val id: String = file.name
-
-    override fun update() {
-        // Reparse the file and update children
-        val newFile = lang.psiParser.parse(file)
-        program = newFile.program
-        range = newFile.range
-    }
 
     override fun accept(visitor: PsiElementVisitor) {
         visitor.visitFile(this)

@@ -1,15 +1,18 @@
 package cengine.lang.asm.ast.target.riscv.rv64
 
+import cengine.lang.asm.AsmLang
 import cengine.lang.asm.ast.DirTypeInterface
 import cengine.lang.asm.ast.InstrTypeInterface
 import cengine.lang.asm.ast.RegTypeInterface
 import cengine.lang.asm.ast.TargetSpec
 import cengine.lang.asm.ast.impl.ASDirType
+import cengine.lang.asm.ast.impl.AsmFile
 import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.asm.ast.target.riscv.RVBaseRegs
 import cengine.lang.asm.ast.target.riscv.RVCsr
 import cengine.lang.asm.ast.target.riscv.RVDirType
 import cengine.lang.obj.elf.*
+import cengine.psi.PsiManager
 import cengine.util.integer.BigInt
 import cengine.util.integer.Int32
 import cengine.util.integer.UInt64
@@ -35,7 +38,7 @@ data object RV64Spec : TargetSpec<ELFGenerator> {
     override val allInstrs: List<InstrTypeInterface> = RV64InstrType.entries
     override val allDirs: List<DirTypeInterface> = RVDirType.entries + ASDirType.entries
 
-    override fun createGenerator(): ELFGenerator = ExecELFGenerator(
+    override fun createGenerator(manager: PsiManager<*, *>): ELFGenerator = ExecELFGenerator(
         ei_class = E_IDENT.ELFCLASS64,
         ei_data = E_IDENT.ELFDATA2LSB,
         ei_osabi = E_IDENT.ELFOSABI_SYSV,
@@ -47,7 +50,8 @@ data object RV64Spec : TargetSpec<ELFGenerator> {
             override val dataStart: BigInt? = null
             override val rodataStart: BigInt? = null
             override val segmentAlign: UInt64 = 0x40000U.toUInt64()
-        }
+        },
+        psiManager = manager
     )
 
     override fun toString(): String = name

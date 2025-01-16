@@ -1,6 +1,7 @@
 package emulator.archs.riscv.riscv64
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt64
 import emulator.archs.riscv.RV
@@ -24,7 +25,7 @@ class RV64CSRRegs : RegFile<UInt64> {
         regValues[index] = value.toUInt64()
     }
 
-    override fun isVisible(index: Int): Boolean= when (index) {
+    override fun isVisible(index: Int): Boolean = when (index) {
         // User
         in 0..0xFF -> when (index) {
             in 0x0..0x5,
@@ -79,12 +80,12 @@ class RV64CSRRegs : RegFile<UInt64> {
             else -> false
         } // Standard read/write
         in 0x700..0x79f -> false // Standard read/write
-        in 0x7a0..0x7af -> when(index){
+        in 0x7a0..0x7af -> when (index) {
             in 0x7a0..0x7a3 -> true
 
             else -> false
         } // Standard read/write debug CSRs
-        in 0x7b0..0x7bf -> when(index){
+        in 0x7b0..0x7bf -> when (index) {
             in 0x7b0..0x7b2 -> true
 
             else -> false
@@ -107,7 +108,7 @@ class RV64CSRRegs : RegFile<UInt64> {
 
     override fun clear() {
         for (i in regValues.indices) {
-            regValues[i] = UInt64.ZERO
+            if (regValues[i] != UInt64.ZERO) regValues[i] = UInt64.ZERO
         }
     }
 }

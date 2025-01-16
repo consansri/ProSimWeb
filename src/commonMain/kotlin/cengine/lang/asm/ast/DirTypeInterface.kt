@@ -13,5 +13,5 @@ interface DirTypeInterface {
     val rule: Rule?
     val typeName: String
     fun buildDirectiveContent(lexer: AsmLexer, targetSpec: TargetSpec<*>): ASNode.Directive?
-    fun build(builder: AsmCodeGenerator<*>, dir: ASNode.Directive)
+    suspend fun build(builder: AsmCodeGenerator<*>, dir: ASNode.Directive)
 }

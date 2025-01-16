@@ -1,8 +1,11 @@
 package cengine.lang.obj.elf
 
+import cengine.lang.asm.AsmLang
 import cengine.lang.asm.ast.AsmCodeGenerator
 import cengine.lang.asm.ast.AsmCodeGenerator.*
+import cengine.lang.asm.ast.impl.AsmFile
 import cengine.lang.obj.elf.Shdr.Companion.SHF_ALLOC
+import cengine.psi.PsiManager
 import cengine.util.Endianness
 import cengine.util.buffer.Int8Buffer
 import cengine.util.buffer.Int8Buffer.Companion.toASCIIByteArray
@@ -23,7 +26,8 @@ abstract class ELFGenerator(
     val e_machine: Elf_Half,
     var e_flags: Elf_Word,
     linkerScript: LinkerScript,
-) : AsmCodeGenerator<ELFGenerator.ELFSection>(linkerScript) {
+    psiManager: PsiManager<*, *>
+) : AsmCodeGenerator<ELFGenerator.ELFSection>(linkerScript, psiManager) {
 
     override val fileSuffix: String
         get() = ".o"

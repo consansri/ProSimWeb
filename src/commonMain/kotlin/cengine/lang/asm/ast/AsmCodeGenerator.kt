@@ -3,13 +3,14 @@ package cengine.lang.asm.ast
 import cengine.lang.asm.ast.impl.ASNode
 import cengine.lang.obj.elf.LinkerScript
 import cengine.lang.obj.elf.Shdr
+import cengine.psi.PsiManager
 import cengine.util.buffer.Buffer
 import cengine.util.integer.BigInt
 import cengine.util.integer.BigInt.Companion.toBigInt
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt64
 
-abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(protected val linkerScript: LinkerScript) {
+abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(protected val linkerScript: LinkerScript, val psiManager: PsiManager<*, *>) {
 
     abstract val fileSuffix: String
 
@@ -23,10 +24,10 @@ abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(protected val link
 
     protected abstract fun writeFile(): ByteArray
 
-    fun generate(ast: ASNode.Program): ByteArray {
+    suspend fun generate(ast: ASNode.Program): ByteArray {
         val statements = ast.getAllStatements()
-        statements.forEach {
-            it.execute()
+        statements.forEach { stmnt ->
+            execute(stmnt)
         }
 
         orderSectionsAndResolveAddresses()
@@ -60,33 +61,33 @@ abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(protected val link
         reservations.clear()
     }
 
-    fun ASNode.Statement.execute() {
-        if (this.label != null) {
-            val added = addLabel(label.identifier)
+    suspend fun execute(stmnt: ASNode.Statement) {
+        if (stmnt.label != null) {
+            val added = addLabel(stmnt.label.identifier)
             if (!added) {
-                this.addError("Label ${label.identifier} was already defined!")
+                stmnt.addError("Label ${stmnt.label.identifier} was already defined!")
             }
         }
 
-        when (this) {
+        when (stmnt) {
             is ASNode.Statement.Dir -> {
                 try {
-                    this.dir.type.build(this@AsmCodeGenerator, this.dir)
+                    stmnt.dir.type.build(this@AsmCodeGenerator, stmnt.dir)
                 } catch (e: NotImplementedError) {
-                    dir.addError(e.message.toString())
+                    stmnt.dir.addError(e.message.toString())
                 }
             }
 
             is ASNode.Statement.Empty -> {}
 
             is ASNode.Statement.Instr -> {
-                instruction.nodes.filterIsInstance<ASNode.NumericExpr>().forEach {
+                stmnt.instruction.nodes.filterIsInstance<ASNode.NumericExpr>().forEach {
                     it.assign(symbols, currentSection, currentSection.content.size.toUInt())
                 }
                 try {
-                    instruction.type.resolve(this@AsmCodeGenerator, instruction)
+                    stmnt.instruction.type.resolve(this@AsmCodeGenerator, stmnt.instruction)
                 } catch (e: Exception) {
-                    instruction.addError(e.message.toString())
+                    stmnt.instruction.addError(e.message.toString())
                 }
             }
 

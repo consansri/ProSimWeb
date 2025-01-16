@@ -42,8 +42,9 @@ class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, "Assemble Binary") {
 
         when (type) {
             Type.EXECUTABLE -> {
-                project.getManager(file)?.let {
-                    executable(project.fileSystem, it, file)
+                val manager = project.getManager(file)
+                if(manager != null){
+                    executable(project.fileSystem, manager, file)
                 }
             }
         }
@@ -53,7 +54,7 @@ class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, "Assemble Binary") {
         val asmFile = manager.updatePsi(file) as AsmFile
         nativeLog("Updated PsiFile $asmFile ${manager.printCache()}")
 
-        val generator = lang.spec.createGenerator()
+        val generator = lang.spec.createGenerator(manager)
 
         val outputPath = FPath.of(vfs, AsmLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + generator.fileSuffix)
 

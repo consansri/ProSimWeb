@@ -1,35 +1,27 @@
 package cengine.lang.obj.elf
 
+import cengine.editor.annotation.Annotation
 import cengine.lang.asm.Disassembler
 import cengine.lang.asm.Initializer
+import cengine.lang.obj.ObjPsiFile
+import cengine.psi.PsiManager
+import cengine.psi.core.PsiElement
+import cengine.psi.core.PsiElementVisitor
+import cengine.psi.core.PsiFile
 import cengine.util.integer.BigInt
 import cengine.util.integer.Int16.Companion.toInt16
 import cengine.util.integer.Int8.Companion.toInt8
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt8.Companion.toUInt8
+import cengine.vfs.VirtualFile
 import emulator.kit.memory.Memory
 
-sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
+sealed class ELFFile(file: VirtualFile, manager: PsiManager<*,*>) : ObjPsiFile(file, manager) {
 
-    companion object {
-        fun parse(name: String, content: ByteArray): ELFFile? {
-            if (!name.endsWith(".o")) return null
+    val bytes = file.getContent()
 
-            val e_ident = E_IDENT.extractFrom(content)
-
-            return when (e_ident.ei_class) {
-                E_IDENT.ELFCLASS32 -> ELF32File(name, content)
-                E_IDENT.ELFCLASS64 -> ELF64File(name, content)
-                else -> null
-            }
-        }
-    }
-
-    override val id: String
-        get() = name
-
-    val e_ident: E_IDENT = eIdent(content)
-    val ehdr: Ehdr = ehdr(content, e_ident)
+    val e_ident: E_IDENT = eIdent(bytes)
+    val ehdr: Ehdr = ehdr(bytes, e_ident)
 
     val sectionHeaders: List<Shdr> = readSectionHeaders()
     val programHeaders: List<Phdr> = readProgramHeaders()
@@ -42,7 +34,7 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
     val shstrtab: Shdr? = sectionHeaders.getOrNull(ehdr.e_shstrndx.toInt())
     val strTab = sectionHeaders.firstOrNull { getSectionName(it) == ".strtab" }
 
-    override fun initialize(memory: Memory<*,*>) {
+    override fun initialize(memory: Memory<*, *>) {
         for (phdr in programHeaders) {
 
             val startAddr = when (phdr) {
@@ -60,7 +52,7 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                 is ELF64_Phdr -> phdr.p_filesz.toInt()
             }
 
-            content.copyOfRange(startOffset, startOffset + size).forEachIndexed { index, byte ->
+            bytes.copyOfRange(startOffset, startOffset + size).forEachIndexed { index, byte ->
                 memory.storeEndianAware(startAddr + index, byte.toInt8())
             }
         }
@@ -116,7 +108,7 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                 is ELF64_Phdr -> phdr.p_filesz.toInt()
             }
 
-            val segmentBytes = content.copyOfRange(startOffset, startOffset + size).map { byte: Byte ->
+            val segmentBytes = bytes.copyOfRange(startOffset, startOffset + size).map { byte: Byte ->
                 byte.toUByte().toUInt8()
             }
 
@@ -131,14 +123,14 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
             is ELF32_Ehdr -> {
                 val offset = ehdr.e_shoff.toInt()
                 List(ehdr.e_shnum.toInt()) { index ->
-                    shdr(content, e_ident, offset + index * ehdr.e_shentsize.toInt())
+                    shdr(bytes, e_ident, offset + index * ehdr.e_shentsize.toInt())
                 }
             }
 
             is ELF64_Ehdr -> {
                 val offset = ehdr.e_shoff.toInt()
                 List(ehdr.e_shnum.toInt()) { index ->
-                    shdr(content, e_ident, offset + index * ehdr.e_shentsize.toInt())
+                    shdr(bytes, e_ident, offset + index * ehdr.e_shentsize.toInt())
                 }
             }
         }
@@ -149,14 +141,14 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
             is ELF32_Ehdr -> {
                 val offset = ehdr.e_phoff.toInt()
                 List(ehdr.e_phnum.toInt()) { index ->
-                    phdr(content, e_ident, offset + index * ehdr.e_phentsize.toInt())
+                    phdr(bytes, e_ident, offset + index * ehdr.e_phentsize.toInt())
                 }
             }
 
             is ELF64_Ehdr -> {
                 val offset = ehdr.e_phoff.toInt()
                 List(ehdr.e_phnum.toInt()) { index ->
-                    phdr(content, e_ident, offset + index * ehdr.e_phentsize.toInt())
+                    phdr(bytes, e_ident, offset + index * ehdr.e_phentsize.toInt())
                 }
             }
         }
@@ -169,14 +161,14 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                 is ELF32_Shdr -> {
                     val offset = it.sh_offset.toInt()
                     List(it.sh_size.toInt() / it.sh_entsize.toInt()) { index ->
-                        sym(content, e_ident, offset + index * it.sh_entsize.toInt())
+                        sym(bytes, e_ident, offset + index * it.sh_entsize.toInt())
                     }
                 }
 
                 is ELF64_Shdr -> {
                     val offset = it.sh_offset.toInt()
                     List(it.sh_size.toInt() / it.sh_entsize.toInt()) { index ->
-                        sym(content, e_ident, offset + index * it.sh_entsize.toInt())
+                        sym(bytes, e_ident, offset + index * it.sh_entsize.toInt())
                     }
                 }
             }
@@ -190,14 +182,14 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                 is ELF32_Shdr -> {
                     val offset = it.sh_offset.toInt()
                     List(it.sh_size.toInt() / it.sh_entsize.toInt()) { index ->
-                        dyn(content, e_ident, offset + index * it.sh_entsize.toInt())
+                        dyn(bytes, e_ident, offset + index * it.sh_entsize.toInt())
                     }
                 }
 
                 is ELF64_Shdr -> {
                     val offset = it.sh_offset.toInt()
                     List(it.sh_size.toInt() / it.sh_entsize.toInt()) { index ->
-                        dyn(content, e_ident, offset + index * it.sh_entsize.toInt())
+                        dyn(bytes, e_ident, offset + index * it.sh_entsize.toInt())
                     }
                 }
             }
@@ -213,7 +205,7 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                     is ELF32_Shdr -> {
                         val offset = section.sh_offset.toInt()
                         val relEntries = List(section.sh_size.toInt() / section.sh_entsize.toInt()) { index ->
-                            rel(content, e_ident, offset + index * section.sh_entsize.toInt())
+                            rel(bytes, e_ident, offset + index * section.sh_entsize.toInt())
                         }
                         sectionName to relEntries
                     }
@@ -221,7 +213,7 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                     is ELF64_Shdr -> {
                         val offset = section.sh_offset.toInt()
                         val relEntries = List(section.sh_size.toInt() / section.sh_entsize.toInt()) { index ->
-                            rel(content, e_ident, offset + index * section.sh_entsize.toInt())
+                            rel(bytes, e_ident, offset + index * section.sh_entsize.toInt())
                         }
                         sectionName to relEntries
                     }
@@ -238,7 +230,7 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                     is ELF32_Shdr -> {
                         val offset = section.sh_offset.toInt()
                         val relEntries = List(section.sh_size.toInt() / section.sh_entsize.toInt()) { index ->
-                            rela(content, e_ident, offset + index * section.sh_entsize.toInt())
+                            rela(bytes, e_ident, offset + index * section.sh_entsize.toInt())
                         }
                         sectionName to relEntries
                     }
@@ -246,7 +238,7 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                     is ELF64_Shdr -> {
                         val offset = section.sh_offset.toInt()
                         val relEntries = List(section.sh_size.toInt() / section.sh_entsize.toInt()) { index ->
-                            rela(content, e_ident, offset + index * section.sh_entsize.toInt())
+                            rela(bytes, e_ident, offset + index * section.sh_entsize.toInt())
                         }
                         sectionName to relEntries
                     }
@@ -262,14 +254,14 @@ sealed class ELFFile(val name: String, val content: ByteArray) : Initializer {
                 is ELF32_Shdr -> {
                     val offset = it.sh_offset.toInt()
                     List(it.sh_size.toInt() / it.sh_entsize.toInt()) { index ->
-                        nhdr(content, e_ident, offset + index * it.sh_entsize.toInt())
+                        nhdr(bytes, e_ident, offset + index * it.sh_entsize.toInt())
                     }
                 }
 
                 is ELF64_Shdr -> {
                     val offset = it.sh_offset.toInt()
                     List(it.sh_size.toInt() / it.sh_entsize.toInt()) { index ->
-                        nhdr(content, e_ident, offset + index * it.sh_entsize.toInt())
+                        nhdr(bytes, e_ident, offset + index * it.sh_entsize.toInt())
                     }
                 }
             }

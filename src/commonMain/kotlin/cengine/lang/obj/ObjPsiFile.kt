@@ -1,17 +1,33 @@
 package cengine.lang.obj
 
 import cengine.editor.annotation.Annotation
-import cengine.lang.LanguageService
-import cengine.psi.impl.PsiFileImpl
+import cengine.lang.asm.Initializer
+import cengine.psi.PsiManager
+import cengine.psi.core.PsiElement
+import cengine.psi.core.PsiElementVisitor
+import cengine.psi.core.PsiFile
 import cengine.vfs.VirtualFile
 
-class ObjPsiFile(file: VirtualFile): PsiFileImpl(file) {
-    override val annotations: List<Annotation> = emptyList()
-    override val additionalInfo: String = ""
-    override var range: IntRange = IntRange.EMPTY
+abstract class ObjPsiFile(final override val file: VirtualFile, final override val manager: PsiManager<*, *>): PsiFile, Initializer {
 
-    override val lang: LanguageService get() = ObjLang
-    override fun update() {
+    // PsiFile
+
+    final override val children: List<PsiElement>
+        get() = emptyList()
+    final override var parent: PsiElement? = null
+
+    final override val annotations: List<Annotation> = emptyList()
+    final override val additionalInfo: String = ""
+    final override var range: IntRange = IntRange.EMPTY
+
+    override fun accept(visitor: PsiElementVisitor) {
 
     }
+
+    // Initializer
+
+    final override val id: String
+        get() = file.name
+
+
 }

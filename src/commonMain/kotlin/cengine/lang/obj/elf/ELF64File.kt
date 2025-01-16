@@ -1,9 +1,9 @@
 package cengine.lang.obj.elf
 
+import cengine.psi.PsiManager
 import cengine.vfs.VirtualFile
 
-class ELF64File(name: String, content: ByteArray) : ELFFile(name, content) {
-    constructor(file: VirtualFile) : this(file.name, file.getContent())
+class ELF64File(file: VirtualFile, manager: PsiManager<*,*>) : ELFFile(file, manager) {
 
     init {
         if (ehdr !is ELF64_Ehdr) throw InvalidElfComponent(this, ehdr)
@@ -14,7 +14,7 @@ class ELF64File(name: String, content: ByteArray) : ELFFile(name, content) {
         if (shstrtab !is ELF64_Shdr) return "[shstrtab missing]"
         val stringTableOffset = shstrtab.sh_offset.toInt()
         val nameOffset = section.sh_name.toInt()
-        return content.sliceArray(stringTableOffset + nameOffset until content.size)
+        return bytes.sliceArray(stringTableOffset + nameOffset until bytes.size)
             .takeWhile { it != 0.toByte() }
             .toByteArray()
             .decodeToString()
@@ -23,7 +23,7 @@ class ELF64File(name: String, content: ByteArray) : ELFFile(name, content) {
     override fun getStrTabString(namendx: Int): String {
         if (strTab !is ELF64_Shdr) return "[strTab missing]"
         val strTabOffset = strTab.sh_offset.toInt()
-        return content.sliceArray(strTabOffset + namendx until content.size)
+        return bytes.sliceArray(strTabOffset + namendx until bytes.size)
             .takeWhile { it != 0.toByte() }
             .toByteArray()
             .decodeToString()

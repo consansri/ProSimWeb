@@ -21,10 +21,12 @@ import kotlinx.coroutines.*
  * @property lang the language service for handling language-specific operations
  * @property psiParser the parser for creating PSI files
  */
-class PsiManager<L : LanguageService, F: PsiFile>(
-    vfs: VFileSystem,
-    val lang: L,
-    val psiParser: PsiParser<F>
+class PsiManager<L : LanguageService, F : PsiFile>(
+    val vfs: VFileSystem,
+    val mode: Mode,
+    val fileSuffix: String,
+    val psiParser: PsiParser<F>,
+    val updateAnalytics: (psiFile: F) -> Unit
 ) {
     private var job: Job? = null
     val psiCache = mutableStateMapOf<FPath, F>()
@@ -50,22 +52,25 @@ class PsiManager<L : LanguageService, F: PsiFile>(
     }
 
     /**
+     * Searches for a file with [relativePath] if it can be found it will update it's psi.
+     *
+     * @param relativePath the path where to search for the file
+     */
+    suspend fun findAndUpdate(relativePath: FPath): F? {
+        val vfile = vfs.findFile(relativePath) ?: return null
+        return updatePsi(vfile)
+    }
+
+    /**
      * Updates the PSI for a given file, creating it if it doesn't exist.
      *
      * @param file the file to update
      * @return the updated or newly created PSI file
      */
     suspend fun updatePsi(file: VirtualFile): F {
-        val psiFile = psiCache[file.path]
-        return if (psiFile == null) {
-            val created = createPsiFile(file)
-            lang.updateAnalytics(created)
-            created
-        } else {
-            psiFile.update()
-            lang.updateAnalytics(psiFile)
-            psiFile
-        }
+        val created = parsePsiFile(file)
+        updateAnalytics(created)
+        return created
     }
 
     /**
@@ -112,7 +117,7 @@ class PsiManager<L : LanguageService, F: PsiFile>(
         queueUpdate(file, onfinish)
         psiUpdateScope.launch {
             onfinish(inserted(file, index, length) ?: run {
-                createPsiFile(file)
+                parsePsiFile(file)
             })
         }
     }
@@ -129,7 +134,7 @@ class PsiManager<L : LanguageService, F: PsiFile>(
         queueUpdate(file, onfinish)
         psiUpdateScope.launch {
             onfinish(deleted(file, start, end) ?: run {
-                createPsiFile(file)
+                parsePsiFile(file)
             })
         }
     }
@@ -143,8 +148,8 @@ class PsiManager<L : LanguageService, F: PsiFile>(
     private fun createPsi(file: VirtualFile, onfinish: suspend (PsiFile) -> Unit = {}) {
         job?.cancel()
         job = psiUpdateScope.launch {
-            val psiFile = createPsiFile(file)
-            lang.updateAnalytics(psiFile)
+            val psiFile = parsePsiFile(file)
+            updateAnalytics(psiFile)
             onfinish(psiFile)
         }
     }
@@ -154,7 +159,7 @@ class PsiManager<L : LanguageService, F: PsiFile>(
      *
      * @param psiFile the new PSI file
      */
-    private fun replacePsi(psiFile: F){
+    private fun replacePsi(psiFile: F) {
         psiCache.remove(psiFile.file.path)
         psiCache[psiFile.file.path] = psiFile
     }
@@ -174,9 +179,9 @@ class PsiManager<L : LanguageService, F: PsiFile>(
      * @param file the virtual file to parse
      * @return the newly created PSI file
      */
-    private suspend fun createPsiFile(file: VirtualFile): F {
+    private suspend fun parsePsiFile(file: VirtualFile): F {
         return withContext(Dispatchers.Default) {
-            val psiFile = psiParser.parse(file)
+            val psiFile = psiParser.parse(file, this@PsiManager)
             replacePsi(psiFile)
             psiFile
         }
@@ -206,15 +211,20 @@ class PsiManager<L : LanguageService, F: PsiFile>(
      */
     inner class VFSListener : FileChangeListener {
         override fun onFileChanged(file: VirtualFile) {
-            if (file.name.endsWith(lang.fileSuffix)) queueUpdate(file)
+            if (file.name.endsWith(fileSuffix)) queueUpdate(file)
         }
 
         override fun onFileCreated(file: VirtualFile) {
-            if (file.name.endsWith(lang.fileSuffix)) createPsi(file)
+            if (file.name.endsWith(fileSuffix)) createPsi(file)
         }
 
         override fun onFileDeleted(file: VirtualFile) {
-            if (file.name.endsWith(lang.fileSuffix)) removePsi(file)
+            if (file.name.endsWith(fileSuffix)) removePsi(file)
         }
+    }
+
+    enum class Mode{
+        TEXT,
+        BINARY
     }
 }

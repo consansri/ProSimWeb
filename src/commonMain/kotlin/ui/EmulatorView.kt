@@ -16,11 +16,18 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import cengine.lang.asm.Initializer
 import cengine.lang.mif.MifLang
+import cengine.lang.mif.ast.MifPsiFile
 import cengine.lang.obj.ObjLang
+import cengine.lang.obj.ObjPsiFile
 import cengine.lang.obj.elf.ELFFile
 import cengine.project.Project
+import cengine.psi.PsiManager
 import emulator.kit.Architecture
 import emulator.kit.nativeError
+import emulator.kit.nativeLog
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import ui.emulator.ArchitectureOverview
 import ui.emulator.ExecutionView
@@ -37,7 +44,7 @@ import ui.uilib.layout.ResizableBorderPanels
 import ui.uilib.layout.VerticalToolBar
 
 @Composable
-fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architecture: Architecture<*,*>?, close: () -> Unit) {
+fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architecture: Architecture<*, *>?, close: () -> Unit) {
 
     val theme = UIState.Theme.value
     val icons = UIState.Icon.value
@@ -59,37 +66,32 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
 
     var emuInitFilePath by remember { mutableStateOf(project.projectState.emu.initFilePath) }
 
-    fun buildInitializer(): Initializer? {
+    fun buildInitializer(onFinish: (Initializer?) -> Unit) {
         emuState.initFilePath = emuInitFilePath
 
-        val initFilePath = emuInitFilePath ?: return null
-        val file = project.fileSystem.findFile(initFilePath) ?: return null
-        val lang = project.getLang(file)
-        return try {
-            when (lang) {
-                MifLang -> {
-                    val mifPsiFile = MifLang.psiParser.parse(file)
-                    val errors = mifPsiFile.printErrors()
-                    if (errors != null) {
-                        nativeError(errors)
-                        return null
-                    }
-                    mifPsiFile
-                }
+        val initFilePath = emuInitFilePath ?: return onFinish(null)
+        val file = project.fileSystem.findFile(initFilePath) ?: return onFinish(null)
+        val manager = project.getManager(file) ?: return onFinish(null)
+        val lang = project.getLang(file) ?: return onFinish(null)
 
-                ObjLang -> {
-                    ELFFile.parse(file.name, file.getContent())
+        when (lang) {
+            MifLang -> {
+                manager.queueUpdate(file) {
+                    onFinish(it as MifPsiFile)
                 }
-
-                else -> null
             }
-        } catch (e: Throwable) {
-            nativeError(e.message.toString())
-            null
+
+            ObjLang -> {
+                manager.queueUpdate(file) {
+                    onFinish(it as ObjPsiFile)
+                }
+            }
+
+            else -> onFinish(null)
         }
     }
 
-    var initializer: Initializer? by remember { mutableStateOf(buildInitializer()) }
+    var initializer: Initializer? by remember { mutableStateOf<Initializer?>(null) }
 
     val archOverview: (@Composable BoxScope.() -> Unit) = {
         ArchitectureOverview(architecture, baseStyle, baseLargeStyle)
@@ -228,33 +230,35 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
                     CButton(icon = icons.continuousExe, onClick = {
                         architecture?.exeContinuous()
                     })
-                    CButton(modifier = Modifier
-                        .scrollable(orientation = Orientation.Vertical,
-                            state = rememberScrollableState { delta ->
-                                accumulatedScroll += delta
+                    CButton(
+                        modifier = Modifier
+                            .scrollable(
+                                orientation = Orientation.Vertical,
+                                state = rememberScrollableState { delta ->
+                                    accumulatedScroll += delta
 
-                                // Increment stepCount when scroll threshold is crossed
-                                if (accumulatedScroll <= -scrollThreshold) {
-                                    stepCount = stepCount.dec().coerceAtLeast(1U)
-                                    accumulatedScroll = 0f // Reset after increment
-                                } else if (accumulatedScroll >= scrollThreshold) {
-                                    stepCount = stepCount.inc()
-                                    accumulatedScroll = 0f // Reset after decrement
+                                    // Increment stepCount when scroll threshold is crossed
+                                    if (accumulatedScroll <= -scrollThreshold) {
+                                        stepCount = stepCount.dec().coerceAtLeast(1U)
+                                        accumulatedScroll = 0f // Reset after increment
+                                    } else if (accumulatedScroll >= scrollThreshold) {
+                                        stepCount = stepCount.inc()
+                                        accumulatedScroll = 0f // Reset after decrement
+                                    }
+                                    delta
+                                })
+                            .pointerInput(Unit) {
+                                detectVerticalDragGestures { _, dragAmount ->
+                                    // Adjust stepCount based on the dragAmount
+                                    if (dragAmount < 0) {
+                                        stepCount = stepCount.inc() // Scroll up to increase
+                                    } else if (dragAmount > 0) {
+                                        stepCount = stepCount.dec().coerceAtLeast(1U) // Scroll down to decrease, ensure it's >= 1
+                                    }
                                 }
-                                delta
-                            })
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures { _, dragAmount ->
-                                // Adjust stepCount based on the dragAmount
-                                if (dragAmount < 0) {
-                                    stepCount = stepCount.inc() // Scroll up to increase
-                                } else if (dragAmount > 0) {
-                                    stepCount = stepCount.dec().coerceAtLeast(1U) // Scroll down to decrease, ensure it's >= 1
-                                }
-                            }
-                        }, icon = icons.stepMultiple, tooltip = stepCount.toString(), onClick = {
-                        architecture?.exeMultiStep(stepCount.toLong())
-                    })
+                            }, icon = icons.stepMultiple, tooltip = stepCount.toString(), onClick = {
+                            architecture?.exeMultiStep(stepCount.toLong())
+                        })
                     CButton(icon = icons.stepOver, onClick = {
                         architecture?.exeSkipSubroutine()
                     })
@@ -280,7 +284,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
 
                 },
                 right = {
-                    CLabel(textStyle = UIState.BaseSmallStyle.current, text = "execution limit: ${Performance.MAX_INSTR_EXE_AMOUNT}" )
+                    CLabel(textStyle = UIState.BaseSmallStyle.current, text = "execution limit: ${Performance.MAX_INSTR_EXE_AMOUNT}")
                 }
             )
         },
@@ -290,6 +294,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
     )
 
     LaunchedEffect(initializer) {
+        nativeLog("updated initializer!")
         architecture ?: return@LaunchedEffect
         architecture.initializer = initializer
         architecture.disassembler?.decodedContent?.value = emptyList()
@@ -304,7 +309,10 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
     }
 
     LaunchedEffect(emuInitFilePath) {
-        initializer = buildInitializer()
+        nativeLog("emuInitFilePath changed!")
+        buildInitializer {
+            initializer = it
+        }
     }
 
     LaunchedEffect(leftContentType) {

@@ -12,14 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import cengine.project.Project
+import cengine.psi.PsiManager
 import cengine.psi.core.PsiElement
-import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import ui.ide.analyze.PsiAnalyzerView
 import ui.ide.editor.CodeEditor
-import ui.ide.editor.ObjectEditor
+import ui.ide.editor.BinaryEditor
 import ui.uilib.UIState
 import ui.uilib.filetree.FileTree
 import ui.uilib.interactable.CButton
@@ -87,9 +87,9 @@ fun IDEView(
     }
 
     val psiAnalyzer: (@Composable BoxScope.() -> Unit) = {
-        val psiManagers = project.psiManagers.map { TabItem(it, title = it.lang.name) }
+        val psiManagers = project.managers.map { TabItem(it, title = it.key.name) }
         TabbedPane(psiManagers, content = {
-            PsiAnalyzerView(psiManagers[it].value) { psiFile, index ->
+            PsiAnalyzerView(psiManagers[it].value.value) { psiFile, index ->
                 val editorIndex = fileEditors.indexOfFirst { editor -> editor.value == psiFile.file }
                 if (editorIndex == -1) {
                     fileEditors.add(TabItem(psiFile.file, icons.file, psiFile.file.name))
@@ -153,31 +153,41 @@ fun IDEView(
                                 // Display File Content
                                 key(fileEditors[index].value.path) {
                                     fileAndPsiPath = fileEditors[index].value to emptyList()
-                                    when {
-                                        fileEditors[index].value.name.endsWith(".o") -> {
-                                            ObjectEditor(
-                                                fileEditors[index].value,
-                                                project,
-                                                codeStyle,
-                                                baseLargeStyle,
-                                                baseStyle
-                                            )
-                                        }
+                                    val langAndManager = project.getLangAndManager(fileEditors[index].value)
 
-                                        else -> {
-                                            CodeEditor(
-                                                fileEditors[index].value,
-                                                project,
-                                                codeStyle,
-                                                codeSmallStyle,
-                                                baseSmallStyle,
-                                                onElementSelected = { vfile, psiPath ->
-                                                    fileAndPsiPath = vfile to psiPath
-                                                },
-                                                onInputLag = { newInputLag ->
-                                                    inputLag = newInputLag
-                                                })
+                                    if (langAndManager != null) {
+                                        val (lang, manager) = langAndManager
+                                        when (manager.mode) {
+                                            PsiManager.Mode.TEXT -> {
+                                                CodeEditor(
+                                                    fileEditors[index].value,
+                                                    lang,
+                                                    manager,
+                                                    project,
+                                                    codeStyle,
+                                                    codeSmallStyle,
+                                                    baseSmallStyle,
+                                                    onElementSelected = { vfile, psiPath ->
+                                                        fileAndPsiPath = vfile to psiPath
+                                                    },
+                                                    onInputLag = { newInputLag ->
+                                                        inputLag = newInputLag
+                                                    }
+                                                )
+                                            }
+
+                                            PsiManager.Mode.BINARY -> {
+                                                BinaryEditor(
+                                                    fileEditors[index].value,
+                                                    manager,
+                                                    codeStyle,
+                                                    baseLargeStyle,
+                                                    baseStyle
+                                                )
+                                            }
                                         }
+                                    } else {
+
                                     }
                                 }
 

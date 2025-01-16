@@ -115,7 +115,7 @@ enum class RVDirType(override val isSection: Boolean = false, override val rule:
         return null
     }
 
-    override fun build(builder: AsmCodeGenerator<*>, dir: ASNode.Directive) {
+    override suspend fun build(builder: AsmCodeGenerator<*>, dir: ASNode.Directive) {
         /**
          * Check Semantic
          */
