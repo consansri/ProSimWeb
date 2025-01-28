@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cengine.lang.asm.Disassembler
+import cengine.lang.asm.ast.target.t6502.T6502Disassembler
 import cengine.util.Endianness
 import cengine.util.integer.UInt16
 import cengine.util.integer.UInt8
@@ -92,8 +93,7 @@ class ArchT6502 : BasicArchImpl<UInt16, UInt8>() {
                 }
             }
         )
-        override val DISASSEMBLER: Disassembler
-            get() = TODO("Not yet implemented")
+        override val DISASSEMBLER: Disassembler = T6502Disassembler()
 
     }
 }
