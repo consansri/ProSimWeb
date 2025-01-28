@@ -6,6 +6,10 @@ import cengine.lang.asm.ast.impl.ASNode
 import cengine.lang.asm.ast.impl.ASNodeType
 import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.asm.ast.lexer.AsmTokenType
+import cengine.util.integer.BigInt
+import cengine.util.integer.BigInt.Companion.toBigInt
+import com.ionspin.kotlin.bignum.decimal.toBigDecimal
+import kotlin.math.pow
 
 enum class RVDirType(override val isSection: Boolean = false, override val rule: Rule? = null) : DirTypeInterface {
     ATTRIBUTE(rule = Rule {
@@ -122,7 +126,10 @@ enum class RVDirType(override val isSection: Boolean = false, override val rule:
 
         when (this) {
             ATTRIBUTE -> TODO()
-            ALIGN -> TODO()
+            ALIGN -> {
+                // Nothing to check for
+            }
+
             DTPRELWORD -> TODO()
             DTPRELDWORD -> TODO()
             DWORD -> {
@@ -144,7 +151,18 @@ enum class RVDirType(override val isSection: Boolean = false, override val rule:
 
         when (this) {
             ATTRIBUTE -> TODO()
-            ALIGN -> TODO()
+            ALIGN -> {
+                val exprs = dir.additionalNodes.filterIsInstance<ASNode.NumericExpr>()
+                val amountExpr = exprs[0]
+                val amount = amountExpr.evaluate(builder).toInt().toDouble()
+
+                val alignment = 2.0.pow(amount).toBigInt()
+                val addr = builder.currentSection.address + builder.currentSection.content.size
+                if (addr % alignment != BigInt.ZERO) {
+                    val padLength = alignment - addr % alignment
+                    builder.currentSection.content.pad(padLength.toInt())
+                }
+            }
             DTPRELWORD -> TODO()
             DTPRELDWORD -> TODO()
             DWORD -> {

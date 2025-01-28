@@ -1,6 +1,7 @@
 package cengine.util.integer
 
 import cengine.util.integer.Int8.Companion.toInt8
+import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.Sign
 import com.ionspin.kotlin.bignum.integer.toBigInteger
@@ -27,6 +28,8 @@ data class BigInt(override val value: BigInteger) : IntNumber<BigInt> {
             return (ONE shl bitWidth) - 1
         }
 
+        fun Float.toBigInt(): BigInt = BigInt(this.toBigDecimal().toBigInteger())
+        fun Double.toBigInt(): BigInt = BigInt(this.toBigDecimal().toBigInteger())
         fun Int.toBigInt(): BigInt = BigInt(this.toBigInteger())
         fun Long.toBigInt(): BigInt = BigInt(this.toBigInteger())
         fun UInt.toBigInt(): BigInt = BigInt(this.toBigInteger())

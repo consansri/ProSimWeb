@@ -1443,7 +1443,15 @@ enum class ASDirType(
                 }
             }
 
-            ZERO -> TODO()
+            ZERO -> {
+                val exprs = dir.additionalNodes.filterIsInstance<ASNode.NumericExpr>()
+
+                val amountExpr = exprs[0]
+                val amount = amountExpr.evaluate(builder).toInt()
+
+                builder.currentSection.content.pad(amount)
+            }
+
             _2BYTE -> {
                 val exprs = dir.additionalNodes.filterIsInstance<ASNode.NumericExpr>()
                 for (expr in exprs) {
