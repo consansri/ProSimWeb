@@ -14,7 +14,10 @@ class IKRR2BaseRegs : RegFile<UInt32> {
     override val regValues = mutableStateListOf(*Array(32) { UInt32.ZERO })
 
     override fun set(index: Int, value: IntNumber<*>) {
-        regValues[index] = value.toUInt32()
+        when (index) {
+            0 -> {}
+            else -> regValues[index] = value.toUInt32()
+        }
     }
 
     override fun isVisible(index: Int): Boolean = true
@@ -37,7 +40,7 @@ class IKRR2BaseRegs : RegFile<UInt32> {
     object BaseProvider : FieldProvider {
         override val name: String = "DESCR"
         override fun get(id: Int): String = when (id) {
-            1 -> "hardwired zero"
+            0 -> "hardwired zero"
             31 -> "return address"
             else -> ""
         }

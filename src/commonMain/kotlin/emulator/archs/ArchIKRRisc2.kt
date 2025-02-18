@@ -77,7 +77,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>() {
             }
 
             SUB -> {
-                baseRegs[decoded.rc] = baseRegs[decoded.ra] - baseRegs[decoded.rb]
+                baseRegs[decoded.rc] = baseRegs[decoded.rb] - baseRegs[decoded.ra]
                 pc += 1
             }
 
