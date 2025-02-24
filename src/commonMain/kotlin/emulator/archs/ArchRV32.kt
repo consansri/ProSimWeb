@@ -21,7 +21,7 @@ import emulator.kit.memory.*
 import emulator.kit.memory.Cache.Setting
 import emulator.kit.optional.BasicArchImpl
 
-class ArchRV32 : BasicArchImpl<UInt32, UInt8>() {
+class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
 
     override val config: ArchConfig = ArchRV32
     override val pcState: MutableState<UInt32> = mutableStateOf(UInt32.ZERO)

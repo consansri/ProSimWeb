@@ -18,7 +18,7 @@ import emulator.kit.memory.*
 import emulator.kit.nativeLog
 import emulator.kit.optional.BasicArchImpl
 
-class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>() {
+class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
 
     override val config: ArchConfig = ArchIKRRisc2
 

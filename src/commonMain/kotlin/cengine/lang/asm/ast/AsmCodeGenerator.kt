@@ -41,13 +41,23 @@ abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(protected val link
     }
 
     private fun addLabel(name: String): Boolean {
-        return symbols.add(
-            Symbol.Label(
-                name,
-                currentSection,
-                currentSection.content.size.toBigInt()
-            )
-        )
+        if (symbols.find { it is Symbol.Label<*> && it.name == name && it.section == currentSection } != null) {
+            return false
+        }
+
+        val found = symbols.find { it.name == name && it.section == currentSection }
+        if (found != null) {
+            symbols.remove(found)
+        }
+
+        symbols.add(Symbol.Label(
+            name,
+            currentSection,
+            found?.binding ?: Symbol.Binding.LOCAL,
+            currentSection.content.size.toBigInt()
+        ))
+
+        return true
     }
 
     private fun Section.resolveReservations() {
@@ -96,7 +106,7 @@ abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(protected val link
     }
 
     fun getOrCreateAbsSymbolInCurrentSection(name: String, value: BigInt): Boolean {
-        return symbols.add(Symbol.Abs(name, currentSection, value))
+        return symbols.add(Symbol.Abs(name, currentSection, symbols.firstOrNull { it.name == name }?.binding ?: Symbol.Binding.LOCAL, value))
     }
 
     fun getOrCreateSectionAndSetCurrent(name: String, type: UInt32 = Shdr.SHT_NULL, flags: UInt64 = UInt64.ZERO, link: T? = null, info: String? = null): T {
@@ -140,24 +150,47 @@ abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(protected val link
 
     sealed class Symbol<T : Section>(val name: String, val section: T, var binding: Binding = Binding.LOCAL) {
 
-        override fun equals(other: Any?): Boolean {
-            if (other !is Symbol<*>) return false
-            if (name != other.name) return false
-            if (section != other.section) return false
-            return true
+        abstract override fun equals(other: Any?): Boolean
+        abstract override fun hashCode(): Int
+        abstract override fun toString(): String
+
+        class Abs<T : Section>(name: String, section: T, binding: Binding, val value: BigInt) : Symbol<T>(name, section, binding) {
+            override fun toString(): String = "Abs($name, $value, $binding)"
+
+            override fun equals(other: Any?): Boolean {
+                if (other !is Abs<*>) return false
+                if (other.name != name) return false
+                if (other.section != section) return false
+                return true
+            }
+
+            override fun hashCode(): Int {
+                var result = this::class.hashCode()
+                result = 31 * result + name.hashCode()
+                result = 31 * result + section.hashCode()
+                return result
+            }
         }
 
-        override fun hashCode(): Int {
-            var result = name.hashCode()
-            result = 31 * result + section.hashCode()
-            return result
-        }
-
-        class Abs<T : Section>(name: String, section: T, val value: BigInt) : Symbol<T>(name, section)
-
-        class Label<T : Section>(name: String, link: T, val offset: BigInt) : Symbol<T>(name, link) {
+        class Label<T : Section>(name: String, link: T, binding: Binding, val offset: BigInt) : Symbol<T>(name, link, binding) {
             val local = name.all { it.isDigit() }
             fun address(): BigInt = section.address + offset
+
+            override fun toString(): String = "Label($name, $offset, $binding)"
+
+            override fun equals(other: Any?): Boolean {
+                if (other !is Label<*>) return false
+                if (other.name != name) return false
+                if (other.section != section) return false
+                return true
+            }
+
+            override fun hashCode(): Int {
+                var result = name.hashCode()
+                result = 31 * result + section.hashCode()
+                return result
+            }
+
         }
 
         enum class Binding {

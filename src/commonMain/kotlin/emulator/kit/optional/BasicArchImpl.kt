@@ -2,11 +2,12 @@ package emulator.kit.optional
 
 import Performance
 import cengine.util.integer.IntNumber
+import cengine.util.integer.IntNumberStatic
 import emulator.kit.memory.Memory
 import emulator.kit.nativeError
 import kotlin.time.measureTime
 
-abstract class BasicArchImpl<ADDR: IntNumber<*>, INSTANCE: IntNumber<*>> : emulator.kit.Architecture<ADDR, INSTANCE>() {
+abstract class BasicArchImpl<ADDR: IntNumber<*>, INSTANCE: IntNumber<*>>(addrType: IntNumberStatic<ADDR>, instanceType: IntNumberStatic<INSTANCE>) : emulator.kit.Architecture<ADDR, INSTANCE>(addrType, instanceType) {
     override fun exeContinuous() {
         var instrCount = 0L
         val tracker = Memory.AccessTracker()

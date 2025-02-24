@@ -18,7 +18,7 @@ import emulator.kit.optional.BasicArchImpl
 /**
  * MOS Technology 6502 Architecture
  */
-class ArchT6502 : BasicArchImpl<UInt16, UInt8>() {
+class ArchT6502 : BasicArchImpl<UInt16, UInt8>(UInt16, UInt8) {
 
     override val config: ArchConfig = ArchT6502
 

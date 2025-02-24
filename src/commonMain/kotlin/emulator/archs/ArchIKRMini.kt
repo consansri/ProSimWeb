@@ -17,7 +17,7 @@ import emulator.kit.MicroSetup
 import emulator.kit.memory.*
 import emulator.kit.optional.BasicArchImpl
 
-class ArchIKRMini : BasicArchImpl<UInt16, UInt16>() {
+class ArchIKRMini : BasicArchImpl<UInt16, UInt16>(UInt16, UInt16) {
 
     override val config: ArchConfig = ArchIKRMini
 

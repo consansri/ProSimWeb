@@ -7,6 +7,7 @@ import cengine.psi.PsiManager
 import cengine.psi.core.*
 import cengine.util.integer.UInt64
 import cengine.util.integer.UInt64.Companion.toUInt64
+import emulator.kit.nativeLog
 import kotlin.experimental.*
 
 /**
@@ -25,7 +26,7 @@ class ExecELFGenerator(
     e_machine: Elf_Half,
     e_flags: Elf_Word = Elf_Word.ZERO,
     linkerScript: LinkerScript,
-    psiManager: PsiManager<*, *>
+    psiManager: PsiManager<*, *>,
 ) : ELFGenerator(Ehdr.ET_EXEC, ei_class, ei_data, ei_osabi, ei_abiversion, e_machine, e_flags, linkerScript, psiManager) {
 
     private val segAlign get() = linkerScript.segmentAlign
@@ -75,8 +76,17 @@ class ExecELFGenerator(
             rodataSegment.p_vaddr = it.value.ulongValue().toUInt64()
         }
 
-        // Set Entry Point
         entryPoint = textSegment.p_vaddr
+
+        // Set Entry Point
+        symbols.firstOrNull {
+            it.name == "_start" && it.binding == Symbol.Binding.GLOBAL
+        }?.let { symbol ->
+            entryPoint = when (symbol) {
+                is Symbol.Abs<*> -> symbol.value.toUInt64()
+                is Symbol.Label<*> -> symbol.address().toUInt64()
+            }
+        }
     }
 
     // PRIVATE METHODS

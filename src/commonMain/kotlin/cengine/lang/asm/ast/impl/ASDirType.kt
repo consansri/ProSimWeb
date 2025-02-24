@@ -10,6 +10,7 @@ import cengine.lang.asm.ast.TargetSpec
 import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.asm.ast.lexer.AsmTokenType
 import cengine.lang.obj.elf.Shdr
+import cengine.util.integer.BigInt
 import cengine.vfs.FPath
 import cengine.vfs.VFileSystem
 
@@ -1270,16 +1271,24 @@ enum class ASDirType(
             FUNC -> TODO()
             GLOBAL -> {
                 val identifier = dir.allTokens.last { it.type == AsmTokenType.SYMBOL }.value
-                builder.symbols.firstOrNull { it.name == identifier }?.let {
+
+                if (builder.symbols.find { it.name == identifier } == null) {
+                    builder.getOrCreateAbsSymbolInCurrentSection(identifier, BigInt.ZERO)
+                }
+
+                builder.symbols.filter { it.name == identifier }.forEach {
                     it.binding = AsmCodeGenerator.Symbol.Binding.GLOBAL
                 }
             }
 
             GLOBL -> {
                 val identifier = dir.allTokens.last { it.type == AsmTokenType.SYMBOL }.value
-                builder.symbols.firstOrNull {
-                    it.name == identifier
-                }?.let {
+
+                if (builder.symbols.find { it.name == identifier } == null) {
+                    builder.getOrCreateAbsSymbolInCurrentSection(identifier, BigInt.ZERO)
+                }
+
+                builder.symbols.filter { it.name == identifier }.forEach {
                     it.binding = AsmCodeGenerator.Symbol.Binding.GLOBAL
                 }
             }

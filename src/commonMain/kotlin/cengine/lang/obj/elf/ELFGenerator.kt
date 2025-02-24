@@ -26,7 +26,7 @@ abstract class ELFGenerator(
     val e_machine: Elf_Half,
     var e_flags: Elf_Word,
     linkerScript: LinkerScript,
-    psiManager: PsiManager<*, *>
+    psiManager: PsiManager<*, *>,
 ) : AsmCodeGenerator<ELFGenerator.ELFSection>(linkerScript, psiManager) {
 
     override val fileSuffix: String
@@ -73,7 +73,7 @@ abstract class ELFGenerator(
     override var currentSection: ELFSection = text
 
     init {
-        symbols.add(Symbol.Label("", nullSec, BigInt(BigInteger.ZERO)))
+        symbols.add(Symbol.Label("", nullSec, Symbol.Binding.LOCAL, BigInt(BigInteger.ZERO)))
     }
 
     override fun writeFile(): ByteArray {

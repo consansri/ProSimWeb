@@ -34,7 +34,7 @@ sealed class ELFFile(file: VirtualFile, manager: PsiManager<*,*>) : ObjPsiFile(f
     val shstrtab: Shdr? = sectionHeaders.getOrNull(ehdr.e_shstrndx.toInt())
     val strTab = sectionHeaders.firstOrNull { getSectionName(it) == ".strtab" }
 
-    override fun initialize(memory: Memory<*, *>) {
+    override fun initialize(memory: Memory<*, *>): IntNumber<*> {
         for (phdr in programHeaders) {
 
             val startAddr = when (phdr) {
@@ -55,6 +55,10 @@ sealed class ELFFile(file: VirtualFile, manager: PsiManager<*,*>) : ObjPsiFile(f
             bytes.copyOfRange(startOffset, startOffset + size).forEachIndexed { index, byte ->
                 memory.storeEndianAware(startAddr + index, byte.toInt8())
             }
+        }
+        return when(ehdr){
+            is ELF32_Ehdr -> ehdr.e_entry
+            is ELF64_Ehdr -> ehdr.e_entry
         }
     }
 

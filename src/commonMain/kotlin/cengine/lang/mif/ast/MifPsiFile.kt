@@ -42,7 +42,7 @@ class MifPsiFile(
         visitor.visitFile(this)
     }
 
-    override fun initialize(memory: Memory<*, *>) {
+    override fun initialize(memory: Memory<*, *>): IntNumber<*> {
         analyzeHeader { addrSize, wordSize, addrRDX, dataRDX, assignments ->
             assignments.filter { assignment ->
                 assignment !is MifNode.Assignment.RepeatingValueRange || assignment.data.all { it.value.parseAnyUInt(dataRDX.radix, wordSize.BYTES).toBigInt() != BigInt.ZERO }
@@ -81,6 +81,8 @@ class MifPsiFile(
                 }
             }
         }
+
+        return BigInt.ZERO
     }
 
     override fun contents(): Map<BigInt, Pair<List<IntNumber<*>>, List<Disassembler.Label>>> {

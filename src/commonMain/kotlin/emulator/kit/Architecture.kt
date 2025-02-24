@@ -2,7 +2,9 @@ package emulator.kit
 
 import androidx.compose.runtime.MutableState
 import cengine.lang.asm.Initializer
+import cengine.util.integer.BigInt
 import cengine.util.integer.IntNumber
+import cengine.util.integer.IntNumberStatic
 import emulator.core.*
 import emulator.kit.common.*
 import emulator.kit.memory.MainMemory
@@ -34,7 +36,7 @@ import emulator.kit.memory.MainMemory
  *  @property cache Not Essential: Possibly given by Config
  *
  */
-abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>> {
+abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(val addrType: IntNumberStatic<ADDR>, val instanceType: IntNumberStatic<INSTANCE>) {
 
     abstract val config: ArchConfig
 
@@ -112,7 +114,7 @@ abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>> {
             it.clear()
         }
         resetPC()
-        initializer?.initialize(memory)
+        pcState.value = addrType.to(initializer?.initialize(memory) ?: BigInt.ZERO)
         nativeLog("${this::class.simpleName} resetting!")
         console.exeInfo("resetting")
     }
