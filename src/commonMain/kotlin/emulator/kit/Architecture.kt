@@ -114,7 +114,8 @@ abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(val ad
             it.clear()
         }
         resetPC()
-        pcState.value = addrType.to(initializer?.initialize(memory) ?: BigInt.ZERO)
+        initializer?.initialize(memory)
+        pcState.value = addrType.to(initializer?.entry() ?: BigInt.ZERO)
         nativeLog("${this::class.simpleName} resetting!")
         console.exeInfo("resetting")
     }

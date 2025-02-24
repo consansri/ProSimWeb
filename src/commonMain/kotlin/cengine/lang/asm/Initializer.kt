@@ -9,9 +9,20 @@ interface Initializer {
     val id: String
 
     /**
+     * Initializes Emulator [Memory]
+     *
+     * @param memory to be initialized
+     */
+    fun initialize(memory: Memory<*, *>)
+
+    /**
      * @return Program Entry Address
      */
-    fun initialize(memory: Memory<*, *>): IntNumber<*>
+    fun entry(): IntNumber<*>
+
+    /**
+     * @return address mapped section content
+     */
     fun contents(): Map<BigInt, Pair<List<IntNumber<*>>, List<Disassembler.Label>>>
 
 }

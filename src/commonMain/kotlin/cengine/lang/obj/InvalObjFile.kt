@@ -7,10 +7,10 @@ import cengine.util.integer.IntNumber
 import cengine.vfs.VirtualFile
 import emulator.kit.memory.Memory
 
-class InvalObjFile(file: VirtualFile, manager: PsiManager<*,*>): ObjPsiFile(file, manager) {
-    override fun initialize(memory: Memory<*, *>): IntNumber<*> {
-        return BigInt.ZERO
-    }
+class InvalObjFile(file: VirtualFile, manager: PsiManager<*, *>) : ObjPsiFile(file, manager) {
+    override fun initialize(memory: Memory<*, *>) {}
+
+    override fun entry(): IntNumber<*> = BigInt.ZERO
 
     override fun contents(): Map<BigInt, Pair<List<IntNumber<*>>, List<Disassembler.Label>>> {
         return emptyMap()
