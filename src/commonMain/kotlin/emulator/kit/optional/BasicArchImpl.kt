@@ -4,7 +4,7 @@ import Performance
 import cengine.util.integer.IntNumber
 import cengine.util.integer.IntNumberStatic
 import emulator.kit.memory.Memory
-import emulator.kit.nativeError
+import nativeError
 import kotlin.time.measureTime
 
 abstract class BasicArchImpl<ADDR: IntNumber<*>, INSTANCE: IntNumber<*>>(addrType: IntNumberStatic<ADDR>, instanceType: IntNumberStatic<INSTANCE>) : emulator.kit.Architecture<ADDR, INSTANCE>(addrType, instanceType) {

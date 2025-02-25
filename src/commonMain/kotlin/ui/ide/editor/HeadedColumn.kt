@@ -3,7 +3,7 @@ package ui.ide.editor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import emulator.kit.nativeLog
+import nativeLog
 
 @Composable
 fun HeadedColumn(

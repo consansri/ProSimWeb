@@ -1,7 +1,7 @@
 package cengine.editor.text
 
-import emulator.kit.nativeLog
-import emulator.kit.nativeWarn
+import nativeLog
+import nativeWarn
 
 
 /**

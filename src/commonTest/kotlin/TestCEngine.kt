@@ -2,7 +2,7 @@
 import cengine.editor.text.RopeModel
 import cengine.editor.text.StringModel
 import cengine.editor.text.TextModel
-import emulator.kit.nativeLog
+import nativeLog
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.test.Test

@@ -37,8 +37,8 @@ import cengine.psi.core.PsiReference
 import cengine.psi.core.PsiService
 import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
-import emulator.kit.nativeLog
-import emulator.kit.nativeWarn
+import nativeLog
+import nativeWarn
 import kotlinx.coroutines.*
 import ui.uilib.ComposeTools
 import ui.uilib.UIState

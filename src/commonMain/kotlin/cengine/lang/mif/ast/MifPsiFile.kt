@@ -15,7 +15,7 @@ import cengine.util.integer.IntNumber.Companion.parseAnyUInt
 import cengine.util.integer.IntNumberStatic
 import cengine.vfs.VirtualFile
 import emulator.kit.memory.Memory
-import emulator.kit.nativeError
+import nativeError
 import kotlin.math.log2
 import kotlin.math.roundToInt
 

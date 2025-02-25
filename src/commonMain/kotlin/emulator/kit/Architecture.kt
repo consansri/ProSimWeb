@@ -8,6 +8,7 @@ import cengine.util.integer.IntNumberStatic
 import emulator.core.*
 import emulator.kit.common.*
 import emulator.kit.memory.MainMemory
+import nativeLog
 
 /**
  *  Architecture Blueprint

@@ -21,7 +21,7 @@ import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
 import cengine.util.integer.UInt64
 import debug.DebugTools
-import emulator.kit.nativeLog
+import nativeLog
 
 enum class RV64InstrType(override val detectionName: String, val isPseudo: Boolean, val paramType: RV64ParamType, val labelDependent: Boolean = false, override val addressInstancesNeeded: Int? = 4) : InstrTypeInterface {
     LUI("LUI", false, RV64ParamType.RD_I20),

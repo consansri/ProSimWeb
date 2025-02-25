@@ -7,7 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.Dialog
-import emulator.kit.nativeLog
+import nativeLog
 import ui.uilib.UIState
 import ui.uilib.interactable.CButton
 import ui.uilib.layout.FormRect

@@ -6,8 +6,8 @@ import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.asm.ast.lexer.AsmToken
 import cengine.lang.asm.ast.lexer.AsmTokenType
 import debug.DebugTools
-import emulator.kit.nativeInfo
-import emulator.kit.nativeLog
+import nativeInfo
+import nativeLog
 
 /**
  * Lexing Position needs to be restored by the caller.

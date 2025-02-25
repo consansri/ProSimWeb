@@ -13,7 +13,7 @@ import cengine.psi.core.PsiFile
 import cengine.psi.core.PsiParser
 import cengine.vfs.VirtualFile
 import debug.DebugTools
-import emulator.kit.nativeLog
+import nativeLog
 
 class AsmPsiParser(private val spec: TargetSpec<*>, private val languageService: AsmLang) : PsiParser<AsmFile> {
 

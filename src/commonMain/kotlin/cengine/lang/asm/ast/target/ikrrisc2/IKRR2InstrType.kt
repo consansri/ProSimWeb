@@ -7,7 +7,7 @@ import cengine.lang.asm.ast.impl.ASNode
 import cengine.lang.asm.ast.lexer.AsmTokenType
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
-import emulator.kit.nativeLog
+import nativeLog
 
 
 enum class IKRR2InstrType(override val detectionName: String, val paramType: IKRR2ParamType, val descr: String = "", val labelDependent: Boolean = false, override val addressInstancesNeeded: Int? = 1) : InstrTypeInterface {

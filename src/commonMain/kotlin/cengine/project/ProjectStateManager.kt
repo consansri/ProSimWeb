@@ -4,7 +4,7 @@ import cengine.vfs.FPath
 import cengine.vfs.VFileSystem
 import cengine.vfs.VirtualFile
 import config.BuildConfig
-import emulator.kit.nativeWarn
+import nativeWarn
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 

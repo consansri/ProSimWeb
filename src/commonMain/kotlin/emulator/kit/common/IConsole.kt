@@ -1,10 +1,10 @@
 package emulator.kit.common
 
 import cengine.lang.asm.CodeStyle
-import emulator.kit.nativeError
-import emulator.kit.nativeInfo
-import emulator.kit.nativeLog
-import emulator.kit.nativeWarn
+import nativeError
+import nativeInfo
+import nativeLog
+import nativeWarn
 import kotlinx.datetime.Clock
 
 /**

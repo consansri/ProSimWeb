@@ -23,8 +23,8 @@ import cengine.lang.obj.elf.ELFFile
 import cengine.project.Project
 import cengine.psi.PsiManager
 import emulator.kit.Architecture
-import emulator.kit.nativeError
-import emulator.kit.nativeLog
+import nativeError
+import nativeLog
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch

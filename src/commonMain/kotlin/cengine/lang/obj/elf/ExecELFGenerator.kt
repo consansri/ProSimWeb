@@ -7,7 +7,7 @@ import cengine.psi.PsiManager
 import cengine.psi.core.*
 import cengine.util.integer.UInt64
 import cengine.util.integer.UInt64.Companion.toUInt64
-import emulator.kit.nativeLog
+import nativeLog
 import kotlin.experimental.*
 
 /**

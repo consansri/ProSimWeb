@@ -9,10 +9,10 @@ import cengine.psi.impl.PsiNotationCollector
 import cengine.vfs.FPath
 import cengine.vfs.VFileSystem
 import cengine.vfs.VirtualFile
-import emulator.kit.nativeError
-import emulator.kit.nativeInfo
-import emulator.kit.nativeLog
-import emulator.kit.nativeWarn
+import nativeError
+import nativeInfo
+import nativeLog
+import nativeWarn
 
 class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, "Assemble Binary") {
 

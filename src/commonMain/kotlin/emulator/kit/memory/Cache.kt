@@ -6,8 +6,8 @@ import cengine.util.integer.IntNumber
 import debug.DebugTools
 import emulator.core.*
 import emulator.kit.common.IConsole
-import emulator.kit.nativeLog
-import emulator.kit.nativeWarn
+import nativeLog
+import nativeWarn
 import kotlin.math.pow
 import kotlin.math.roundToInt
 

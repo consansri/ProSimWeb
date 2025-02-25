@@ -16,7 +16,7 @@ import cengine.util.integer.BigInt
 import cengine.util.integer.BigInt.Companion.toBigInt
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import debug.DebugTools
-import emulator.kit.nativeLog
+import nativeLog
 
 /**
  * Node Relatives

@@ -1,7 +1,5 @@
-package emulator.kit
-
 actual fun nativeWarn(message: String) {
-    println("Warn: $message")
+    println("Warning: $message")
 }
 
 actual fun nativeLog(message: String) {

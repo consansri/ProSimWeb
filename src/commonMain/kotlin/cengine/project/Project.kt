@@ -8,7 +8,7 @@ import cengine.psi.PsiManager
 import cengine.vfs.FileChangeListener
 import cengine.vfs.VFileSystem
 import cengine.vfs.VirtualFile
-import emulator.kit.nativeLog
+import nativeLog
 import org.jetbrains.skia.impl.Managed
 
 /**

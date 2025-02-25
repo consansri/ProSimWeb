@@ -15,7 +15,7 @@ import emulator.archs.ikrrisc2.IKRR2BaseRegs
 import emulator.kit.ArchConfig
 import emulator.kit.MicroSetup
 import emulator.kit.memory.*
-import emulator.kit.nativeLog
+import nativeLog
 import emulator.kit.optional.BasicArchImpl
 
 class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {

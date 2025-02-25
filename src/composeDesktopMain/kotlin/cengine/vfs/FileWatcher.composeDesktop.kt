@@ -1,7 +1,7 @@
 package cengine.vfs
 
 import debug.DebugTools
-import emulator.kit.nativeLog
+import nativeLog
 import java.nio.file.*
 import kotlin.concurrent.thread
 import kotlin.io.path.pathString
