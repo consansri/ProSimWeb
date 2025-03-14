@@ -15,7 +15,7 @@ import cengine.vfs.VirtualFile
  * -type [Type] or -t [Type]
  */
 object ObjRunner : Runner<ObjLang>(ObjLang, "convert") {
-    override val defaultAttrs: List<String> = listOf("-t", Type.MIF.name, "-")
+    override val defaultAttrs: List<String> = listOf("-t", Type.MIF.name, "-cn", "mem")
 
     override suspend fun global(project: Project, vararg attrs: String) {
 
