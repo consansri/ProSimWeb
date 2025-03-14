@@ -15,6 +15,7 @@ import nativeLog
 import nativeWarn
 
 class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, "Assemble Binary") {
+    override val defaultAttrs: List<String> = listOf("-t", Type.entries.first().name)
 
     override suspend fun global(project: Project, vararg attrs: String) {
 

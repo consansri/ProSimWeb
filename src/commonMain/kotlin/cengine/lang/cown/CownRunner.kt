@@ -5,6 +5,8 @@ import cengine.project.Project
 import cengine.vfs.VirtualFile
 
 object CownRunner: Runner<CownLang>(CownLang,"CownRun") {
+    override val defaultAttrs: List<String> = emptyList()
+
     override suspend fun global(project: Project, vararg attrs: String) {
 
     }

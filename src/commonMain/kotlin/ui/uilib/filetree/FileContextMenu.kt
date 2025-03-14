@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import ui.uilib.UIState
 import ui.uilib.menu.Menu
 import ui.uilib.menu.MenuItem
+import ui.uilib.menu.MenuItemWithAttrs
 
 @Composable
 fun FileContextMenu(
@@ -40,10 +41,10 @@ fun FileContextMenu(
 
         val runConfig = project.getLang(file)?.runConfig
         runConfig?.let {
-            MenuItem(UIState.Icon.value.build, it.name) {
+            MenuItemWithAttrs(UIState.Icon.value.chevronRight, it.name, it.defaultAttrs) { attrs ->
                 onDismiss()
                 ioScope.launch {
-                    it.onFile(project, file)
+                    runConfig.onFile(project, file, *attrs.toTypedArray())
                 }
             }
         }

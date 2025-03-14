@@ -1,5 +1,6 @@
 package cengine.lang.mif
 
+import cengine.lang.asm.Initializer
 import cengine.lang.mif.MifGenerator.Radix
 import cengine.lang.obj.elf.*
 import cengine.util.integer.*
@@ -11,16 +12,16 @@ import kotlin.math.log2
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-class MifConverter(val depth: Double, val wordSize: IntNumberStatic<*>) {
+class MifConverter(private val depth: Double, private val wordSize: IntNumberStatic<*>) {
 
     constructor(wordSize: IntNumberStatic<*>, addrSize: IntNumberStatic<*>, id: String) : this(2.0.pow(addrSize.BITS), wordSize)
 
-    val addrSize: IntNumberStatic<*> = IntNumber.nearestUType(log2(depth).roundToInt() / 8)
-    var addrRDX: Radix = Radix.HEX
-    var dataRDX: Radix = Radix.HEX
+    private val addrSize: IntNumberStatic<*> = IntNumber.nearestUType(log2(depth).roundToInt() / 8)
+    private var addrRDX: Radix = Radix.HEX
+    private var dataRDX: Radix = Radix.HEX
 
     // Represents the ranges as a list of triples: (start address, end address, data value)
-    val ranges: MutableList<Range> = mutableListOf()
+    private val ranges: MutableList<Range> = mutableListOf()
 
     init {
         // Initially, all addresses are filled with 0
@@ -145,7 +146,7 @@ class MifConverter(val depth: Double, val wordSize: IntNumberStatic<*>) {
 
     inner class Range(val start: BigInt, val end: BigInt, val data: List<IntNumber<*>>) {
         // Helper function to check if a range contains a specific address
-        fun contains(addr: BigInt): Boolean = addr >= start && addr <= end
+        fun contains(addr: BigInt): Boolean = addr in start..end
 
         // Helper function to check if a range overlaps with another range
         fun overlaps(startAddr: BigInt, endAddr: BigInt): Boolean =

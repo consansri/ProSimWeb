@@ -13,6 +13,8 @@ import cengine.vfs.VirtualFile
  */
 abstract class Runner<T : LanguageService>(val lang: T, val name: String) {
 
+    abstract val defaultAttrs: List<String>
+
     /**
      * Executes a global action on the project.
      *

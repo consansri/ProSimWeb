@@ -7,20 +7,20 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import ui.uilib.UIState
+import ui.uilib.interactable.CInput
 import ui.uilib.label.CLabel
 import ui.uilib.params.IconType
-
+import ui.uilib.text.CTextField
 
 @Composable
 fun Menu(position: Offset, onDismiss: () -> Unit = {}, items: @Composable ColumnScope.() -> Unit) {
@@ -58,5 +58,28 @@ fun MenuItem(icon: ImageVector, text: String, onClick: () -> Unit) {
     ) {
         CLabel(text = text, icon = icon, iconType = IconType.SMALL, textStyle = UIState.BaseStyle.current)
     }
+}
+
+@Composable
+fun MenuItemWithAttrs(icon: ImageVector, text: String, defaultAttrs: List<String>, onClick: (attrs: List<String>) -> Unit) {
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    var value by remember { mutableStateOf(TextFieldValue(defaultAttrs.joinToString(" "))) }
+
+    Row(
+        Modifier
+            .clickable(interactionSource, indication = null) {
+                onClick(value.text.split("\\s+".toRegex()).filter { it.isNotEmpty() })
+            }
+            .hoverable(interactionSource)
+            .background(if (isHovered) UIState.Theme.value.COLOR_ICON_BG_HOVER else Color.Transparent)
+    ) {
+        CLabel(text = text, icon = icon, iconType = IconType.SMALL, textStyle = UIState.BaseStyle.current)
+        CTextField(value, onValueChange = {
+            value = it
+        }, textStyle = UIState.CodeStyle.current)
+    }
+
 }
 
