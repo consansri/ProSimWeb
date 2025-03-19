@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
 import ui.ide.analyze.PsiAnalyzerView
 import ui.ide.editor.CodeEditor
 import ui.ide.editor.BinaryEditor
+import ui.ide.editor.TextEditor
 import ui.uilib.UIState
 import ui.uilib.filetree.FileTree
 import ui.uilib.interactable.CButton
@@ -187,7 +188,14 @@ fun IDEView(
                                             }
                                         }
                                     } else {
-
+                                        TextEditor(
+                                            fileEditors[index].value,
+                                            codeStyle,
+                                            codeSmallStyle,
+                                            onInputLag = { newInputLag ->
+                                                inputLag = newInputLag
+                                            }
+                                        )
                                     }
                                 }
 
