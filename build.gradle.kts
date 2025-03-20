@@ -16,11 +16,11 @@ val DIST_ORG: String by project
 val DIST_FILENAME = "$DIST_NAME-$DIST_VERSION"
 
 plugins {
-    kotlin("multiplatform") version "2.1.10"
+    kotlin("multiplatform") version "2.1.20"
     id("org.jetbrains.dokka") version "1.9.20"
-    kotlin("plugin.compose") version "2.1.10"
+    kotlin("plugin.compose") version "2.1.20"
     id("org.jetbrains.compose") version "1.7.3"
-    kotlin("plugin.serialization") version "2.1.10"
+    kotlin("plugin.serialization") version "2.1.20"
     distribution
 }
 
