@@ -1,8 +1,6 @@
 package cengine.lang.mif
 
-import cengine.lang.asm.AsmLang
 import cengine.lang.asm.ast.AsmCodeGenerator
-import cengine.lang.asm.ast.impl.AsmFile
 import cengine.lang.obj.elf.LinkerScript
 import cengine.lang.obj.elf.Shdr
 import cengine.psi.PsiManager
@@ -63,10 +61,10 @@ class MifGenerator<T : Buffer<*>>(linkerScript: LinkerScript, psiManager: PsiMan
     }
 
     override fun writeFile(): ByteArray {
-        val builder = MifConverter(text.content.type, addrSize, this::class.simpleName.toString())
+        val builder = MifBuilder(text.content.type, addrSize, this::class.simpleName.toString())
 
-        builder.setAddrRadix(Radix.HEX)
-        builder.setDataRadix(Radix.HEX)
+        builder.setAddrRadix(MifRadix.HEX)
+        builder.setDataRadix(MifRadix.HEX)
 
         sections.filter {
             it.isProg()
@@ -91,16 +89,5 @@ class MifGenerator<T : Buffer<*>>(linkerScript: LinkerScript, psiManager: PsiMan
         }
     }
 
-    enum class Radix(val radix: Int) {
-        HEX(16),
-        OCT(8),
-        BIN(2),
-        DEC(10);
 
-        companion object {
-            fun getRadix(string: String): Radix {
-                return entries.firstOrNull { it.name == string.uppercase() } ?: HEX
-            }
-        }
-    }
 }

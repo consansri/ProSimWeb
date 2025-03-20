@@ -2,6 +2,7 @@ package ui.uilib.text
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -31,7 +32,7 @@ fun CTextField(
     showBorder: Boolean = true,
     decorationBox: @Composable (@Composable () -> Unit) -> Unit = { innerTextField ->
         innerTextField()
-    }
+    },
 ) {
     val scale = UIState.Scale.value
 
@@ -40,26 +41,18 @@ fun CTextField(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = if (showBorder) {
-            modifier.background(backgroundColor)
-                .border(scale.SIZE_BORDER_THICKNESS, if (!error) borderColor else UIState.Theme.value.COLOR_RED, RoundedCornerShape(scale.SIZE_CORNER_RADIUS))
-                .padding(scale.SIZE_INSET_MEDIUM)
-                .onFocusChanged {focusState ->
-                    if(isFocused && !focusState.isFocused){
-                        onFocusLost(value)
-                    }
-                    isFocused = focusState.isFocused
+        modifier = modifier
+            .background(backgroundColor)
+            .apply {
+                if (showBorder) border(scale.SIZE_BORDER_THICKNESS, if (!error) borderColor else UIState.Theme.value.COLOR_RED, RoundedCornerShape(scale.SIZE_CORNER_RADIUS))
+            }
+            .padding(scale.SIZE_INSET_MEDIUM)
+            .onFocusChanged { focusState ->
+                if (isFocused && !focusState.isFocused) {
+                    onFocusLost(value)
                 }
-        } else {
-            modifier.background(backgroundColor)
-                .padding(scale.SIZE_INSET_MEDIUM)
-                .onFocusChanged {focusState ->
-                    if(isFocused && !focusState.isFocused){
-                        onFocusLost(value)
-                    }
-                    isFocused = focusState.isFocused
-                }
-        },
+                isFocused = focusState.isFocused
+            },
         textStyle = textStyle.copy(textColor),
         singleLine = singleLine,
         readOnly = readonly,
@@ -84,7 +77,7 @@ fun CTextField(
     showBorder: Boolean = true,
     decorationBox: @Composable (@Composable () -> Unit) -> Unit = { innerTextField ->
         innerTextField()
-    }
+    },
 ) {
     val scale = UIState.Scale.value
 
@@ -93,26 +86,18 @@ fun CTextField(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = if (showBorder) {
+        modifier =
             modifier.background(backgroundColor)
-                .border(scale.SIZE_BORDER_THICKNESS, if (!error) borderColor else UIState.Theme.value.COLOR_RED, RoundedCornerShape(scale.SIZE_CORNER_RADIUS))
+                .apply {
+                    if (showBorder) border(scale.SIZE_BORDER_THICKNESS, if (!error) borderColor else UIState.Theme.value.COLOR_RED, RoundedCornerShape(scale.SIZE_CORNER_RADIUS))
+                }
                 .padding(scale.SIZE_INSET_MEDIUM)
-                .onFocusChanged {focusState ->
-                    if(isFocused && !focusState.isFocused){
+                .onFocusChanged { focusState ->
+                    if (isFocused && !focusState.isFocused) {
                         onFocusLost(value)
                     }
                     isFocused = focusState.isFocused
-                }
-        } else {
-            modifier.background(backgroundColor)
-                .padding(scale.SIZE_INSET_MEDIUM)
-                .onFocusChanged {focusState ->
-                    if(isFocused && !focusState.isFocused){
-                        onFocusLost(value)
-                    }
-                    isFocused = focusState.isFocused
-                }
-        },
+                },
         textStyle = textStyle.copy(textColor),
         singleLine = singleLine,
         readOnly = readonly,

@@ -53,10 +53,10 @@ fun BinaryEditor(
                         ) {
 
                             // Draw Header Info
-                            ELFHeaderInfos(objFile,  codeStyle, titleStyle, baseStyle)
+                            ELFHeaderInfos(objFile, codeStyle, titleStyle, baseStyle)
 
                             // Draw Sections wrapped in ProgramHeaders
-                            ELFSectionInfos(objFile,  codeStyle, baseStyle)
+                            ELFSectionInfos(objFile, codeStyle, baseStyle)
                         }
                     }
 
@@ -351,7 +351,6 @@ fun ELFHeaderInfos(
                 when (ehdr) {
                     is ELF32_Ehdr -> "0x" + ehdr.e_entry.toString(16)
                     is ELF64_Ehdr -> "0x" + ehdr.e_entry.toString(16)
-                    else -> "(invalid)"
                 },
                 textAlign = TextAlign.Left,
                 modifier = Modifier.weight(0.5f),
@@ -382,7 +381,6 @@ fun ELFHeaderInfos(
                 when (ehdr) {
                     is ELF32_Ehdr -> "0x" + ehdr.e_phoff.toString(16)
                     is ELF64_Ehdr -> "0x" + ehdr.e_phoff.toString(16)
-                    else -> "(invalid)"
                 } + " (bytes into file)",
                 textAlign = TextAlign.Left,
                 modifier = Modifier.weight(0.5f),
@@ -413,7 +411,6 @@ fun ELFHeaderInfos(
                 when (ehdr) {
                     is ELF32_Ehdr -> "0x" + ehdr.e_shoff.toString(16)
                     is ELF64_Ehdr -> "0x" + ehdr.e_shoff.toString(16)
-                    else -> "(invalid)"
                 } + " (bytes into file)",
                 textAlign = TextAlign.Left,
                 modifier = Modifier.weight(0.5f),

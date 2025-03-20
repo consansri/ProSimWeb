@@ -2,6 +2,7 @@ package ui.uilib.menu
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -78,7 +79,7 @@ fun MenuItemWithAttrs(icon: ImageVector, text: String, defaultAttrs: List<String
         CLabel(text = text, icon = icon, iconType = IconType.SMALL, textStyle = UIState.BaseStyle.current)
         CTextField(value, onValueChange = {
             value = it
-        }, textStyle = UIState.CodeStyle.current)
+        }, modifier = Modifier.focusable(true).clickable { }, textStyle = UIState.CodeStyle.current)
     }
 
 }

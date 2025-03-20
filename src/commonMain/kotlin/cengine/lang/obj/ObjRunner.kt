@@ -1,13 +1,15 @@
 package cengine.lang.obj
 
 import cengine.lang.Runner
-import cengine.lang.mif.MifConverter
+import cengine.lang.mif.MifBuilder
+import cengine.lang.mif.toMif
 import cengine.lang.obj.ObjRunner.Type
 import cengine.lang.obj.elf.ELFFile
 import cengine.lang.vhdl.toVHDL
 import cengine.project.Project
 import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
+import nativeError
 
 
 /**
@@ -26,6 +28,18 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "convert") {
         var type = Type.MIF
         var filename = file.name.removeSuffix(lang.fileSuffix)
         var constname = "mem"
+        var addrWidth: Int? = null
+
+        val manager = project.getManager(file)
+        if (manager == null) {
+            nativeError("${this::class.simpleName} Unable to find manager for ${file.name}!")
+            return
+        }
+        val objFile = manager.getPsiFile(file) as? ELFFile ?: manager.updatePsi(file) as? ELFFile
+        if (objFile == null) {
+            nativeError("${this::class.simpleName} Unable to find or create PsiFile for ${file.name}!")
+            return
+        }
 
         for (i in attrs.indices) {
             val attr = attrs[i]
@@ -38,7 +52,7 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "convert") {
                     } ?: continue
                 }
 
-                "-cn", "--constant" -> {
+                "-n", "--name" -> {
                     val next = attrs.getOrNull(i + 1) ?: continue
                     if (next.isNotEmpty() && !next.startsWith("-")) {
                         constname = next
@@ -49,6 +63,14 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "convert") {
                     val next = attrs.getOrNull(i + 1) ?: continue
                     if (next.isNotEmpty() && !next.startsWith("-")) {
                         filename = next
+                    }
+                }
+
+                "-aw", "--address-width" -> {
+                    val next = attrs.getOrNull(i + 1) ?: continue
+                    val aw = next.toIntOrNull()
+                    if (next.isNotEmpty() && aw != null) {
+                        addrWidth = aw
                     }
                 }
 
@@ -65,10 +87,7 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "convert") {
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
 
-                val manager = project.getManager(file) ?: return
-                val objFile = manager.getPsiFile(file) as? ELFFile ?: return
-
-                val fileContent = MifConverter.parseElf(objFile).build()
+                val fileContent = objFile.toMif(addrWidth)
                 outputFile.setAsUTF8String(fileContent)
             }
 
@@ -77,9 +96,6 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "convert") {
 
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
-
-                val manager = project.getManager(file) ?: return
-                val objFile = manager.getPsiFile(file) as? ELFFile ?: return
 
                 val fileContent = objFile.toVHDL(filename, constname)
                 outputFile.setAsUTF8String(fileContent)

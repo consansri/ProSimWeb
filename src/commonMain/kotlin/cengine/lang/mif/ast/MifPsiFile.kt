@@ -3,8 +3,9 @@ package cengine.lang.mif.ast
 import cengine.editor.annotation.Annotation
 import cengine.lang.asm.Disassembler
 import cengine.lang.asm.Initializer
-import cengine.lang.mif.MifGenerator.Radix
+
 import cengine.lang.mif.MifLang
+import cengine.lang.mif.MifRadix
 import cengine.psi.PsiManager
 import cengine.psi.core.PsiElement
 import cengine.psi.core.PsiElementVisitor
@@ -123,11 +124,11 @@ class MifPsiFile(
         return contents
     }
 
-    private fun analyzeHeader(result: (addrSize: IntNumberStatic<*>, wordSize: IntNumberStatic<*>, addrRDX: Radix, dataRDX: Radix, assignments: List<MifNode.Assignment>) -> Unit) {
+    private fun analyzeHeader(result: (addrSize: IntNumberStatic<*>, wordSize: IntNumberStatic<*>, addrRDX: MifRadix, dataRDX: MifRadix, assignments: List<MifNode.Assignment>) -> Unit) {
         var currWordSize: IntNumberStatic<*>? = null
         var currDepth: Double? = null
-        var dataRDX = Radix.HEX
-        var addrRDX = Radix.HEX
+        var dataRDX = MifRadix.HEX
+        var addrRDX = MifRadix.HEX
 
         program.headers.forEach {
             when (it.identifier.value) {
@@ -143,11 +144,11 @@ class MifPsiFile(
                 }
 
                 "ADDRESS_RADIX" -> {
-                    addrRDX = Radix.getRadix(it.value.value)
+                    addrRDX = MifRadix.getRadix(it.value.value)
                 }
 
                 "DATA_RADIX" -> {
-                    dataRDX = Radix.getRadix(it.value.value)
+                    dataRDX = MifRadix.getRadix(it.value.value)
                 }
             }
         }
