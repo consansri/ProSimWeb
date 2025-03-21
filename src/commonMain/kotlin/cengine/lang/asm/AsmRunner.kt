@@ -44,8 +44,6 @@ class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, getRunnerName(lang.spec))
                         -------------------------------------------------------- $name help --------------------------------------------------------
                             Arguments:
                                 -t, --target            : set the target (${Target.entries.joinToString { it.name }})
-                                -n, --name              : change name of constant
-                                -fn, --filename         : change output filename (without type suffix)
                                 -h, --help              : show help
                              
                         -------------------------------------------------------- $name help --------------------------------------------------------
