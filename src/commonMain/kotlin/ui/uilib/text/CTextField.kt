@@ -35,17 +35,17 @@ fun CTextField(
     },
 ) {
     val scale = UIState.Scale.value
-
     var isFocused by remember { mutableStateOf(false) }
+
+    val modifiedModifier = if (showBorder) {
+        modifier.border(scale.SIZE_BORDER_THICKNESS, if (!error) borderColor else UIState.Theme.value.COLOR_RED, RoundedCornerShape(scale.SIZE_CORNER_RADIUS))
+    } else modifier
 
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier
+        modifier = modifiedModifier
             .background(backgroundColor)
-            .apply {
-                if (showBorder) border(scale.SIZE_BORDER_THICKNESS, if (!error) borderColor else UIState.Theme.value.COLOR_RED, RoundedCornerShape(scale.SIZE_CORNER_RADIUS))
-            }
             .padding(scale.SIZE_INSET_MEDIUM)
             .onFocusChanged { focusState ->
                 if (isFocused && !focusState.isFocused) {
@@ -80,17 +80,18 @@ fun CTextField(
     },
 ) {
     val scale = UIState.Scale.value
-
     var isFocused by remember { mutableStateOf(false) }
+
+    val modifiedModifier = if (showBorder) {
+        modifier.border(scale.SIZE_BORDER_THICKNESS, if (!error) borderColor else UIState.Theme.value.COLOR_RED, RoundedCornerShape(scale.SIZE_CORNER_RADIUS))
+    } else modifier
 
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier =
-            modifier.background(backgroundColor)
-                .apply {
-                    if (showBorder) border(scale.SIZE_BORDER_THICKNESS, if (!error) borderColor else UIState.Theme.value.COLOR_RED, RoundedCornerShape(scale.SIZE_CORNER_RADIUS))
-                }
+            modifiedModifier
+                .background(backgroundColor)
                 .padding(scale.SIZE_INSET_MEDIUM)
                 .onFocusChanged { focusState ->
                     if (isFocused && !focusState.isFocused) {

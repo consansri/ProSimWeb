@@ -77,9 +77,15 @@ fun MenuItemWithAttrs(icon: ImageVector, text: String, defaultAttrs: List<String
             .background(if (isHovered) UIState.Theme.value.COLOR_ICON_BG_HOVER else Color.Transparent)
     ) {
         CLabel(text = text, icon = icon, iconType = IconType.SMALL, textStyle = UIState.BaseStyle.current)
-        CTextField(value, onValueChange = {
-            value = it
-        }, modifier = Modifier.focusable(true).clickable { }, textStyle = UIState.CodeStyle.current)
+        CTextField(
+            value,
+            onValueChange = {
+                value = it
+            },
+            modifier = Modifier.focusable(true).clickable(interactionSource, indication = null) { },
+            textStyle = UIState.CodeStyle.current,
+            showBorder = false
+        )
     }
 
 }

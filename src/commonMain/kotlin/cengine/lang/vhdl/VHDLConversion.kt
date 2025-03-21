@@ -2,11 +2,6 @@ package cengine.lang.vhdl
 
 import Constants
 import cengine.lang.asm.Initializer
-import cengine.util.buffer.Int8Buffer.Companion.toASCIIString
-import cengine.util.integer.IntNumber.Companion.toArray
-import kotlinx.datetime.*
-import nativeLog
-
 
 fun Initializer.toVHDL(packageName: String, memoryName: String, chunkSize: Int = 16): String {
 
