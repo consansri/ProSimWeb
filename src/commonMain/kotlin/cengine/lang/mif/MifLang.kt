@@ -12,6 +12,9 @@ import cengine.psi.PsiManager
 import cengine.vfs.VFileSystem
 
 object MifLang : LanguageService() {
+
+    const val OUTPUT_DIR = ".mif"
+
     override val name: String = "MIF"
     override val fileSuffix: String = ".mif"
     override val runConfig: Runner<MifLang> = MifRunner
