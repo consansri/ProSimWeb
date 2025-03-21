@@ -19,10 +19,9 @@ fun Initializer.toVHDL(packageName: String, memoryName: String, chunkSize: Int =
         appendLine()
         appendLine("library IEEE;")
         appendLine("use IEEE.STD_LOGIC_1164.ALL;")
-        appendLine("library IEEE.STD_LOGIC_ARITH.ALL;")
-        appendLine("library IEEE.STD_LOGIC_UNSIGNED.ALL;")
+        appendLine("use IEEE.NUMERIC_STD.ALL;")
         appendLine()
-        appendLine("package body $packageName is")
+        appendLine("PACKAGE $packageName IS")
         appendLine("    constant entrypoint : std_logic_vector(${entry.type.BITS - 1} downto 0) := X\"${entry.zeroPaddedHex()}\";")
         appendLine()
         content.filter { it.value.first.isNotEmpty() }.forEach { (secaddr, values) ->
@@ -38,7 +37,7 @@ fun Initializer.toVHDL(packageName: String, memoryName: String, chunkSize: Int =
             appendLine("    );")
             appendLine()
         }
-        appendLine("end $packageName;")
+        appendLine("END $packageName;")
 
     }
 }

@@ -34,10 +34,10 @@ fun Initializer.toMif(addrBitWidth: Int?, chunkSize: Int = 16, addrRadix: MifRad
             value.first.chunked(chunkSize).forEachIndexed { chunkIndex, chunk ->
                 val startAddr = key + chunkIndex * chunkSize
                 val endAddr = startAddr + chunk.size - 1
-                appendLine("    [${startAddr.toString(addrRadix.radix)}..${endAddr.toString(addrRadix.radix)}] : ${chunk.joinToString(" ") { it.toString(dataRadix.radix) }};")
+                appendLine("    [${addrRadix.format(startAddr)}..${addrRadix.format(endAddr)}] : ${chunk.joinToString(" ") { dataRadix.format(it) }};")
             }
+            appendLine()
         }
-        appendLine()
         appendLine("END;")
         appendLine()
     }
