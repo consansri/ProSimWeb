@@ -16,8 +16,8 @@ import nativeError
  * Attributes:
  * -type [Type] or -t [Type]
  */
-object ObjRunner : Runner<ObjLang>(ObjLang, "convert") {
-    override val defaultAttrs: List<String> = listOf("-t", Type.MIF.name, "-cn", "mem")
+object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
+    override val defaultAttrs: List<String> = listOf("-t", Type.MIF.name, "-n", "mem")
 
     override suspend fun global(project: Project, vararg attrs: String) {
 
