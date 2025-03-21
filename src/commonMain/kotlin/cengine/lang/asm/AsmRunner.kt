@@ -2,6 +2,7 @@ package cengine.lang.asm
 
 import cengine.editor.annotation.Severity
 import cengine.lang.Runner
+import cengine.lang.asm.ast.TargetSpec
 import cengine.lang.asm.ast.impl.AsmFile
 import cengine.project.Project
 import cengine.psi.PsiManager
@@ -14,35 +15,51 @@ import nativeInfo
 import nativeLog
 import nativeWarn
 
-class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, "Assemble Binary") {
-    override val defaultAttrs: List<String> = listOf("-t", Type.entries.first().name)
+class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, getRunnerName(lang.spec)) {
+
+    companion object{
+        const val ASM_RUNNER_PREFIX = "asm-"
+        fun getRunnerName(spec: TargetSpec<*>): String = ASM_RUNNER_PREFIX + spec.shortName
+    }
 
     override suspend fun global(project: Project, vararg attrs: String) {
 
     }
 
     override suspend fun onFile(project: Project, file: VirtualFile, vararg attrs: String) {
-        var type = Type.EXECUTABLE
+        var target = Target.EXEC
 
         for (i in attrs.indices) {
-            val attr = attrs[i]
-
-            when (attr) {
-                "-t", "-type" -> {
+            when (val attr = attrs[i]) {
+                "-t", "--target" -> {
                     val next = attrs.getOrNull(i + 1) ?: continue
-                    type = Type.entries.firstOrNull {
+                    target = Target.entries.firstOrNull {
                         it.name == next.uppercase()
                     } ?: continue
                 }
 
-                else -> {
+                "-h", "--help" -> {
+                    nativeLog("""
+                        
+                        -------------------------------------------------------- $name help --------------------------------------------------------
+                            Arguments:
+                                -t, --target            : set the target (${Target.entries.joinToString { it.name }})
+                                -n, --name              : change name of constant
+                                -fn, --filename         : change output filename (without type suffix)
+                                -h, --help              : show help
+                             
+                        -------------------------------------------------------- $name help --------------------------------------------------------
+                    """.trimIndent())
+                }
 
+                else -> {
+                    nativeError("${name}: Invalid Argument $attr (display valid arguments with -h or --help)!")
                 }
             }
         }
 
-        when (type) {
-            Type.EXECUTABLE -> {
+        when (target) {
+            Target.EXEC -> {
                 val manager = project.getManager(file)
                 if(manager != null){
                     executable(project.fileSystem, manager, file)
@@ -80,7 +97,7 @@ class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, "Assemble Binary") {
         }
     }
 
-    enum class Type {
-        EXECUTABLE
+    enum class Target {
+        EXEC
     }
 }

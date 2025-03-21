@@ -1,6 +1,7 @@
 package cengine.lang
 
 import cengine.project.Project
+import cengine.project.ProjectStateManager
 import cengine.vfs.VirtualFile
 
 
@@ -12,8 +13,6 @@ import cengine.vfs.VirtualFile
  * @property name The name of the runner.
  */
 abstract class Runner<T : LanguageService>(val lang: T, val name: String) {
-
-    abstract val defaultAttrs: List<String>
 
     /**
      * Executes a global action on the project.

@@ -22,6 +22,7 @@ interface TargetSpec<T : AsmCodeGenerator<*>> {
     }
 
     val name: String
+    val shortName: String get() = name.replace("\\s".toRegex(), "").lowercase()
     val emuLink: EmuLink?
 
     /** Determines if registers are detected by name. */

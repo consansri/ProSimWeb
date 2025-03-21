@@ -39,12 +39,13 @@ fun FileContextMenu(
             onDelete(file)
         }
 
-        val runConfig = project.getLang(file)?.runConfig
-        runConfig?.let {
-            MenuItemWithAttrs(UIState.Icon.value.chevronRight, it.name, it.defaultAttrs) { attrs ->
+        val runner = project.getLang(file)?.runConfig
+        runner?.let {
+            MenuItemWithAttrs(UIState.Icon.value.chevronRight, it.name, project.projectState.ide.runnerAttrs[it.name] ?: emptyList()) { attrs ->
                 onDismiss()
+                project.projectState.ide.replaceRunnerAttrs(runner, attrs)
                 ioScope.launch {
-                    runConfig.onFile(project, file, *attrs.toTypedArray())
+                    runner.onFile(project, file, *attrs.toTypedArray())
                 }
             }
         }

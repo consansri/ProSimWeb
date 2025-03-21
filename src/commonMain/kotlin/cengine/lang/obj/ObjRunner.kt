@@ -1,23 +1,22 @@
 package cengine.lang.obj
 
 import cengine.lang.Runner
-import cengine.lang.mif.MifBuilder
 import cengine.lang.mif.toMif
-import cengine.lang.obj.ObjRunner.Type
+import cengine.lang.obj.ObjRunner.Target
 import cengine.lang.obj.elf.ELFFile
 import cengine.lang.vhdl.toVHDL
 import cengine.project.Project
 import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
 import nativeError
+import nativeLog
 
 
 /**
  * Attributes:
- * -type [Type] or -t [Type]
+ * -type [Target] or -t [Target]
  */
 object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
-    override val defaultAttrs: List<String> = listOf("-t", Type.MIF.name, "-n", "mem")
 
     override suspend fun global(project: Project, vararg attrs: String) {
 
@@ -25,7 +24,7 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
 
     override suspend fun onFile(project: Project, file: VirtualFile, vararg attrs: String) {
 
-        var type = Type.MIF
+        var target = Target.MIF
         var filename = file.name.removeSuffix(lang.fileSuffix)
         var constname = "mem"
         var addrWidth: Int? = null
@@ -45,9 +44,9 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
             val attr = attrs[i]
 
             when (attr) {
-                "-t", "--type" -> {
+                "-t", "--target" -> {
                     val next = attrs.getOrNull(i + 1) ?: continue
-                    type = Type.entries.firstOrNull {
+                    target = Target.entries.firstOrNull {
                         it.name == next.uppercase()
                     } ?: continue
                 }
@@ -74,14 +73,29 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
                     }
                 }
 
-                else -> {
+                "-h", "--help" -> {
+                    nativeLog("""
+                        
+                        -------------------------------------------------------- $name help --------------------------------------------------------
+                            Arguments:
+                                -t, --target            : set the target (${Target.entries.joinToString { it.name }})
+                                -n, --name              : change name of constant
+                                -fn, --filename         : change output filename (without type suffix)
+                                -aw, --address-width    : customize address-width (in bits)
+                                -h, --help              : show help
+                             
+                        -------------------------------------------------------- $name help --------------------------------------------------------
+                    """.trimIndent())
+                }
 
+                else -> {
+                    nativeError("$name: Invalid Argument $attr (display valid arguments with -h or --help)!")
                 }
             }
         }
 
-        when (type) {
-            Type.MIF -> {
+        when (target) {
+            Target.MIF -> {
                 val outputPath = FPath.of(project.fileSystem, ObjLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".mif")
 
                 project.fileSystem.deleteFile(outputPath)
@@ -91,7 +105,7 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
                 outputFile.setAsUTF8String(fileContent)
             }
 
-            Type.VHDL -> {
+            Target.VHDL -> {
                 val outputPath = FPath.of(project.fileSystem, ObjLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".vhd")
 
                 project.fileSystem.deleteFile(outputPath)
@@ -104,7 +118,7 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
     }
 
 
-    enum class Type {
+    enum class Target {
         MIF,
         VHDL
     }

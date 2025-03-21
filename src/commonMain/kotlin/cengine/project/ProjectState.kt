@@ -1,6 +1,11 @@
 package cengine.project
 
+import cengine.lang.Runner
+import cengine.lang.asm.AsmRunner
+import cengine.lang.asm.AsmRunner.Target
 import cengine.lang.asm.ast.TargetSpec
+import cengine.lang.mif.MifRunner
+import cengine.lang.obj.ObjRunner
 import cengine.vfs.FPath
 import kotlinx.serialization.Serializable
 import ui.EmulatorContentView
@@ -30,7 +35,11 @@ data class ProjectState(
         private var _bottomContent: ToolContentType? = null,
         private var _leftWidth: Float = 200f,
         private var _bottomHeight: Float = 200f,
-        private var _rightWidth: Float = 200f
+        private var _rightWidth: Float = 200f,
+        private var _runnerAttrs: Map<String, List<String>> = mapOf(
+            MifRunner.name to listOf("-t", MifRunner.Target.VHDL.name, "-h"),
+            ObjRunner.name to listOf("-t", ObjRunner.Target.MIF.name, "-h"),
+        ) + TargetSpec.specs.associate { AsmRunner.getRunnerName(it) to listOf("-t", Target.EXEC.name, "-h") },
     ) {
         var openFiles: List<FPath>
             get() = _openFiles
@@ -74,6 +83,20 @@ data class ProjectState(
                 _rightWidth = value
                 ProjectStateManager.projectStateChanged()
             }
+
+        var runnerAttrs: Map<String, List<String>>
+            get() = _runnerAttrs
+            set(value) {
+                _runnerAttrs = value
+                ProjectStateManager.projectStateChanged()
+            }
+
+        fun replaceRunnerAttrs(runner: Runner<*>, newAttrs: List<String>) {
+            val newMap = runnerAttrs.toMutableMap()
+            newMap.remove(runner.name)
+            newMap[runner.name] = newAttrs
+            runnerAttrs = newMap
+        }
     }
 
     @Serializable
@@ -84,7 +107,7 @@ data class ProjectState(
         private var _rightContent: EmulatorContentView? = null,
         private var _leftWidth: Float = 200f,
         private var _bottomHeight: Float = 200f,
-        private var _rightWidth: Float = 200f
+        private var _rightWidth: Float = 200f,
     ) {
         var initFilePath: FPath?
             get() = _objFilePath
