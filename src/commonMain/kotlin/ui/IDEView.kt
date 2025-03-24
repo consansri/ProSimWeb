@@ -22,6 +22,8 @@ import ui.ide.editor.CodeEditor
 import ui.ide.editor.BinaryEditor
 import ui.ide.editor.TextEditor
 import ui.uilib.UIState
+import ui.uilib.console.CConsole
+import ui.uilib.console.UnifiedTerminalShell
 import ui.uilib.filetree.FileTree
 import ui.uilib.interactable.CButton
 import ui.uilib.interactable.CToggle
@@ -103,6 +105,15 @@ fun IDEView(
         })
     }
 
+    val console: (@Composable BoxScope.() -> Unit) = {
+        UnifiedTerminalShell(project)
+
+        val messages = remember { mutableStateListOf<String>() }
+        /*CConsole(messages) {
+            messages += it
+        }*/
+    }
+
     BorderLayout(
         Modifier.fillMaxSize().background(theme.COLOR_BG_0),
         top = {
@@ -123,7 +134,7 @@ fun IDEView(
                         DropdownMenuItem(
                             onClick = {
                                 coroutineScope.launch {
-                                    config.global(project)
+                                    config.run(project)
                                 }
                                 runConfigExpanded = false
                             },
@@ -145,6 +156,7 @@ fun IDEView(
                     leftContent = when (leftContentType) {
                         ToolContentType.FileTree -> fileTree
                         ToolContentType.PsiAnalyzer -> psiAnalyzer
+                        ToolContentType.Console -> console
                         null -> null
                     },
                     centerContent = {
@@ -208,11 +220,13 @@ fun IDEView(
                     rightContent = when (rightContentType) {
                         ToolContentType.FileTree -> fileTree
                         ToolContentType.PsiAnalyzer -> psiAnalyzer
+                        ToolContentType.Console -> console
                         null -> null
                     },
                     bottomContent = when (bottomContentType) {
                         ToolContentType.FileTree -> fileTree
                         ToolContentType.PsiAnalyzer -> psiAnalyzer
+                        ToolContentType.Console -> console
                         null -> null
                     },
                     onLeftWidthChange = {
@@ -244,9 +258,11 @@ fun IDEView(
                         } else null
                     }, value = bottomContentType == ToolContentType.PsiAnalyzer, icon = icons.statusError)
 
-                    /*CToggle(onClick = {
-
-                    }, value = false, icon = icons.console)*/
+                    CToggle(onClick = {
+                        bottomContentType = if (bottomContentType != ToolContentType.Console) {
+                            ToolContentType.Console
+                        } else null
+                    }, value = false, icon = icons.console)
 
                 }
             )
@@ -296,5 +312,6 @@ fun IDEView(
 @Serializable
 enum class ToolContentType {
     FileTree,
-    PsiAnalyzer;
+    PsiAnalyzer,
+    Console;
 }

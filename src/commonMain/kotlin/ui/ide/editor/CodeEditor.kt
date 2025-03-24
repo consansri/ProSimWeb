@@ -221,7 +221,7 @@ fun CodeEditor(
     fun run() {
         coroutineScope.launch {
             withContext(Dispatchers.Default) {
-                lang.runConfig.onFile(project, file)
+                lang.runConfig.run(project, file)
                 nativeLog("Run $manager ${manager.printCache()} ${manager.getPsiFile(file)}")
                 val psiFile = manager.getPsiFile(file) ?: return@withContext
                 psiHasChanged(psiFile)

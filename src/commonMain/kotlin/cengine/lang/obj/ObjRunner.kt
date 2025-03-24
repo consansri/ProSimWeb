@@ -1,6 +1,7 @@
 package cengine.lang.obj
 
 import cengine.lang.Runner
+import cengine.lang.mif.MifRunner
 import cengine.lang.mif.toMif
 import cengine.lang.obj.ObjRunner.Target
 import cengine.lang.obj.elf.ELFFile
@@ -18,32 +19,27 @@ import nativeLog
  */
 object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
 
-    override suspend fun global(project: Project, vararg attrs: String) {
-
-    }
-
-    override suspend fun onFile(project: Project, file: VirtualFile, vararg attrs: String) {
-
+    override suspend fun run(project: Project, vararg attrs: String): Boolean {
         var target = Target.MIF
-        var filename = file.name.removeSuffix(lang.fileSuffix)
+        var filepath: FPath? = null
+        var filename: String? = null // file.name.removeSuffix(lang.fileSuffix)
         var constname = "mem"
         var addrWidth: Int? = null
-
-        val manager = project.getManager(file)
-        if (manager == null) {
-            nativeError("${this::class.simpleName} Unable to find manager for ${file.name}!")
-            return
-        }
-        val objFile = manager.getPsiFile(file) as? ELFFile ?: manager.updatePsi(file) as? ELFFile
-        if (objFile == null) {
-            nativeError("${this::class.simpleName} Unable to find or create PsiFile for ${file.name}!")
-            return
-        }
 
         for (i in attrs.indices) {
             val attr = attrs[i]
 
             when (attr) {
+                DEFAULT_FILEPATH_ATTR -> {
+                    val next = attrs.getOrNull(i + 1) ?: continue
+                    if (next.isNotEmpty()) {
+                        filepath = FPath.delimited(next)
+                    } else {
+                        nativeError("${this::class.simpleName} expected filepath!")
+                        return false
+                    }
+                }
+
                 "-t", "--target" -> {
                     val next = attrs.getOrNull(i + 1) ?: continue
                     target = Target.entries.firstOrNull {
@@ -74,10 +70,12 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
                 }
 
                 "-h", "--help" -> {
-                    nativeLog("""
+                    nativeLog(
+                        """
                         
                         -------------------------------------------------------- $name help --------------------------------------------------------
                             Arguments:
+                                $DEFAULT_FILEPATH_ATTR  : file to run
                                 -t, --target            : set the target (${Target.entries.joinToString { it.name }})
                                 -n, --name              : change name of constant
                                 -fn, --filename         : change output filename (without type suffix)
@@ -85,13 +83,29 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
                                 -h, --help              : show help
                              
                         -------------------------------------------------------- $name help --------------------------------------------------------
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 }
 
                 else -> {
                     nativeError("$name: Invalid Argument $attr (display valid arguments with -h or --help)!")
                 }
             }
+        }
+
+        val file = resolveFilePath(project, filepath) ?: return false
+
+        if (filename == null) filename = file.name.removeSuffix(lang.fileSuffix)
+
+        val manager = project.getManager(file)
+        if (manager == null) {
+            nativeError("${this::class.simpleName} Unable to find manager for ${file.name}!")
+            return false
+        }
+        val objFile = manager.getPsiFile(file) as? ELFFile ?: manager.updatePsi(file) as? ELFFile
+        if (objFile == null) {
+            nativeError("${this::class.simpleName} Unable to find or create PsiFile for ${file.name}!")
+            return false
         }
 
         when (target) {
@@ -115,6 +129,8 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
                 outputFile.setAsUTF8String(fileContent)
             }
         }
+
+        return true
     }
 
 

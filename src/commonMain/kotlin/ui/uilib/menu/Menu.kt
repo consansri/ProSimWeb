@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import cengine.util.string.splitBySpaces
 import ui.uilib.UIState
 import ui.uilib.interactable.CInput
 import ui.uilib.label.CLabel
@@ -71,7 +72,7 @@ fun MenuItemWithAttrs(icon: ImageVector, text: String, defaultAttrs: List<String
     Row(
         Modifier
             .clickable(interactionSource, indication = null) {
-                onClick(value.text.split("\\s+".toRegex()).filter { it.isNotEmpty() })
+                onClick(value.text.splitBySpaces())
             }
             .hoverable(interactionSource)
             .background(if (isHovered) UIState.Theme.value.COLOR_ICON_BG_HOVER else Color.Transparent)

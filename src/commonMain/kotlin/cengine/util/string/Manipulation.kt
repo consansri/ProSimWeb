@@ -5,6 +5,7 @@ package cengine.util.string
  */
 
 private val leadingZerosRegex = Regex("^0+(?!$)")
+private val spacesRegex = "\\s+".toRegex()
 
 /**
  * Removes leading zeros from a string.
@@ -13,3 +14,5 @@ private val leadingZerosRegex = Regex("^0+(?!$)")
  * @return the input string with the leading zeros removed, or "0" if the input string is empty
  */
 fun String.removeLeadingZeros(): String = replaceFirst(leadingZerosRegex, "").ifEmpty { "0" }
+
+fun String.splitBySpaces(): List<String> = split(spacesRegex).filter { it.isNotEmpty() }

@@ -4,6 +4,8 @@ import cengine.editor.annotation.Severity
 import cengine.lang.Runner
 import cengine.lang.asm.ast.TargetSpec
 import cengine.lang.asm.ast.impl.AsmFile
+import cengine.lang.mif.MifRunner
+import cengine.lang.obj.ObjRunner
 import cengine.project.Project
 import cengine.psi.PsiManager
 import cengine.psi.impl.PsiNotationCollector
@@ -17,20 +19,27 @@ import nativeWarn
 
 class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, getRunnerName(lang.spec)) {
 
-    companion object{
+    companion object {
         const val ASM_RUNNER_PREFIX = "asm-"
         fun getRunnerName(spec: TargetSpec<*>): String = ASM_RUNNER_PREFIX + spec.shortName
     }
 
-    override suspend fun global(project: Project, vararg attrs: String) {
-
-    }
-
-    override suspend fun onFile(project: Project, file: VirtualFile, vararg attrs: String) {
+    override suspend fun run(project: Project, vararg attrs: String): Boolean {
         var target = Target.EXEC
+        var filepath: FPath? = null
 
         for (i in attrs.indices) {
             when (val attr = attrs[i]) {
+                DEFAULT_FILEPATH_ATTR -> {
+                    val next = attrs.getOrNull(i + 1) ?: continue
+                    if (next.isNotEmpty()) {
+                        filepath = FPath.delimited(next)
+                    } else {
+                        nativeError("${this::class.simpleName} expected filepath!")
+                        return false
+                    }
+                }
+
                 "-t", "--target" -> {
                     val next = attrs.getOrNull(i + 1) ?: continue
                     target = Target.entries.firstOrNull {
@@ -39,15 +48,18 @@ class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, getRunnerName(lang.spec))
                 }
 
                 "-h", "--help" -> {
-                    nativeLog("""
+                    nativeLog(
+                        """
                         
                         -------------------------------------------------------- $name help --------------------------------------------------------
                             Arguments:
+                                $DEFAULT_FILEPATH_ATTR  : file to run
                                 -t, --target            : set the target (${Target.entries.joinToString { it.name }})
                                 -h, --help              : show help
                              
                         -------------------------------------------------------- $name help --------------------------------------------------------
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 }
 
                 else -> {
@@ -56,17 +68,21 @@ class AsmRunner(lang: AsmLang) : Runner<AsmLang>(lang, getRunnerName(lang.spec))
             }
         }
 
+        val file = resolveFilePath(project, filepath) ?: return false
+
         when (target) {
             Target.EXEC -> {
                 val manager = project.getManager(file)
-                if(manager != null){
+                if (manager != null) {
                     executable(project.fileSystem, manager, file)
                 }
             }
         }
+
+        return true
     }
 
-    private suspend fun executable(vfs: VFileSystem, manager: PsiManager<*,*>, file: VirtualFile) {
+    private suspend fun executable(vfs: VFileSystem, manager: PsiManager<*, *>, file: VirtualFile) {
         val asmFile = manager.updatePsi(file) as AsmFile
         nativeLog("Updated PsiFile $asmFile ${manager.printCache()}")
 
