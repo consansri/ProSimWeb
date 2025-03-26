@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.SpanStyle
@@ -34,11 +36,13 @@ fun UnifiedTerminalShell(context: ShellContext) {
 
     val consoleExecutionScope = rememberCoroutineScope()
 
+    // Create a FocusRequester to manage focus manually
+    val focusRequester = remember { FocusRequester() }
+
     val keyWordHighlighter = KeywordHighlightTransformation(
         ShellCmd.BASE.map { it.keyword } to SpanStyle(color = theme.COLOR_BLUE),
         runConfigs.map { it.name } to SpanStyle(color = theme.COLOR_ORANGE)
     )
-
 
     // A helper function to process commands.
     suspend fun processCommand(command: String) {
@@ -96,11 +100,9 @@ fun UnifiedTerminalShell(context: ShellContext) {
         textStyle = UIState.CodeStyle.current,
         modifier = Modifier
             .fillMaxSize()
+            .focusRequester(focusRequester)
             .background(theme.COLOR_BG_0)
             .padding(scale.SIZE_INSET_MEDIUM)
-            .onFocusChanged {
-                SysOut.log("Terminal focus state ${Constants.sign()}: ${it.hasFocus}")
-            }
             .onPreviewKeyEvent { keyEvent ->
                 // Only Handle KeyDown events.
                 if (keyEvent.type == KeyEventType.KeyDown) {
@@ -115,6 +117,8 @@ fun UnifiedTerminalShell(context: ShellContext) {
                                 processCommands(input)
                                 // Append command output and a new prompt.
                                 context.streamprompt()
+                                // Re-request focus to avoid losing it.
+                                focusRequester.requestFocus()
                             }
 
                             // Consume the key event.
@@ -204,5 +208,10 @@ fun UnifiedTerminalShell(context: ShellContext) {
             },
         visualTransformation = keyWordHighlighter
     )
+
+    // Make sure we initially request focus when the shell appears.
+    LaunchedEffect(Unit){
+        focusRequester.requestFocus()
+    }
 
 }
