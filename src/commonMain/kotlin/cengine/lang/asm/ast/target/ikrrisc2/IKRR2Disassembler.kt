@@ -118,7 +118,7 @@ object IKRR2Disassembler : Disassembler() {
                 BEQ, BNE, BLT, BGT, BLE, BGE -> {
                     val offset18 = disp18.signExtend(18)
                     val target = segmentAddr.toUInt32() + offset.toUInt32() + offset18
-                    Decoded(offset, binary, "${type.lc5Name} $hexPrefix${disp18.toString(16)}", target.toBigInt())
+                    Decoded(offset, binary, "${type.lc5Name} $rcReg, $hexPrefix${disp18.toString(16)}", target.toBigInt())
                 }
 
                 BRA, BSR -> {
