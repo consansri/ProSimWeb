@@ -6,6 +6,7 @@ sealed interface IOContext {
         const val PREFIX_INFO = "info: "
         const val PREFIX_DEBUG = "debug: "
         const val PREFIX_LOG = "log: "
+        const val PREFIX_USAGE = "usage: "
     }
 
     fun stream(message: String)
@@ -21,5 +22,7 @@ sealed interface IOContext {
     fun debug(message: String) = streamln(PREFIX_DEBUG + message)
 
     fun log(message: String) = streamln(PREFIX_LOG + message)
+
+    fun usage(message: String) = streamln(PREFIX_USAGE + message)
 
 }

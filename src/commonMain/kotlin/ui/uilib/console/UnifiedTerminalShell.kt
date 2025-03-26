@@ -14,6 +14,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Constraints
 import cengine.util.string.commonPrefix
 import cengine.util.string.splitBySpaces
@@ -166,6 +167,17 @@ fun UnifiedTerminalShell(context: ShellContext) {
                             return@onPreviewKeyEvent true
                         }
 
+                        Key.MoveHome -> {
+                            if (context.terminalState.selection.start > context.inputStartIndex) {
+                                if (keyEvent.isShiftPressed) {
+                                    context.terminalState = context.terminalState.copy(selection = TextRange(context.terminalState.selection.start, context.inputStartIndex))
+                                } else {
+                                    context.terminalState = context.terminalState.copy(selection = TextRange(context.inputStartIndex))
+                                }
+                                return@onPreviewKeyEvent true
+                            }
+                        }
+
                         Key.Tab -> {
                             // When Tab is pressed, attempt to complete directory paths.
                             val inputText = context.terminalState.text.substring(context.inputStartIndex, context.terminalState.selection.start)
@@ -210,7 +222,7 @@ fun UnifiedTerminalShell(context: ShellContext) {
     )
 
     // Make sure we initially request focus when the shell appears.
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 

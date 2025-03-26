@@ -33,7 +33,7 @@ data class ShellCmd(val keyword: String, val onPrompt: ShellContext.(attrs: List
             ShellCmd("mkdir") { attrs ->
                 // Create a new directory.
                 if (attrs.size != 1) {
-                    streamln("Usage: mkdir <directory_name>")
+                    usage("mkdir <directory_name>")
                 } else {
                     val destPath = attrs[0].toFPath()
                     val parentDir = project.fileSystem[directory, destPath] ?: return@ShellCmd error("Invalid path $destPath")
@@ -48,7 +48,7 @@ data class ShellCmd(val keyword: String, val onPrompt: ShellContext.(attrs: List
             },
             ShellCmd("rm") { attrs ->
                 // Usage: rm [-r] <target>
-                if (attrs.isEmpty()) return@ShellCmd streamln("Usage: rm [-r] <target>")
+                if (attrs.isEmpty()) return@ShellCmd usage("rm [-r] <target>")
 
                 var recursive = false
                 var targetPath: String? = null
@@ -58,7 +58,7 @@ data class ShellCmd(val keyword: String, val onPrompt: ShellContext.(attrs: List
                     if (attrs.size > 1) {
                         targetPath = attrs[1]
                     } else {
-                        return@ShellCmd streamln("Usage: rm -r <target>")
+                        return@ShellCmd usage("rm -r <target>")
                     }
                 } else {
                     targetPath = attrs[0]
@@ -73,6 +73,38 @@ data class ShellCmd(val keyword: String, val onPrompt: ShellContext.(attrs: List
 
                 // Remove the target.
                 project.fileSystem.deleteFile(target.path, true)
+            },
+            ShellCmd("touch") { attrs ->
+                if (attrs.size != 1) {
+                    usage("touch <filename>")
+                    return@ShellCmd
+                }
+                // Convert the provided argument to an FPath.
+                val filePath = attrs[0].toFPath()
+
+                if (filePath.isEmpty()) {
+                    usage("touch <filename>")
+                    return@ShellCmd
+                }
+
+                // Resolve the parent directory relative to the current directory.
+                val parentDir = project.fileSystem[directory, filePath.withoutLast()] ?: return@ShellCmd error("Invalid path: ${filePath.withoutLast()}")
+
+                project.fileSystem.createFile(parentDir.path + filePath.last(), false)
+            },
+            ShellCmd("cat") { attrs ->
+                if (attrs.size != 1) {
+                    usage("cat <filename>")
+                    return@ShellCmd
+                }
+
+                val file = project.fileSystem[directory, attrs[0].toFPath()] ?: return@ShellCmd usage("cat <filename>")
+                if (file.isDirectory) {
+                    error("File is a directory!")
+                    return@ShellCmd
+                }
+
+                streamln(file.getAsUTF8String())
             }
         )
     }
