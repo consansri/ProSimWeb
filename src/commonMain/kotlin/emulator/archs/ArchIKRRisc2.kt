@@ -15,7 +15,7 @@ import emulator.archs.ikrrisc2.IKRR2BaseRegs
 import emulator.kit.ArchConfig
 import emulator.kit.MicroSetup
 import emulator.kit.memory.*
-import nativeLog
+
 import emulator.kit.optional.BasicArchImpl
 
 class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
@@ -295,7 +295,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
 
             BLT -> {
                 val disp = decoded.disp18.signExtend(18)
-                if (baseRegs[decoded.rc] < 0) {
+                if (baseRegs[decoded.rc].toInt32() < 0) {
                     pc += disp
                 } else {
                     pc += 1
@@ -304,7 +304,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
 
             BGT -> {
                 val disp = decoded.disp18.signExtend(18)
-                if (baseRegs[decoded.rc] > 0) {
+                if (baseRegs[decoded.rc].toInt32() > 0) {
                     pc += disp
                 } else {
                     pc += 1
@@ -313,7 +313,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
 
             BLE -> {
                 val disp = decoded.disp18.signExtend(18)
-                if (baseRegs[decoded.rc] <= 0) {
+                if (baseRegs[decoded.rc].toInt32() <= 0) {
                     pc += disp
                 } else {
                     pc += 1
@@ -322,7 +322,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
 
             BGE -> {
                 val disp = decoded.disp18.signExtend(18)
-                if (baseRegs[decoded.rc] >= 0) {
+                if (baseRegs[decoded.rc].toInt32() >= 0) {
                     pc += disp
                 } else {
                     pc += 1
@@ -335,7 +335,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
 
             BSR -> {
                 baseRegs[31] = pc + 1 // Save return address
-                nativeLog("BSR: ${pc.toString(16)} + ${decoded.disp26.signExtend(26).toString(16)} -> ${(pc + decoded.disp26.signExtend(26)).toString(16)}")
+                SysOut.log("BSR: ${pc.toString(16)} + ${decoded.disp26.signExtend(26).toString(16)} -> ${(pc + decoded.disp26.signExtend(26)).toString(16)}")
                 pc += decoded.disp26.signExtend(26)
             }
 
