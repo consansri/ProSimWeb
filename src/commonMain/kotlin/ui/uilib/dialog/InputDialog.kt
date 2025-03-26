@@ -7,7 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.Dialog
-import nativeLog
+
 import ui.uilib.UIState
 import ui.uilib.interactable.CButton
 import ui.uilib.layout.FormRect
@@ -51,7 +51,7 @@ fun InputDialog(title: String, init: String, onConfirm: (String) -> Unit, onDism
                     text = "Confirm",
                     onClick = {
                         if (text.text.isNotEmpty()) {
-                            nativeLog("Confirm: -> ")
+                            SysOut.log("Confirm: -> ")
                             onConfirm(text.text)
                         }
                     }, active = text.text.isNotEmpty(),

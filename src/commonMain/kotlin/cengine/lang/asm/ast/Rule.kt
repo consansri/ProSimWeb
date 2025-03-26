@@ -4,7 +4,7 @@ import cengine.lang.asm.ast.impl.ASNode
 import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.asm.ast.lexer.AsmToken
 import debug.DebugTools
-import nativeLog
+
 
 /**
  * Class representing a rule for the assembler, which matches components based on specified criteria.
@@ -35,7 +35,7 @@ class Rule(comp: () -> Component = { Component.Nothing }) {
     fun matchStart(lexer: AsmLexer, targetSpec: TargetSpec<*>): MatchResult {
         val result = comp.matchStart(lexer, targetSpec)
         if (DebugTools.KIT_showRuleChecks) {
-            nativeLog(result.toString())
+            SysOut.log(result.toString())
         }
         return result
     }

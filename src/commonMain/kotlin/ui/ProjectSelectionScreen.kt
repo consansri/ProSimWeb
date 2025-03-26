@@ -72,7 +72,7 @@ fun ProjectSelectionScreen(onProjectSelected: (ProjectState) -> Unit, onCreateNe
 
                             CLabel(
                                 modifier = Modifier.weight(1.0f),
-                                text = it.absRootPath,
+                                text = it.absRootPath.toString(),
                                 textAlign = TextAlign.Left,
                                 horizontalArrangement = Arrangement.Start,
                                 softWrap = false

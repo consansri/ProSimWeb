@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cengine.project.Project
 import cengine.vfs.FPath
+import cengine.vfs.FPath.Companion.toFPath
 import cengine.vfs.FileChangeListener
 import cengine.vfs.VirtualFile
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
@@ -105,7 +106,7 @@ fun FileTree(
                 inputDialogTitle = if (isDirectory) "Create Directory" else "Create File"
                 inputDialogInitText = "new"
                 onInputConfirm.value = { newName ->
-                    vfs.createFile(file.path + FPath.delimited(newName), isDirectory)
+                    vfs.createFile(file.path + newName.toFPath(), isDirectory)
                     forceReload()
                     showInputDialog = false
                 }
@@ -139,7 +140,7 @@ fun FileTree(
             },
             valid = {
                 val path = selectedFile!!.path + it
-                vfs.findFile(path) != null
+                vfs[path] != null
             }
         )
     }

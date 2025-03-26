@@ -18,7 +18,7 @@ fun TopBar(
     project: Project,
     viewType: MutableState<ViewType>,
     onClose: () -> Unit,
-    customContent: @Composable RowScope.() -> Unit = {}
+    customContent: @Composable RowScope.() -> Unit = {},
 ) {
 
     val theme = UIState.Theme.value
@@ -28,7 +28,7 @@ fun TopBar(
     AppBar(
         icon = icons.appLogo,
         title = project.projectState.target,
-        name = project.projectState.absRootPath,
+        name = project.projectState.absRootPath.toString(),
         type = viewType.value.name,
         actions = {
 

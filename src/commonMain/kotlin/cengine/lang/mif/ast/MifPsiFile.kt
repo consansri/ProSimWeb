@@ -16,7 +16,7 @@ import cengine.util.integer.IntNumber.Companion.parseAnyUInt
 import cengine.util.integer.IntNumberStatic
 import cengine.vfs.VirtualFile
 import emulator.kit.memory.Memory
-import nativeError
+
 import kotlin.math.log2
 import kotlin.math.roundToInt
 
@@ -66,7 +66,7 @@ class MifPsiFile(
                         val endAddr = BigInt.parse(assignment.valueRange.last.value, addrRDX.radix)
                         val length = (endAddr - startAddr) + 1
                         if (length < 0 || length > Int.MAX_VALUE) {
-                            nativeError("MifPsiFile ${file.name}: Length of ${assignment::class.simpleName} exceeds 0..${Int.MAX_VALUE} -> $length = $endAddr - $startAddr")
+                            SysOut.error("MifPsiFile ${file.name}: Length of ${assignment::class.simpleName} exceeds 0..${Int.MAX_VALUE} -> $length = $endAddr - $startAddr")
                             return@analyzeHeader
                         }
                         val initArray = try {
@@ -74,7 +74,7 @@ class MifPsiFile(
                                 values[it % values.size]
                             }
                         } catch (e: Exception) {
-                            nativeError("Couldn't convert $length to exact Int (${length.value.intValue(false)})")
+                            SysOut.error("Couldn't convert $length to exact Int (${length.value.intValue(false)})")
                             emptyList()
                         }
                         memory.storeArray(startAddr, initArray)
@@ -111,7 +111,7 @@ class MifPsiFile(
                         val endAddr = BigInt.parse(assignment.valueRange.last.value, addrRDX.radix)
                         val length = (endAddr - startAddr) + 1
                         if (length < 0) {
-                            nativeError("MifPsiFile ${file.name}: Length of ${assignment::class.simpleName} exceeds ${Int.MAX_VALUE} -> $length = $endAddr - $startAddr")
+                            SysOut.error("MifPsiFile ${file.name}: Length of ${assignment::class.simpleName} exceeds ${Int.MAX_VALUE} -> $length = $endAddr - $startAddr")
                             return@analyzeHeader
                         }
                         startAddr to (List(length.toInt()) {
@@ -135,7 +135,7 @@ class MifPsiFile(
                 "WIDTH" -> {
                     currWordSize = IntNumber.nearestUType(it.value.value.toInt() / 8)
                     if (currWordSize == BigInt) {
-                        nativeError("WordSize shouldn't be BigInt! It should always be a type which has a fixed bit width! It may not be implemented yet!")
+                        SysOut.error("WordSize shouldn't be BigInt! It should always be a type which has a fixed bit width! It may not be implemented yet!")
                     }
                 }
 

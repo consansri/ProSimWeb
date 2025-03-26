@@ -11,7 +11,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
  * @property rootPath The root path of this file system.
  */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-actual class ActualFileSystem actual constructor(actual val rootPath: String) {
+actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
 
     /**
      * Reads the content of a file.
@@ -22,7 +22,7 @@ actual class ActualFileSystem actual constructor(actual val rootPath: String) {
     @OptIn(ExperimentalEncodingApi::class)
     actual fun readFile(path: FPath): ByteArray {
         val content = Base64.decode(localStorage.getItem(getFileKey(path)) ?: "")
-        // nativeLog("ACTUAL ReadFile: $path ${content.size}")
+        // SysOut.log("ACTUAL ReadFile: $path ${content.size}")
         return content
     }
 
@@ -34,7 +34,7 @@ actual class ActualFileSystem actual constructor(actual val rootPath: String) {
      */
     @OptIn(ExperimentalEncodingApi::class)
     actual fun writeFile(path: FPath, content: ByteArray) {
-        // nativeLog("ACTUAL WriteFile: $path ${content.size}")
+        // SysOut.log("ACTUAL WriteFile: $path ${content.size}")
         localStorage.setItem(getFileKey(path), Base64.encode(content))
     }
 
@@ -44,7 +44,7 @@ actual class ActualFileSystem actual constructor(actual val rootPath: String) {
      * @param path The relative path of the file or directory to delete.
      */
     actual fun deleteFile(path: FPath) {
-        // nativeLog("ACTUAL DeleteFile: $path")
+        // SysOut.log("ACTUAL DeleteFile: $path")
         localStorage.removeItem(getFileKey(path))
     }
 
@@ -56,7 +56,7 @@ actual class ActualFileSystem actual constructor(actual val rootPath: String) {
      */
     @OptIn(ExperimentalEncodingApi::class)
     actual fun createFile(path: FPath, isDirectory: Boolean) {
-        // nativeLog("ACTUAL CreateFile: $path isDirectory=$isDirectory")
+        // SysOut.log("ACTUAL CreateFile: $path isDirectory=$isDirectory")
         if (isDirectory) {
             // don't save!
         } else {
@@ -79,7 +79,7 @@ actual class ActualFileSystem actual constructor(actual val rootPath: String) {
             .filter { it.isNotEmpty() }
             .distinct()
 
-        //nativeLog("ACTUAL ListDirectories: path=$path prefix=$prefix ->\n ${paths}")
+        //SysOut.log("ACTUAL ListDirectories: path=$path prefix=$prefix ->\n ${paths}")
         return paths
     }
 
@@ -120,7 +120,7 @@ actual class ActualFileSystem actual constructor(actual val rootPath: String) {
      * @param path The relative path to convert.
      * @return The absolute path.
      */
-    actual fun getAbsolutePath(path: FPath): String = path.toAbsolute(rootPath)
+    actual fun getAbsolutePath(path: FPath): String = path.toString()
 
     private fun getFileKey(path: FPath): String = "${Keys.FILE_PREFIX}${getAbsolutePath(path)}"
     private fun getDirPrefix(path: FPath): String = "${Keys.FILE_PREFIX}${getAbsolutePath(path)}${FPath.DELIMITER}"

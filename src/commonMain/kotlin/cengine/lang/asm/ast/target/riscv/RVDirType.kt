@@ -106,7 +106,7 @@ enum class RVDirType(override val isSection: Boolean = false, override val rule:
         }
 
         if (result.matches) {
-            //nativeLog("RuleResult: ${result} for $this")
+            //SysOut.log("RuleResult: ${result} for $this")
             val identificationToken = result.matchingTokens.firstOrNull { it.type == AsmTokenType.DIRECTIVE }
             return if (identificationToken != null) {
                 ASNode.Directive(this, identificationToken, result.matchingTokens - identificationToken, result.matchingNodes)

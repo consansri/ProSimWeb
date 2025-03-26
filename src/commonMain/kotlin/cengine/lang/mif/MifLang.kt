@@ -17,11 +17,11 @@ object MifLang : LanguageService() {
 
     override val name: String = "MIF"
     override val fileSuffix: String = ".mif"
-    override val runConfig: Runner<MifLang> = MifRunner
     override val completionProvider: CompletionProvider? = null
     override val annotationProvider: AnnotationProvider? = null
     override val highlightProvider: HighlightProvider = MifHighlighter()
     override val formatter: Formatter? = null
+    override val runConfig: Runner<MifLang> = MifRunner
 
     override fun createManager(vfs: VFileSystem): PsiManager<*, *> = PsiManager<MifLang, MifPsiFile>(
         vfs,

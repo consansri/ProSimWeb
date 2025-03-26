@@ -52,12 +52,12 @@ class PsiManager<L : LanguageService, F : PsiFile>(
     }
 
     /**
-     * Searches for a file with [relativePath] if it can be found it will update it's psi.
+     * Searches for a file with [path] if it can be found it will update it's psi.
      *
-     * @param relativePath the path where to search for the file
+     * @param path the path where to search for the file
      */
-    suspend fun findAndUpdate(relativePath: FPath): F? {
-        val vfile = vfs.findFile(relativePath) ?: return null
+    suspend fun findAndUpdate(path: FPath): F? {
+        val vfile = vfs[path] ?: return null
         return updatePsi(vfile)
     }
 

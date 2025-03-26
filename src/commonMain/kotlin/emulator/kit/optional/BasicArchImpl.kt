@@ -4,7 +4,7 @@ import Performance
 import cengine.util.integer.IntNumber
 import cengine.util.integer.IntNumberStatic
 import emulator.kit.memory.Memory
-import nativeError
+
 import kotlin.time.measureTime
 
 abstract class BasicArchImpl<ADDR: IntNumber<*>, INSTANCE: IntNumber<*>>(addrType: IntNumberStatic<ADDR>, instanceType: IntNumberStatic<INSTANCE>) : emulator.kit.Architecture<ADDR, INSTANCE>(addrType, instanceType) {
@@ -32,7 +32,7 @@ abstract class BasicArchImpl<ADDR: IntNumber<*>, INSTANCE: IntNumber<*>>(addrTyp
         val measuredTime = measureTime {
             super.exeSingleStep() // clears console
             if (!executeNext(tracker).valid) {
-                nativeError("Couldn't execute instruction at ${pcState.value.toString(16)}!")
+                SysOut.error("Couldn't execute instruction at ${pcState.value.toString(16)}!")
             }
         }
 

@@ -1,5 +1,6 @@
 package cengine.vfs
 
+import SysOut
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -9,7 +10,8 @@ import java.nio.file.Paths
  * @property rootPath The root path of this file system.
  */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-actual class ActualFileSystem actual constructor(actual val rootPath: String) {
+actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
+
     /**
      * Reads the content of a file.
      *
@@ -98,8 +100,12 @@ actual class ActualFileSystem actual constructor(actual val rootPath: String) {
      * @return The absolute path.
      */
     actual fun getAbsolutePath(path: FPath): String {
-        val pathString = Paths.get(rootPath, *path.withoutFirst().names).normalize().toString()
-        return pathString
+        return if (path.isEmpty()) {
+            SysOut.info("Path is empty $path!")
+            Paths.get("/").normalize().toString()
+        } else {
+            Paths.get(path.first(), *path.withoutFirst().parts).normalize().toString()
+        }
     }
 
 

@@ -10,7 +10,7 @@ actual class FileWatcher actual constructor(actual val vfs: VFileSystem) {
      *
      * @param path The absolute path of the directory to watch.
      */
-    actual fun watchDirectory(path: String) {
+    actual fun watchDirectory(path: FPath) {
     }
 
     /**

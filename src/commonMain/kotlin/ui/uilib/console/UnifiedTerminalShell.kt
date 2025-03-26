@@ -1,39 +1,51 @@
 package ui.uilib.console
 
+import Constants
+import SysOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
-import cengine.project.Project
+import androidx.compose.ui.unit.Constraints
+import cengine.util.string.commonPrefix
 import cengine.util.string.splitBySpaces
+import cengine.vfs.FPath
+import cengine.vfs.FPath.Companion.toFPath
+import config.BuildConfig
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import ui.uilib.UIState
-import ui.uilib.interactable.CVerticalScrollBar
 import ui.uilib.text.KeywordHighlightTransformation
 
 
 @Composable
-fun UnifiedTerminalShell(project: Project) {
+fun UnifiedTerminalShell(context: ShellContext) {
 
     val theme = UIState.Theme.value
     val scale = UIState.Scale.value
+    val runConfigs = context.project.services.map { it.runConfig }
 
-    val shellContext = remember { ShellContext(project) }
+    val consoleExecutionScope = rememberCoroutineScope()
+
+    val keyWordHighlighter = KeywordHighlightTransformation(
+        ShellCmd.BASE.map { it.keyword } to SpanStyle(color = theme.COLOR_BLUE),
+        runConfigs.map { it.name } to SpanStyle(color = theme.COLOR_ORANGE)
+    )
+
 
     // A helper function to process commands.
-    fun processCommand(command: String): String {
+    suspend fun processCommand(command: String) {
         // Replace with real command parsing/execution logic.
         val attrs = command.splitBySpaces()
         if (attrs.isEmpty()) {
-            return ""
+            return
         }
 
         val baseCmd = ShellCmd.BASE.firstOrNull {
@@ -41,76 +53,156 @@ fun UnifiedTerminalShell(project: Project) {
         }
 
         if (baseCmd != null) {
-            return baseCmd.onPrompt(shellContext, attrs.drop(1))
+            return baseCmd.onPrompt(context, attrs.drop(1))
         }
 
-        return "Error: $command is invalid"
-    }
+        val runConfig = runConfigs.firstOrNull { attrs.first().lowercase() == it.name.lowercase() }
+        if (runConfig != null) {
+            runConfig.run(context, context.project, *attrs.drop(1).toTypedArray())
+            return
+        }
 
-    val vScrollState = rememberScrollState()
-
-    CVerticalScrollBar(vScrollState) {
-        BasicTextField(
-            value = shellContext.terminalState,
-            onValueChange = { newValue ->
-                // Ensure that modifications before the current prompt are ignored.
-                if (newValue.text.startsWith(shellContext.terminalState.text.substring(0, shellContext.inputStartIndex))) {
-                    shellContext.terminalState = newValue
-                }
-            },
-            textStyle = UIState.CodeStyle.current,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(theme.COLOR_BG_0)
-                .padding(scale.SIZE_INSET_MEDIUM)
-                .onPreviewKeyEvent { keyEvent ->
-                    // Only Handle KeyDown events.
-                    if (keyEvent.type == KeyEventType.KeyDown) {
-                        when (keyEvent.key) {
-                            Key.Enter -> {
-                                // Extract current user command.
-                                val command = shellContext.terminalState.text.substring(shellContext.inputStartIndex).trimEnd()
-                                // Process command (this is synchronous here; consider using coroutines for longer tasks)
-                                val output = processCommand(command)
-                                // Append command output and a new prompt.
-                                val newContent = buildString {
-                                    val prevContent = shellContext.terminalState.text
-                                    if (prevContent.isNotEmpty()) {
-                                        append(prevContent)
-                                        append("\n")
-                                    }
-                                    if (output.isNotEmpty()) {
-                                        append(output)
-                                        append("\n")
-                                    }
-                                    append(shellContext.prompt())
-                                }
-                                shellContext.terminalState = TextFieldValue(newContent, TextRange(newContent.length))
-                                // Update the input start index to be at the end of the new prompt.
-                                shellContext.inputStartIndex = newContent.length
-                                // Consume the key event.
-                                return@onPreviewKeyEvent true
-                            }
-
-                            Key.Backspace -> {
-                                // Prevent deleting characters before the prompt.
-                                if (shellContext.terminalState.selection.start <= shellContext.inputStartIndex) {
-                                    return@onPreviewKeyEvent true
-                                }
-                            }
-
-                            else -> {}
-                        }
-                    }
-                    false
-                },
-            visualTransformation = KeywordHighlightTransformation(
-                ShellCmd.BASE.map { it.keyword },
-                SpanStyle(color = theme.COLOR_BLUE)
-            )
-
+        context.error("$command is invalid")
+        context.info(
+            """
+            Commands:
+                Basic:  ${ShellCmd.BASE.joinToString(", ") { it.keyword }}
+                Runner: ${runConfigs.joinToString(", ") { it.name }}
+            """.trimIndent()
         )
     }
 
+    suspend fun processCommands(input: String) {
+        if (input.trim().isEmpty()) return
+
+        context.shellCmdHistory.remove(input)
+        context.shellCmdHistory.add(input)
+
+        val commands = input.split(";").map { it.trim() }
+        commands.forEach {
+            processCommand(it)
+        }
+    }
+
+
+    BasicTextField(
+        value = context.terminalState,
+        onValueChange = { newValue ->
+            // Ensure that modifications before the current prompt are ignored.
+            if (newValue.text.startsWith(context.terminalState.text.substring(0, context.inputStartIndex))) {
+                context.terminalState = newValue
+            }
+        },
+        textStyle = UIState.CodeStyle.current,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(theme.COLOR_BG_0)
+            .padding(scale.SIZE_INSET_MEDIUM)
+            .onFocusChanged {
+                SysOut.log("Terminal focus state ${Constants.sign()}: ${it.hasFocus}")
+            }
+            .onPreviewKeyEvent { keyEvent ->
+                // Only Handle KeyDown events.
+                if (keyEvent.type == KeyEventType.KeyDown) {
+                    when (keyEvent.key) {
+                        Key.Enter -> {
+                            consoleExecutionScope.launch {
+                                // Extract current user command.
+                                val input = context.terminalState.text.substring(context.inputStartIndex).trim()
+                                // Add LineBreak
+                                context.streamln()
+                                // Process command (this is synchronous here; consider using coroutines for longer tasks)
+                                processCommands(input)
+                                // Append command output and a new prompt.
+                                context.streamprompt()
+                            }
+
+                            // Consume the key event.
+                            return@onPreviewKeyEvent true
+                        }
+
+                        Key.Backspace -> {
+                            // Prevent deleting characters before the prompt.
+                            if (context.terminalState.selection.start <= context.inputStartIndex) {
+                                return@onPreviewKeyEvent true
+                            }
+                        }
+
+                        Key.DirectionUp -> {
+                            if (context.shellCmdHistory.isNotEmpty()) {
+                                val currCommand = context.terminalState.text.substring(context.inputStartIndex).trimEnd()
+                                val historyIndex = context.shellCmdHistory.indexOf(currCommand)
+
+                                val nextCommand = if (historyIndex == -1) {
+                                    context.shellCmdHistory.last()
+                                } else {
+                                    context.shellCmdHistory.getOrNull(historyIndex - 1) ?: return@onPreviewKeyEvent true
+                                }
+
+                                context.replaceCommand(nextCommand)
+                            }
+
+                            return@onPreviewKeyEvent true
+                        }
+
+                        Key.DirectionDown -> {
+                            if (context.shellCmdHistory.isNotEmpty()) {
+                                val currCommand = context.terminalState.text.substring(context.inputStartIndex).trimEnd()
+                                val historyIndex = context.shellCmdHistory.indexOf(currCommand)
+
+                                val nextCommand = if (historyIndex == -1) {
+                                    return@onPreviewKeyEvent true
+                                } else {
+                                    context.shellCmdHistory.getOrNull(historyIndex + 1) ?: ""
+                                }
+
+                                context.replaceCommand(nextCommand)
+                            }
+
+                            return@onPreviewKeyEvent true
+                        }
+
+                        Key.Tab -> {
+                            // When Tab is pressed, attempt to complete directory paths.
+                            val inputText = context.terminalState.text.substring(context.inputStartIndex, context.terminalState.selection.start)
+                            // Identify the last token in the current command (assuming tokens are space-separated)
+                            val tokens = inputText.splitBySpaces()
+                            val currentToken = tokens.lastOrNull() ?: ""
+                            if (currentToken.isNotEmpty()) {
+                                val path = currentToken.toFPath()
+                                var directory = context.directory
+                                var completion = ""
+                                for (part in path) {
+                                    if (part == "..") {
+                                        completion = ""
+                                        directory = directory.parent() ?: return@onPreviewKeyEvent false
+                                    }
+
+                                    val subdir = directory.getChildren().firstOrNull { it.name == part }
+                                    if (subdir != null && subdir.isDirectory) {
+                                        completion = ""
+                                        directory = subdir
+                                    }
+
+                                    val completions = directory.getChildren().map { it.name }.filter { it.startsWith(part) }
+
+                                    if (completions.isNotEmpty()) {
+                                        val completedPart = completions.commonPrefix()
+                                        completion = completedPart.drop(part.length)
+                                    }
+                                }
+                                context.complete(completion)
+                                return@onPreviewKeyEvent true
+                            }
+                            return@onPreviewKeyEvent false
+                        }
+
+                        else -> {}
+                    }
+                }
+                false
+            },
+        visualTransformation = keyWordHighlighter
+    )
 
 }

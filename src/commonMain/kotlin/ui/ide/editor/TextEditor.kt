@@ -37,8 +37,8 @@ import cengine.psi.core.PsiReference
 import cengine.psi.core.PsiService
 import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
-import nativeLog
-import nativeWarn
+
+
 import kotlinx.coroutines.*
 import ui.uilib.ComposeTools
 import ui.uilib.UIState
@@ -171,7 +171,7 @@ fun TextEditor(
                             keyEvent.isShiftPressed && keyEvent.isCtrlPressed && !keyEvent.isAltPressed -> {
                                 when (keyEvent.key) {
                                     Key.S -> {
-                                        nativeWarn("Couldn't run a file which has no language service attached.")
+                                        SysOut.warn("Couldn't run a file which has no language service attached.")
                                         true
                                     }
 
@@ -332,7 +332,7 @@ fun TextEditor(
 
                 file.setAsUTF8String(textFieldValue.text)
             }
-            if (time.inWholeMilliseconds > 5) nativeLog("LaunchedEffect(textFieldValue) took ${time.inWholeMilliseconds}ms")
+            if (time.inWholeMilliseconds > 5) SysOut.log("LaunchedEffect(textFieldValue) took ${time.inWholeMilliseconds}ms")
         }
     }
 
@@ -356,7 +356,7 @@ fun TextEditor(
         val time = measureTime {
             lineNumberLabelingBounds = textMeasurer.measure(lineCount.toString(), codeSmallStyle).size.toSize()
         }
-        if (time.inWholeMilliseconds > 5) nativeLog("LaunchedEffect(lineCount) took ${time.inWholeMilliseconds}ms")
+        if (time.inWholeMilliseconds > 5) SysOut.log("LaunchedEffect(lineCount) took ${time.inWholeMilliseconds}ms")
     }
 }
 

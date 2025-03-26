@@ -1,8 +1,5 @@
 package cengine.editor.text
 
-import nativeLog
-import nativeWarn
-
 
 /**
  * Rope is the data structure for holding the text editor state.
@@ -19,7 +16,7 @@ class RopeModel(text: String = "") : TextModel {
             root = root.insert(index, new)
             rebalance()
         } else {
-            nativeWarn("RopeModel.insert(): Index $index out of Bounds [0..$length].")
+            SysOut.warn("RopeModel.insert(): Index $index out of Bounds [0..$length].")
         }
     }
 
@@ -28,7 +25,7 @@ class RopeModel(text: String = "") : TextModel {
             root = root.delete(start, end)
             rebalance()
         } else {
-            nativeWarn("RopeModel.delete(): Range $start..<$end out of Bounds [0..$length].")
+            SysOut.warn("RopeModel.delete(): Range $start..<$end out of Bounds [0..$length].")
         }
     }
 
@@ -49,14 +46,14 @@ class RopeModel(text: String = "") : TextModel {
     override fun getLineAndColumn(index: Int): Pair<Int, Int> {
         val coercedIndex = index.coerceIn(0..length)
         val result = root.getLineAndColumn(coercedIndex)
-        //nativeLog("LC from Index($index): $result")
+        //SysOut.log("LC from Index($index): $result")
         return result.line to result.col
     }
 
     override fun indexOf(line: Int, column: Int): Int {
         require(line >= 0 && column >= 0) { "Line ($line) and column ($column) must be non-negative" }
         val index = root.getIndexFromLineAndColumn(line, column)
-        //nativeLog("Index from LC($line,$column): $index")
+        //SysOut.log("Index from LC($line,$column): $index")
         return index
     }
 
@@ -69,17 +66,17 @@ class RopeModel(text: String = "") : TextModel {
     override fun toString(): String = root.substring(0, length).toString()
 
     fun printDebugTree() {
-        nativeLog("RopeModel:")
+        SysOut.log("RopeModel:")
         printNode(root, "", true)
-        nativeLog("----------")
+        SysOut.log("----------")
     }
 
     private fun printNode(node: Node, prefix: String, isLast: Boolean) {
         val nodePrefix = prefix + (if (isLast) "\\-- " else "+-- ")
         when (node) {
-            is Leaf -> nativeLog("$nodePrefix Leaf[${node.weight},${node.lineBreaks}](\"${node.text.replace("\n", "\\n")}\")")
+            is Leaf -> SysOut.log("$nodePrefix Leaf[${node.weight},${node.lineBreaks}](\"${node.text.replace("\n", "\\n")}\")")
             is Branch -> {
-                nativeLog("$nodePrefix Branch [${node.weight},${node.lineBreaks}]")
+                SysOut.log("$nodePrefix Branch [${node.weight},${node.lineBreaks}]")
                 val childPrefix = prefix + (if (isLast) "    " else "|   ")
                 printNode(node.left, childPrefix, false)
                 printNode(node.right, childPrefix, true)
@@ -89,7 +86,7 @@ class RopeModel(text: String = "") : TextModel {
 
     private fun rebalance() {
         if (root.depth > length / LEAF_MAX_LENGTH + 1) {
-            nativeLog("RopeModel: rebalance()")
+            SysOut.log("RopeModel: rebalance()")
             val newRoot = Node.rebalance(root)
             if (newRoot != root) {
                 root = newRoot
@@ -302,13 +299,13 @@ class RopeModel(text: String = "") : TextModel {
         override fun getLineAndColumn(countUntil: Int): LC {
             return if (countUntil < left.weight) {
                 val value = left.getLineAndColumn(countUntil)
-                // nativeLog("getLC: Depth $depth: $value")
+                // SysOut.log("getLC: Depth $depth: $value")
                 value
             } else {
                 val leftLC = left.getLineAndColumn(left.weight)
                 val rightLC = right.getLineAndColumn(countUntil - left.weight)
                 val value = leftLC + rightLC
-                // nativeLog("getLC: Depth $depth: $value")
+                // SysOut.log("getLC: Depth $depth: $value")
                 value
             }
         }

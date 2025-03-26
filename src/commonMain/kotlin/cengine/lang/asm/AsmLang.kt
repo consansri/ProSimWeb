@@ -27,8 +27,6 @@ class AsmLang(spec: TargetSpec<*>) : LanguageService() {
             completionProvider = AsmCompleter(value)
             highlightProvider = AsmHighlighter(value)
         }
-
-    override var runConfig: Runner<AsmLang> = AsmRunner(this)
     
     override val name: String = "Assembly"
     override val fileSuffix: String = ".s"
@@ -40,6 +38,8 @@ class AsmLang(spec: TargetSpec<*>) : LanguageService() {
     override var highlightProvider: HighlightProvider = AsmHighlighter(spec)
     
     override val formatter: Formatter = AsmFormatter()
+
+    override var runConfig: Runner<AsmLang> = AsmRunner(this)
 
     override fun createManager(vfs: VFileSystem): PsiManager<*, *> = PsiManager<AsmLang, AsmFile>(
         vfs,

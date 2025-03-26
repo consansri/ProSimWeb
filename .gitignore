@@ -7,8 +7,8 @@ premu/
 .kotlin
 .classpath
 .project
+appstate.json
 *.eml
 *.userlibraries
 /qodana.yaml
-/prosimweb/
 .qodo

@@ -2,7 +2,7 @@
 import cengine.editor.text.RopeModel
 import cengine.editor.text.StringModel
 import cengine.editor.text.TextModel
-import nativeLog
+
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.test.Test
@@ -49,7 +49,7 @@ class TestCEngine {
         val (sValue, sTime) = measureTimedValue {
             second.findAllOccurrences(searchString)
         }
-        nativeLog(
+        SysOut.log(
             "FindAllOccurences: (search: $searchString) $sValue == $fValue" +
                     "\n\t${first::class.simpleName}\t\t: ${fTime.inWholeNanoseconds}ns" +
                     "\n\t${second::class.simpleName}\t\t: ${sTime.inWholeNanoseconds}ns"
@@ -67,7 +67,7 @@ class TestCEngine {
         val (sValue, sTime) = measureTimedValue {
             second.getLineAndColumn(1)
         }
-        nativeLog(
+        SysOut.log(
             "BoundsOf LC At Index: $sValue == $fValue" +
                     "\n\t${first::class.simpleName}\t\t: ${fTime.inWholeNanoseconds}ns" +
                     "\n\t${second::class.simpleName}\t\t: ${sTime.inWholeNanoseconds}ns"
@@ -85,7 +85,7 @@ class TestCEngine {
         val (sValue, sTime) = measureTimedValue {
             second.indexOf(0,0)
         }
-        nativeLog(
+        SysOut.log(
             "BoundsOf Index At LC: $fValue == $sValue" +
                     "\n\t${first::class.simpleName}\t\t: ${fTime.inWholeNanoseconds}ns" +
                     "\n\t${second::class.simpleName}\t\t: ${sTime.inWholeNanoseconds}ns"
@@ -105,7 +105,7 @@ class TestCEngine {
         val sTime = measureTime {
             second.insert(index, string)
         }
-        nativeLog(
+        SysOut.log(
             "CompareInserts: " +
                     "\n\t${first::class.simpleName}\t\t: ${fTime.inWholeNanoseconds}ns" +
                     "\n\t${second::class.simpleName}\t\t: ${sTime.inWholeNanoseconds}ns"
@@ -125,7 +125,7 @@ class TestCEngine {
         val sTime = measureTime {
             second.delete(start, end)
         }
-        nativeLog(
+        SysOut.log(
             "CompareDeletes: $end in 0..$maxlength" +
                     "\n\t${first::class.simpleName}\t\ttook ${fTime.inWholeNanoseconds}ns" +
                     "\n\t${second::class.simpleName}\t\ttook ${sTime.inWholeNanoseconds}ns"
@@ -147,7 +147,7 @@ class TestCEngine {
         val sTime = measureTime {
             sSub = second.substring(start, end)
         }
-        nativeLog("CompareSubstring: $end in 0..$maxlength " +
+        SysOut.log("CompareSubstring: $end in 0..$maxlength " +
                 "\n\t${first::class.simpleName}\t\ttook ${fTime.inWholeNanoseconds}ns" +
                 "\n\t${second::class.simpleName}\t\ttook ${sTime.inWholeNanoseconds}ns")
         assertEquals(fSub, sSub)
@@ -166,7 +166,7 @@ class TestCEngine {
         val sTime = measureTime {
             sChar = second.charAt(start)
         }
-        nativeLog("CompareCharAt: $start in 0..$maxlength " +
+        SysOut.log("CompareCharAt: $start in 0..$maxlength " +
                 "\n\t${first::class.simpleName}\t\ttook ${fTime.inWholeNanoseconds}ns" +
                 "\n\t${second::class.simpleName}\t\ttook ${sTime.inWholeNanoseconds}ns")
         assertEquals(fChar, sChar)
@@ -185,7 +185,7 @@ class TestCEngine {
         val sTime = measureTime {
             sIndex = second.indexOf(line, col)
         }
-        nativeLog("CompareIndexAtLC: Index: $fIndex pointsOn: ${first.charAt(fIndex)}" +
+        SysOut.log("CompareIndexAtLC: Index: $fIndex pointsOn: ${first.charAt(fIndex)}" +
                 "\n\t${first::class.simpleName}\t\ttook ${fTime.inWholeNanoseconds}ns" +
                 "\n\t${second::class.simpleName}\t\ttook ${sTime.inWholeNanoseconds}ns")
         assertEquals(fIndex, sIndex)
@@ -202,7 +202,7 @@ class TestCEngine {
         val sTime = measureTime {
             sLC = second.getLineAndColumn(index)
         }
-        nativeLog("CompareLCAtIndex: Line: ${fLC.first} Col: ${fLC.second} pointsOn: ${first.charAt(index)} " +
+        SysOut.log("CompareLCAtIndex: Line: ${fLC.first} Col: ${fLC.second} pointsOn: ${first.charAt(index)} " +
                 "\n\t${first::class.simpleName}\t\ttook ${fTime.inWholeNanoseconds}ns" +
                 "\n\t${second::class.simpleName}\t\ttook ${sTime.inWholeNanoseconds}ns")
         assertEquals(fLC, sLC)

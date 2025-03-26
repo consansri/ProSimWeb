@@ -12,28 +12,27 @@ import androidx.compose.ui.text.input.VisualTransformation
  * It builds an AnnotatedString where keywords are styled with [keywordStyle].
  */
 class KeywordHighlightTransformation(
-    private val keywords: List<String>,
-    private val keywordStyle: SpanStyle = SpanStyle()
+    vararg keywordStyleMap: Pair<List<String>, SpanStyle>
 ) : VisualTransformation {
-
-    private val regex = "\\b(${keywords.joinToString("|")})\\b".toRegex()
+    private val regexStyles: List<Pair<Regex, SpanStyle>> = keywordStyleMap.map {
+        val pattern = "\\b${it.first.joinToString("|")}\\b"
+         pattern.toRegex() to it.second
+    }
 
     override fun filter(text: AnnotatedString): TransformedText {
         val annotated = buildAnnotatedString {
-            // Split text into words using a simple regex. This can be improved for more robust matching.
-            var lastIndex = 0
-            regex.findAll(text.text).forEach { result ->
-                // Append text before the keyword.
-                append(text.text.substring(lastIndex, result.range.first))
-                // Append the keyword with highlighting.
-                pushStyle(keywordStyle)
-                append(result.value)
-                pop()
-                lastIndex = result.range.last + 1
-            }
-            // Append any remaining text.
-            if (lastIndex < text.length) {
-                append(text.text.substring(lastIndex, text.length))
+
+            append(text) // Start by adding all the text
+
+            regexStyles.forEach { (regex, spanStyle) ->
+                regex.findAll(text.text).forEach { matchResult ->
+                    // Add a style span for each match
+                    addStyle(
+                        style = spanStyle,
+                        start = matchResult.range.first,
+                        end = matchResult.range.last + 1,
+                    )
+                }
             }
         }
         // IdentityOffsetMapping because we don't change text length.

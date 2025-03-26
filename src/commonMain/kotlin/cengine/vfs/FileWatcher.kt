@@ -12,7 +12,7 @@ expect class FileWatcher(vfs: VFileSystem) {
      *
      * @param path The absolute path of the directory to watch.
      */
-    fun watchDirectory(path: String)
+    fun watchDirectory(path: FPath)
 
     /**
      * Starts the file-watching process.

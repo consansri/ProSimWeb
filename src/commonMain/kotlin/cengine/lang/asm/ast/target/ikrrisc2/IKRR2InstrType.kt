@@ -7,7 +7,7 @@ import cengine.lang.asm.ast.impl.ASNode
 import cengine.lang.asm.ast.lexer.AsmTokenType
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
-import nativeLog
+
 
 
 enum class IKRR2InstrType(override val detectionName: String, val paramType: IKRR2ParamType, val descr: String = "", val labelDependent: Boolean = false, override val addressInstancesNeeded: Int? = 1) : InstrTypeInterface {
@@ -129,7 +129,7 @@ enum class IKRR2InstrType(override val detectionName: String, val paramType: IKR
                 }
 
                 val bundle = (opc shl 26) or (rc shl 21) or (rb shl 16) or imm16
-                nativeLog("IKRR2 I-Type: ${bundle.toString(16)}, imm: ${imm16.toString(16)}")
+                SysOut.log("IKRR2 I-Type: ${bundle.toString(16)}, imm: ${imm16.toString(16)}")
                 builder.currentSection.content.put(bundle)
             }
 

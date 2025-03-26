@@ -14,7 +14,7 @@ import ui.ViewType
 
 @Serializable
 data class ProjectState(
-    val absRootPath: String,
+    val absRootPath: FPath,
     val target: String,
     private var _viewType: ViewType = ViewType.IDE,
     val ide: IDEViewState = IDEViewState(),

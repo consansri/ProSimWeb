@@ -22,7 +22,6 @@ import ui.ide.editor.CodeEditor
 import ui.ide.editor.BinaryEditor
 import ui.ide.editor.TextEditor
 import ui.uilib.UIState
-import ui.uilib.console.CConsole
 import ui.uilib.console.UnifiedTerminalShell
 import ui.uilib.filetree.FileTree
 import ui.uilib.interactable.CButton
@@ -53,7 +52,7 @@ fun IDEView(
 
     val fileEditors = remember {
         mutableStateListOf(*ideState.openFiles.mapNotNull { path ->
-            project.fileSystem.findFile(path)
+            project.fileSystem[path]
         }.map { file ->
             TabItem(file, icons.file, file.name)
         }.toTypedArray())
@@ -106,12 +105,12 @@ fun IDEView(
     }
 
     val console: (@Composable BoxScope.() -> Unit) = {
-        UnifiedTerminalShell(project)
-
-        val messages = remember { mutableStateListOf<String>() }
-        /*CConsole(messages) {
-            messages += it
-        }*/
+        val consoles = project.consoles.map { TabItem(it, title = it.directory.name) }
+        TabbedPane(consoles, content = { index ->
+            UnifiedTerminalShell(project.consoles[index])
+        }, closeable = true) { tab ->
+            project.consoles.remove(tab.value)
+        }
     }
 
     BorderLayout(
@@ -134,7 +133,8 @@ fun IDEView(
                         DropdownMenuItem(
                             onClick = {
                                 coroutineScope.launch {
-                                    config.run(project)
+                                    val context = project.getOrCreateConsole()
+                                    config.run(context, project)
                                 }
                                 runConfigExpanded = false
                             },

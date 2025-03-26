@@ -131,7 +131,7 @@ class AsmLexer(input: String, private val targetSpec: TargetSpec<*>) : BaseLexer
         advance()
         val token = AsmToken(AsmTokenType.UNDEFINED, char, start..<index)
         return token
-        //nativeError("InvalidTokenException $token $index")
+        //SysOut.error("InvalidTokenException $token $index")
     }
 
     interface Prefices {

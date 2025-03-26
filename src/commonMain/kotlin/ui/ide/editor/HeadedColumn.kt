@@ -3,7 +3,7 @@ package ui.ide.editor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import nativeLog
+
 
 @Composable
 fun HeadedColumn(
@@ -49,7 +49,7 @@ fun HeadedColumn(
             val xPosition = 0
             var yPosition = 0
 
-            nativeLog(
+            SysOut.log(
                 """
                 Width: $totalWidth, Height: $totalHeight
                 RowHeaderWidth: $rowHeaderWidth, RowContentWidth: $rowContentWidth

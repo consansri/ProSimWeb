@@ -12,6 +12,7 @@ import cengine.lang.asm.ast.lexer.AsmTokenType
 import cengine.lang.obj.elf.Shdr
 import cengine.util.integer.BigInt
 import cengine.vfs.FPath
+import cengine.vfs.FPath.Companion.toFPath
 import cengine.vfs.VFileSystem
 
 enum class ASDirType(
@@ -1104,7 +1105,7 @@ enum class ASDirType(
         }
 
         if (result.matches) {
-            //nativeLog("RuleResult: ${result} for $this")
+            //SysOut.log("RuleResult: ${result} for $this")
             val identificationToken = result.matchingTokens.firstOrNull { it.type == AsmTokenType.DIRECTIVE }
             return if (identificationToken != null) {
                 ASNode.Directive(
@@ -1317,7 +1318,7 @@ enum class ASDirType(
                     dir.addError("expected a file name!")
                 }
 
-                val fpath = FPath.of(builder.psiManager.vfs, *fileName.split("/").toTypedArray())
+                val fpath = fileName.toFPath()
 
                 val asmFile = builder.psiManager.findAndUpdate(fpath)
 

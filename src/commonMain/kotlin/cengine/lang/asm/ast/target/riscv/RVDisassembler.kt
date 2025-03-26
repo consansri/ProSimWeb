@@ -24,7 +24,7 @@ class RVDisassembler(private val addrConstrained: BigInt.() -> BigInt) : Disasse
             val instr = currInstr.decode(startAddr, currIndex)
             decoded.add(instr)
 
-            // nativeLog("Instr: ${currInstr.binary.toString(16).padStart(32, '0')} -> ${currInstr.binary}: ${instr.disassembled}")
+            // SysOut.log("Instr: ${currInstr.binary.toString(16).padStart(32, '0')} -> ${currInstr.binary}: ${instr.disassembled}")
 
             currIndex += 4
         }

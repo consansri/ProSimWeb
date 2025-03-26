@@ -1,10 +1,9 @@
 package cengine.lang
 
+import ConsoleContext
+import SysOut
 import cengine.project.Project
-import cengine.project.ProjectStateManager
-import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
-import nativeError
 
 
 /**
@@ -14,40 +13,24 @@ import nativeError
  * @property lang The language service instance.
  * @property name The name of the runner.
  */
-abstract class Runner<T : LanguageService>(val lang: T, val name: String) {
+abstract class Runner<T: LanguageService>(val name: String) {
+
+    abstract val lang: T
 
     companion object {
         const val DEFAULT_FILEPATH_ATTR = "-f"
     }
 
     /**
-     * Executes on the project.
+     * Executes on a [ConsoleContext]
      *
      * @param project The project to execute the action on.
      * @param attrs Optional attributes that affect the action.
      */
-    abstract suspend fun run(project: Project, vararg attrs: String): Boolean
+    protected abstract suspend fun ConsoleContext.runWithContext(project: Project, vararg attrs: String): Boolean
 
-    suspend fun run(project: Project, file: VirtualFile, vararg attrs: String): Boolean = run(project, DEFAULT_FILEPATH_ATTR, file.path.toString(), *attrs)
+    suspend fun run(context: ConsoleContext, project: Project, vararg attrs: String): Boolean = context.runWithContext(project, *attrs)
 
-    fun resolveFilePath(project: Project, filepath: FPath?): VirtualFile? {
-        if (filepath == null) {
-            nativeError("${this::class.simpleName} No filepath provided!")
-            return null
-        }
-
-        val file = project.fileSystem.findFile(filepath)
-        if (file == null) {
-            nativeError("${this::class.simpleName} File ($filepath) not found!")
-            return null
-        }
-
-        if (!file.name.endsWith(lang.fileSuffix)) {
-            nativeError("${this::class.simpleName} File($filepath) is not of type ${lang.fileSuffix}!")
-            return null
-        }
-
-        return file
-    }
+    suspend fun run(ioContext: ConsoleContext, project: Project, file: VirtualFile, vararg attrs: String): Boolean = ioContext.runWithContext(project, DEFAULT_FILEPATH_ATTR, file.path.relativeTo(ioContext.directory).toString(), *attrs)
 
 }

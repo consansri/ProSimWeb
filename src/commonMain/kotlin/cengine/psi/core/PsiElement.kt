@@ -72,13 +72,13 @@ interface PsiElement : Interval {
     }
 
     fun traverseUp(visitor: PsiElementVisitor) {
-        //nativeLog("${visitor::class.simpleName} at ${this::class.simpleName}")
+        //SysOut.log("${visitor::class.simpleName} at ${this::class.simpleName}")
         visitor.visitElement(this)
         parent?.traverseUp(visitor)
     }
 
     fun traverseDown(visitor: PsiElementVisitor) {
-        //nativeLog("${visitor::class.simpleName} at ${this::class.simpleName}")
+        //SysOut.log("${visitor::class.simpleName} at ${this::class.simpleName}")
         visitor.visitElement(this)
         children.forEach {
             it.traverseDown(visitor)

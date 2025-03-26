@@ -8,7 +8,7 @@ import cengine.util.integer.IntNumberStatic
 import emulator.core.*
 import emulator.kit.common.*
 import emulator.kit.memory.MainMemory
-import nativeLog
+
 
 /**
  *  Architecture Blueprint
@@ -117,7 +117,7 @@ abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(val ad
         resetPC()
         initializer?.initialize(memory)
         pcState.value = addrType.to(initializer?.entry() ?: BigInt.ZERO)
-        nativeLog("${this::class.simpleName} resetting!")
+        SysOut.log("${this::class.simpleName} resetting!")
         console.exeInfo("resetting")
     }
 

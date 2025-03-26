@@ -1,10 +1,10 @@
 package emulator.kit.common
 
 import cengine.lang.asm.CodeStyle
-import nativeError
-import nativeInfo
-import nativeLog
-import nativeWarn
+
+
+
+
 import kotlinx.datetime.Clock
 
 /**
@@ -15,22 +15,22 @@ class IConsole(val name: String) {
     private val messageArray: MutableList<Message> = mutableListOf()
 
     fun info(message: String) {
-        nativeInfo(message)
+        SysOut.info(message)
         messageArray.add(Message(MSGType.INFO, message))
     }
 
     fun log(message: String) {
-        nativeLog(message)
+        SysOut.log(message)
         messageArray.add(Message(MSGType.LOG, message))
     }
 
     fun warn(message: String) {
-        nativeWarn(message)
+        SysOut.warn(message)
         messageArray.add(Message(MSGType.WARNING, message))
     }
 
     fun error(message: String) {
-        nativeError(message)
+        SysOut.error(message)
         messageArray.add(Message(MSGType.ERROR, message))
     }
 

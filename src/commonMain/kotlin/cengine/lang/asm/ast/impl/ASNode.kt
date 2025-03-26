@@ -16,7 +16,7 @@ import cengine.util.integer.BigInt
 import cengine.util.integer.BigInt.Companion.toBigInt
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import debug.DebugTools
-import nativeLog
+
 
 /**
  * Node Relatives
@@ -65,7 +65,7 @@ sealed class ASNode(override var range: IntRange, vararg children: PsiElement) :
     }
 
     override fun accept(visitor: PsiElementVisitor) {
-        //nativeLog("${visitor::class.simpleName} at ${this::class.simpleName}")
+        //SysOut.log("${visitor::class.simpleName} at ${this::class.simpleName}")
         visitor.visitElement(this)
     }
 
@@ -228,7 +228,7 @@ sealed class ASNode(override var range: IntRange, vararg children: PsiElement) :
                         val node = it.buildDirectiveContent(lexer, targetSpec)
 
                         if (node != null) {
-                            //nativeLog("Found directive ${it.getDetectionString()} ${node::class.simpleName}")
+                            //SysOut.log("Found directive ${it.getDetectionString()} ${node::class.simpleName}")
                             return node
                         }
 
@@ -713,7 +713,7 @@ sealed class ASNode(override var range: IntRange, vararg children: PsiElement) :
                     lexer.position = relevantTokens.removeLast().range.first
                 }
 
-                if (DebugTools.KIT_showPostFixExpressions) nativeLog("NumericExpr.validTokens: $relevantTokens")
+                if (DebugTools.KIT_showPostFixExpressions) SysOut.log("NumericExpr.validTokens: $relevantTokens")
 
                 if (relevantTokens.isEmpty()) {
                     lexer.position = initialPos
@@ -737,7 +737,7 @@ sealed class ASNode(override var range: IntRange, vararg children: PsiElement) :
                         }
                     }
 
-                    if (DebugTools.KIT_showPostFixExpressions) nativeLog(
+                    if (DebugTools.KIT_showPostFixExpressions) SysOut.log(
                         "NumericExpr:" +
                                 "\n\tRelevantTokens: ${relevantTokens.joinToString(" ") { it.value }}" +
                                 "\n\tPostFixNotation: ${postFixTokens.joinToString(" ") { it.value }}" +
@@ -847,7 +847,7 @@ sealed class ASNode(override var range: IntRange, vararg children: PsiElement) :
                 val operatorStack = mutableListOf<AsmToken>()
 
                 for (token in infix) {
-                    if (DebugTools.KIT_showPostFixExpressions) nativeLog(
+                    if (DebugTools.KIT_showPostFixExpressions) SysOut.log(
                         "PostFixIteration: for ${token.type}:${token.getPrecedence(markedAsPrefix)} -> ${token.value}" +
                                 "\n\tOutput: ${output.joinToString(" ") { it.value }}" +
                                 "\n\tOperatorStack: ${operatorStack.joinToString("") { it.value }}"

@@ -21,7 +21,7 @@ import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
 import cengine.util.integer.UInt64
 import debug.DebugTools
-import nativeLog
+
 
 enum class RV64InstrType(override val detectionName: String, val isPseudo: Boolean, val paramType: RV64ParamType, val labelDependent: Boolean = false, override val addressInstancesNeeded: Int? = 4) : InstrTypeInterface {
     LUI("LUI", false, RV64ParamType.RD_I20),
@@ -402,7 +402,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                 when {
                     imm.fitsInSigned(12) -> {
                         val imm12 = imm.toInt32().lowest(12).toUInt32()
-                        if (DebugTools.RV64_showLIDecisions) nativeLog("Decided 12 Bit Signed for 0x${imm12.toString(16)}")
+                        if (DebugTools.RV64_showLIDecisions) SysOut.log("Decided 12 Bit Signed for 0x${imm12.toString(16)}")
                         val opcode = RVConst.OPC_ARITH_IMM
                         val funct3 = RVConst.FUNCT3_OPERATION
 
@@ -412,7 +412,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
 
                     imm.fitsInSigned(32) -> {
                         val imm32 = imm.toInt32().toUInt32()
-                        if (DebugTools.RV64_showLIDecisions) nativeLog("Decided 32 Bit Signed for 0x${imm32.toString(16)}")
+                        if (DebugTools.RV64_showLIDecisions) SysOut.log("Decided 32 Bit Signed for 0x${imm32.toString(16)}")
                         // resized = upper + lower
                         // upper = resized - lower
                         val lower = imm32.lowest(12)
@@ -448,7 +448,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                         val l2 = resized.shr(12).lowest(12).toUInt32() + l1.bit(11)
                         val l3 = resized.shr(12 + 12).lowest(20).toUInt32() + l2.bit(11)
 
-                        if (DebugTools.RV64_showLIDecisions) nativeLog("Decided 44 Bit Signed for 0x${resized.toString(16)}:\n" +
+                        if (DebugTools.RV64_showLIDecisions) SysOut.log("Decided 44 Bit Signed for 0x${resized.toString(16)}:\n" +
                                 "\tl1: ${l1.toString(16)}\n" +
                                 "\tl2: ${l2.toString(16)}\n" +
                                 "\tl3: ${l3.toString(16)}\n")
@@ -477,7 +477,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
 
                     imm.fitsInSigned(56) -> {
                         val resized = imm.toInt64().toUInt64().lowest(56)
-                        if (DebugTools.RV64_showLIDecisions) nativeLog("Decided 56 Bit Signed for ${resized.toString(16)}")
+                        if (DebugTools.RV64_showLIDecisions) SysOut.log("Decided 56 Bit Signed for ${resized.toString(16)}")
                         /**
                          *  val64 = lui + addiw + addi3 + addi2 + addi1
                          *
@@ -538,7 +538,7 @@ enum class RV64InstrType(override val detectionName: String, val isPseudo: Boole
                         } catch (e: Exception) {
                             imm.toUInt64()
                         }
-                        if (DebugTools.RV64_showLIDecisions) nativeLog("Decided 64 Bit Signed for ${resized.toString(16)}")
+                        if (DebugTools.RV64_showLIDecisions) SysOut.log("Decided 64 Bit Signed for ${resized.toString(16)}")
                         /**
                          *  val64 = lui + addiw + addi3 + addi2 + addi1
                          *

@@ -17,6 +17,7 @@ import cengine.system.AppTarget.DESKTOP
 import cengine.system.AppTarget.WEB
 import cengine.system.appTarget
 import cengine.system.isAbsolutePathValid
+import cengine.vfs.FPath.Companion.toFPath
 import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.launch
 import ui.uilib.UIState
@@ -120,7 +121,7 @@ fun CreateNewProjectScreen(onProjectCreated: (ProjectState) -> Unit, onCancel: (
                         CButton(
                             onClick = {
                                 if (!invalidProjectPath) {
-                                    val state = ProjectState(pathField, target.name)
+                                    val state = ProjectState(pathField.toFPath(), target.name)
                                     ProjectStateManager.appState = ProjectStateManager.appState.copy(
                                         projectStates = listOf(state) + ProjectStateManager.projects,
                                         currentlyOpened = 0

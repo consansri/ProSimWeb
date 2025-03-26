@@ -13,12 +13,12 @@ import cengine.psi.core.PsiFile
 import cengine.psi.core.PsiParser
 import cengine.vfs.VirtualFile
 import debug.DebugTools
-import nativeLog
+
 
 class AsmPsiParser(private val spec: TargetSpec<*>, private val languageService: AsmLang) : PsiParser<AsmFile> {
 
     override suspend fun parse(file: VirtualFile, manager: PsiManager<*, *>): AsmFile {
-        nativeLog("Parsing ${file.path} ...")
+        SysOut.log("Parsing ${file.path} ...")
 
         val content = file.getAsUTF8String()
 
@@ -34,7 +34,7 @@ class AsmPsiParser(private val spec: TargetSpec<*>, private val languageService:
 
         program.accept(LabelLinker(labelCollector.labels))
 
-        //nativeLog("AsmPsiParser parses file: $fileName!")
+        //SysOut.log("AsmPsiParser parses file: $fileName!")
 
         val generator = spec.createGenerator(manager)
         generator.generate(program)
@@ -42,7 +42,7 @@ class AsmPsiParser(private val spec: TargetSpec<*>, private val languageService:
         val asmFile = AsmFile(file, manager, program)
 
         if (DebugTools.KIT_showPSITree) {
-            nativeLog(asmFile.print(file.name))
+            SysOut.log(asmFile.print(file.name))
         }
 
         return asmFile

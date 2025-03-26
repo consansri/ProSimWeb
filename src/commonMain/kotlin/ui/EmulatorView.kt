@@ -23,8 +23,8 @@ import cengine.lang.obj.elf.ELFFile
 import cengine.project.Project
 import cengine.psi.PsiManager
 import emulator.kit.Architecture
-import nativeError
-import nativeLog
+
+
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -70,7 +70,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
         emuState.initFilePath = emuInitFilePath
 
         val initFilePath = emuInitFilePath ?: return onFinish(null)
-        val file = project.fileSystem.findFile(initFilePath) ?: return onFinish(null)
+        val file = project.fileSystem[initFilePath] ?: return onFinish(null)
         val manager = project.getManager(file) ?: return onFinish(null)
         val lang = project.getLang(file) ?: return onFinish(null)
 
@@ -294,7 +294,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
     )
 
     LaunchedEffect(initializer) {
-        nativeLog("updated initializer!")
+        SysOut.log("updated initializer!")
         architecture ?: return@LaunchedEffect
         architecture.initializer = initializer
         architecture.disassembler?.decodedContent?.value = emptyList()
@@ -309,7 +309,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
     }
 
     LaunchedEffect(emuInitFilePath) {
-        nativeLog("emuInitFilePath changed!")
+        SysOut.log("emuInitFilePath changed!")
         buildInitializer {
             initializer = it
         }

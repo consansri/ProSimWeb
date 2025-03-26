@@ -1,5 +1,6 @@
 package ui.ide.editor
 
+import SysOut
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -37,8 +38,8 @@ import cengine.psi.core.PsiReference
 import cengine.psi.core.PsiService
 import cengine.vfs.FPath
 import cengine.vfs.VirtualFile
-import nativeLog
-import nativeWarn
+
+
 import kotlinx.coroutines.*
 import ui.uilib.ComposeTools
 import ui.uilib.UIState
@@ -55,7 +56,7 @@ import kotlin.time.measureTime
 fun CodeEditor(
     file: VirtualFile,
     lang: LanguageService,
-    manager: PsiManager<*,*>,
+    manager: PsiManager<*, *>,
     project: Project,
     codeStyle: TextStyle,
     codeSmallStyle: TextStyle,
@@ -208,7 +209,7 @@ fun CodeEditor(
             }
 
         }
-        if (time.inWholeMilliseconds > 5) nativeLog("locatePSIElement took ${time.inWholeMilliseconds}ms")
+        if (time.inWholeMilliseconds > 5) SysOut.log("locatePSIElement took ${time.inWholeMilliseconds}ms")
     }
 
     suspend fun psiHasChanged(psiFile: PsiFile) {
@@ -221,8 +222,8 @@ fun CodeEditor(
     fun run() {
         coroutineScope.launch {
             withContext(Dispatchers.Default) {
-                lang.runConfig.run(project, file)
-                nativeLog("Run $manager ${manager.printCache()} ${manager.getPsiFile(file)}")
+                val console = project.getOrCreateConsole()
+                lang.runConfig.run(console, project, file)
                 val psiFile = manager.getPsiFile(file) ?: return@withContext
                 psiHasChanged(psiFile)
             }
@@ -265,12 +266,12 @@ fun CodeEditor(
                                 emptyList()
                             }
                         } catch (e: Exception) {
-                            nativeWarn("Completion canceled by edit.")
+                            SysOut.warn("Completion canceled by edit.")
                         }
                     }
                 }
 
-                if (time.inWholeMilliseconds > 5) nativeLog("fetchCompletions took ${time.inWholeMilliseconds}ms")
+                if (time.inWholeMilliseconds > 5) SysOut.log("fetchCompletions took ${time.inWholeMilliseconds}ms")
             }
         }
     }
@@ -641,7 +642,7 @@ fun CodeEditor(
                 locatePSIElement()
                 fetchCompletions()
             }
-            if (time.inWholeMilliseconds > 5) nativeLog("LaunchedEffect(textFieldValue) took ${time.inWholeMilliseconds}ms")
+            if (time.inWholeMilliseconds > 5) SysOut.log("LaunchedEffect(textFieldValue) took ${time.inWholeMilliseconds}ms")
         }
     }
 
@@ -665,7 +666,7 @@ fun CodeEditor(
         val time = measureTime {
             lineNumberLabelingBounds = textMeasurer.measure(lineCount.toString(), codeSmallStyle).size.toSize()
         }
-        if (time.inWholeMilliseconds > 5) nativeLog("LaunchedEffect(lineCount) took ${time.inWholeMilliseconds}ms")
+        if (time.inWholeMilliseconds > 5) SysOut.log("LaunchedEffect(lineCount) took ${time.inWholeMilliseconds}ms")
     }
 
     LaunchedEffect(completions) {
@@ -686,17 +687,17 @@ fun CodeEditor(
                 localAnnotations = annotations
             }
         }
-        if (time.inWholeMilliseconds > 5) nativeLog("LaunchedEffect(hoverPosition) took ${time.inWholeMilliseconds}ms")
+        if (time.inWholeMilliseconds > 5) SysOut.log("LaunchedEffect(hoverPosition) took ${time.inWholeMilliseconds}ms")
     }
 
     LaunchedEffect(allAnnotations) {
         val time = measureTime {
             val psiFile = manager.getPsiFile(file) ?: return@LaunchedEffect
             allAnnotations.forEach {
-                nativeLog(it.createConsoleMessage(psiFile))
+                SysOut.log(it.createConsoleMessage(psiFile))
             }
         }
-        if (time.inWholeMilliseconds > 5) nativeLog("LaunchedEffect(allAnnotations) took ${time.inWholeMilliseconds}ms")
+        if (time.inWholeMilliseconds > 5) SysOut.log("LaunchedEffect(allAnnotations) took ${time.inWholeMilliseconds}ms")
     }
 
     LaunchedEffect(localAnnotations) {

@@ -6,8 +6,8 @@ import cengine.util.integer.IntNumber
 import debug.DebugTools
 import emulator.core.*
 import emulator.kit.common.IConsole
-import nativeLog
-import nativeWarn
+
+
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -41,7 +41,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
         get() = backingMemory.init
 
     init {
-        if (DebugTools.KIT_showCacheInfo) nativeLog(this.toString())
+        if (DebugTools.KIT_showCacheInfo) SysOut.log(this.toString())
     }
 
     val model = Model()
@@ -71,7 +71,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
 
         val searchResult = model.search(address)
 
-        nativeLog("load search: ${address.toString(16)} -> ${searchResult?.first?.rowIndex?.toString(16)}, ${searchResult?.second?.toString(16)}")
+        SysOut.log("load search: ${address.toString(16)} -> ${searchResult?.first?.rowIndex?.toString(16)}, ${searchResult?.second?.toString(16)}")
 
         if (searchResult != null) {
             // HIT
@@ -86,7 +86,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
 
         val fetchedResult = model.fetch(address)
 
-        nativeLog("load fetch: ${address.toString(16)} -> ${fetchedResult.first.rowIndex.toString(16)}, ${fetchedResult.second.toString(16)}")
+        SysOut.log("load fetch: ${address.toString(16)} -> ${fetchedResult.first.rowIndex.toString(16)}, ${fetchedResult.second.toString(16)}")
 
         // MISS
         tracker.misses++
@@ -168,7 +168,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
                 it.rowIndex == rowIndex
             } ?: throw MemoryException("Invalid row rowIndex: ${rowIndex}.")
 
-            //nativeLog("Selected ${row.index.toString(16)} for ${index.toString(16)}")
+            //SysOut.log("Selected ${row.index.toString(16)} for ${index.toString(16)}")
 
             val (blockIndex, wroteBack) = row.fetchBlock(tag)
             return Triple(row, blockIndex, wroteBack)
@@ -212,7 +212,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
              */
             fun compare(tag: ADDR, rowIndex: ADDR): Int? {
                 if (this.rowIndex != rowIndex) return null
-                //nativeLog("Compare Row ${this.index.toString(16)} ?= ${index.toString(16)} -> ${this.index == index}")
+                //SysOut.log("Compare Row ${this.index.toString(16)} ?= ${index.toString(16)} -> ${this.index == index}")
                 blocks.forEachIndexed { blockIndex, cacheBlock ->
                     if (cacheBlock.compare(tag)) return blockIndex
                 }
@@ -230,7 +230,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
                     if (offsetIndex + i < offsetCount) {
                         blocks[blockIndex].write(offsetIndex + i, value)
                     } else {
-                        nativeWarn("Invalid offset for cache write! (offset: ${offsetIndex + i})")
+                        SysOut.warn("Invalid offset for cache write! (offset: ${offsetIndex + i})")
                     }
                 }
             }

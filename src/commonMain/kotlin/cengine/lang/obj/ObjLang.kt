@@ -1,5 +1,6 @@
 package cengine.lang.obj
 
+import SysOut
 import cengine.editor.annotation.AnnotationProvider
 import cengine.editor.completion.CompletionProvider
 import cengine.editor.formatting.Formatter
@@ -17,11 +18,11 @@ object ObjLang : LanguageService() {
 
     override val name: String = "ObjLang"
     override val fileSuffix: String = ".o"
-    override val runConfig: Runner<ObjLang> = ObjRunner
     override val completionProvider: CompletionProvider? = null
     override val annotationProvider: AnnotationProvider? = null
     override val highlightProvider: HighlightProvider? = null
     override val formatter: Formatter? = null
+    override val runConfig: Runner<ObjLang> = ObjRunner
 
     override fun createManager(vfs: VFileSystem): PsiManager<ObjLang, ObjPsiFile> = PsiManager(
         vfs,

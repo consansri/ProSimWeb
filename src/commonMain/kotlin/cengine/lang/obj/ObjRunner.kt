@@ -1,78 +1,83 @@
 package cengine.lang.obj
 
+import ConsoleContext
+import cengine.lang.LanguageService
 import cengine.lang.Runner
-import cengine.lang.mif.MifRunner
+import cengine.lang.asm.AsmLang
 import cengine.lang.mif.toMif
 import cengine.lang.obj.ObjRunner.Target
 import cengine.lang.obj.elf.ELFFile
 import cengine.lang.vhdl.toVHDL
 import cengine.project.Project
 import cengine.vfs.FPath
-import cengine.vfs.VirtualFile
-import nativeError
-import nativeLog
+import cengine.vfs.FPath.Companion.toFPath
 
 
 /**
  * Attributes:
  * -type [Target] or -t [Target]
  */
-object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
+object ObjRunner : Runner<ObjLang>("objc") {
 
-    override suspend fun run(project: Project, vararg attrs: String): Boolean {
+    override val lang: ObjLang get() = ObjLang
+
+    override suspend fun ConsoleContext.runWithContext(project: Project, vararg attrs: String): Boolean {
         var target = Target.MIF
         var filepath: FPath? = null
         var filename: String? = null // file.name.removeSuffix(lang.fileSuffix)
         var constname = "mem"
         var addrWidth: Int? = null
 
-        for (i in attrs.indices) {
-            val attr = attrs[i]
-
-            when (attr) {
+        var index = 0
+        while(index in attrs.indices){
+            when (val attr = attrs[index]) {
                 DEFAULT_FILEPATH_ATTR -> {
-                    val next = attrs.getOrNull(i + 1) ?: continue
+                    val next = attrs.getOrNull(index + 1) ?: continue
                     if (next.isNotEmpty()) {
-                        filepath = FPath.delimited(next)
+                        filepath = next.toFPath()
                     } else {
-                        nativeError("${this::class.simpleName} expected filepath!")
+                        error("${this::class.simpleName} expected filepath!")
                         return false
                     }
+                    index++
                 }
 
                 "-t", "--target" -> {
-                    val next = attrs.getOrNull(i + 1) ?: continue
+                    val next = attrs.getOrNull(index + 1) ?: continue
                     target = Target.entries.firstOrNull {
                         it.name == next.uppercase()
                     } ?: continue
+                    index++
                 }
 
                 "-n", "--name" -> {
-                    val next = attrs.getOrNull(i + 1) ?: continue
+                    val next = attrs.getOrNull(index + 1) ?: continue
                     if (next.isNotEmpty() && !next.startsWith("-")) {
                         constname = next
                     }
+                    index++
                 }
 
                 "-fn", "--filename" -> {
-                    val next = attrs.getOrNull(i + 1) ?: continue
+                    val next = attrs.getOrNull(index + 1) ?: continue
                     if (next.isNotEmpty() && !next.startsWith("-")) {
                         filename = next
                     }
+                    index++
                 }
 
                 "-aw", "--address-width" -> {
-                    val next = attrs.getOrNull(i + 1) ?: continue
+                    val next = attrs.getOrNull(index + 1) ?: continue
                     val aw = next.toIntOrNull()
                     if (next.isNotEmpty() && aw != null) {
                         addrWidth = aw
                     }
+                    index++
                 }
 
                 "-h", "--help" -> {
-                    nativeLog(
+                    streamln(
                         """
-                        
                         -------------------------------------------------------- $name help --------------------------------------------------------
                             Arguments:
                                 $DEFAULT_FILEPATH_ATTR  : file to run
@@ -88,29 +93,41 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
                 }
 
                 else -> {
-                    nativeError("$name: Invalid Argument $attr (display valid arguments with -h or --help)!")
+                    error("$name: Invalid Argument $attr (display valid arguments with -h or --help)!")
                 }
             }
+
+            index++
         }
 
-        val file = resolveFilePath(project, filepath) ?: return false
+        if(filepath == null){
+            error("${name}: Filepath is missing.")
+            return false
+        }
+
+        val file = project.fileSystem[directory, filepath]
+
+        if (file == null) {
+            error("$name: Filepath invalid or missing.")
+            return false
+        }
 
         if (filename == null) filename = file.name.removeSuffix(lang.fileSuffix)
 
         val manager = project.getManager(file)
         if (manager == null) {
-            nativeError("${this::class.simpleName} Unable to find manager for ${file.name}!")
+            error("${this::class.simpleName} Unable to find manager for ${file.name}!")
             return false
         }
         val objFile = manager.getPsiFile(file) as? ELFFile ?: manager.updatePsi(file) as? ELFFile
         if (objFile == null) {
-            nativeError("${this::class.simpleName} Unable to find or create PsiFile for ${file.name}!")
+            error("${this::class.simpleName} Unable to find or create PsiFile for ${file.name}!")
             return false
         }
 
         when (target) {
             Target.MIF -> {
-                val outputPath = FPath.of(project.fileSystem, ObjLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".mif")
+                val outputPath = FPath(ObjLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".mif")
 
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
@@ -120,7 +137,7 @@ object ObjRunner : Runner<ObjLang>(ObjLang, "objc") {
             }
 
             Target.VHDL -> {
-                val outputPath = FPath.of(project.fileSystem, ObjLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".vhd")
+                val outputPath = FPath(ObjLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".vhd")
 
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)

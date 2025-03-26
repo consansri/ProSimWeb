@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import cengine.lang.asm.CodeStyle
-import nativeLog
+
 import org.jetbrains.compose.resources.FontResource
 import ui.uilib.UIState
 import ui.uilib.interactable.CButton
@@ -26,7 +26,7 @@ abstract class Theme {
                 } else {
                     UIState.Theme.value = LightTheme
                 }
-                nativeLog("Theme switched to ${theme.name}")
+                SysOut.log("Theme switched to ${theme.name}")
             }, icon = theme.icon)
         }
     }

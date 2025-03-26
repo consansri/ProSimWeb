@@ -6,8 +6,8 @@ import cengine.lang.asm.ast.lexer.AsmLexer
 import cengine.lang.asm.ast.lexer.AsmToken
 import cengine.lang.asm.ast.lexer.AsmTokenType
 import debug.DebugTools
-import nativeInfo
-import nativeLog
+
+
 
 /**
  * Lexing Position needs to be restored by the caller.
@@ -21,7 +21,7 @@ sealed class Component {
         private val comp = comp()
         override fun matchStart(lexer: AsmLexer, targetSpec: TargetSpec<*>): Rule.MatchResult {
             val result = comp.matchStart(lexer, targetSpec)
-            if (DebugTools.KIT_showRuleChecks) nativeLog("Match: Optional ${comp.print("")}")
+            if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: Optional ${comp.print("")}")
             return Rule.MatchResult(true, result.matchingTokens, result.matchingNodes)
         }
 
@@ -34,7 +34,7 @@ sealed class Component {
             for (comp in comps) {
                 val result = comp.matchStart(lexer, targetSpec)
                 if (result.matches) {
-                    if (DebugTools.KIT_showRuleChecks) nativeLog("Match: XOR ${result.matchingTokens.joinToString { it.type.name }}")
+                    if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: XOR ${result.matchingTokens.joinToString { it.type.name }}")
                     return Rule.MatchResult(true, result.matchingTokens, result.matchingNodes)
                 }
             }
@@ -65,7 +65,7 @@ sealed class Component {
                 iteration++
             }
 
-            if (DebugTools.KIT_showRuleChecks) nativeLog("Match: Repeatable ${comp.print("")} iterations: $iteration")
+            if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: Repeatable ${comp.print("")} iterations: $iteration")
             return Rule.MatchResult(true, matchingTokens, matchingNodes)
         }
 
@@ -80,7 +80,7 @@ sealed class Component {
 
             for (comp in comps) {
                 if (print) {
-                    nativeInfo("${this::class.simpleName}: ${comp.print("")} == ${lexer.peek(true)}")
+                    SysOut.info("${this::class.simpleName}: ${comp.print("")} == ${lexer.peek(true)}")
                 }
 
                 val result = comp.matchStart(lexer, targetSpec)
@@ -94,7 +94,7 @@ sealed class Component {
                 matchingTokens.addAll(result.matchingTokens)
             }
 
-            if (DebugTools.KIT_showRuleChecks) nativeLog("Match: Seq ${comps.joinToString("") { it.print("") }}")
+            if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: Seq ${comps.joinToString("") { it.print("") }}")
             return Rule.MatchResult(true, matchingTokens, matchingNodes)
         }
 
@@ -111,7 +111,7 @@ sealed class Component {
             }
 
             val token = lexer.consume(ignoreSpace)
-            if (DebugTools.KIT_showRuleChecks) nativeLog("Match: Except ${comp.print("")}")
+            if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: Except ${comp.print("")}")
             return Rule.MatchResult(true, listOf(token), listOf())
         }
 
@@ -135,7 +135,7 @@ sealed class Component {
                 }
             }
 
-            if (DebugTools.KIT_showRuleChecks) nativeLog("Match: Specific $content -> $token")
+            if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: Specific $content -> $token")
             return Rule.MatchResult(true, listOf(token))
         }
 
@@ -154,7 +154,7 @@ sealed class Component {
 
             lexer.consume(true)
 
-            if (DebugTools.KIT_showRuleChecks) nativeLog("Match: Reg ${token.value} -> ${token.value}")
+            if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: Reg ${token.value} -> ${token.value}")
             return Rule.MatchResult(true, listOf(token), listOf())
         }
 
@@ -166,7 +166,7 @@ sealed class Component {
             val initialPos = lexer.position
             val token = lexer.consume(true)
             if (token.type == AsmTokenType.DIRECTIVE && ".${dirName.uppercase()}" == token.value.uppercase()) {
-                if (DebugTools.KIT_showRuleChecks) nativeLog("Match: Dir $dirName")
+                if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: Dir $dirName")
                 return Rule.MatchResult(true, listOf(token), listOf())
             }
             lexer.position = initialPos
@@ -183,17 +183,17 @@ sealed class Component {
 
             if (token.type != type) {
                 if (print) {
-                    nativeInfo("${this::class.simpleName} ${token.type} == $type -> false")
+                    SysOut.info("${this::class.simpleName} ${token.type} == $type -> false")
                 }
                 lexer.position = initialPos
                 return Rule.MatchResult(false)
             }
 
             if (print) {
-                nativeInfo("${this::class.simpleName} ${token.type} == $type -> true")
+                SysOut.info("${this::class.simpleName} ${token.type} == $type -> true")
             }
 
-            if (DebugTools.KIT_showRuleChecks) nativeLog("Match: InSpecific ${type.name}")
+            if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: InSpecific ${type.name}")
             return Rule.MatchResult(true, listOf(token))
         }
 
@@ -206,12 +206,12 @@ sealed class Component {
 
             val node = ASNode.buildNode(type, lexer, targetSpec)
             if (node == null || !condition(node)) {
-                if (DebugTools.KIT_showRuleChecks) nativeLog("Mismatch: SpecNode ${type.name}")
+                if (DebugTools.KIT_showRuleChecks) SysOut.log("Mismatch: SpecNode ${type.name}")
                 lexer.position = initialPosition
                 return Rule.MatchResult(false, listOf(), listOf())
             }
 
-            if (DebugTools.KIT_showRuleChecks) nativeLog("Match: SpecNode ${type.name}")
+            if (DebugTools.KIT_showRuleChecks) SysOut.log("Match: SpecNode ${type.name}")
             return Rule.MatchResult(true, listOf(), listOf(node))
         }
 

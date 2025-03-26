@@ -94,7 +94,7 @@ sealed class Memory<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
             instanceType.split(value)
         }
 
-        //nativeLog("StoreEndianAware $address: $value -> $alignedAddr: $instances")
+        //SysOut.log("StoreEndianAware $address: $value -> $alignedAddr: $instances")
 
         storeInstanceArray(alignedAddr, instances, tracker)
     }

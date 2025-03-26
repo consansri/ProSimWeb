@@ -1,7 +1,8 @@
 package cengine.vfs
 
+import cengine.vfs.FPath.Companion.toFPath
 import debug.DebugTools
-import nativeLog
+
 import java.nio.file.*
 import kotlin.concurrent.thread
 import kotlin.io.path.pathString
@@ -17,8 +18,8 @@ actual class FileWatcher actual constructor(actual val vfs: VFileSystem) {
     private var watchThread: Thread? = null
     private var isWatching = false
 
-    actual fun watchDirectory(path: String) {
-        val dir = Paths.get(path)
+    actual fun watchDirectory(path: FPath) {
+        val dir = Paths.get(path.first(), *path.withoutFirst().toTypedArray())
         val watchKey = dir.register(
             watchService,
             StandardWatchEventKinds.ENTRY_CREATE,
@@ -40,26 +41,26 @@ actual class FileWatcher actual constructor(actual val vfs: VFileSystem) {
                         val kind = event.kind()
                         val fileName = event.context() as? FPath
                         if (fileName != null) {
-                            val relativePath = vfs.toRelative(dir.pathString.replace(separator, FPath.DELIMITER))
+                            val path = dir.pathString.replace(separator, FPath.DELIMITER).toFPath()
                             when (kind) {
                                 StandardWatchEventKinds.ENTRY_CREATE -> {
-                                    if (DebugTools.ENGINE_showFileWatcherInfo) nativeLog("FILE-$relativePath-CREATED")
-                                    vfs.findFile(relativePath)?.let {
+                                    if (DebugTools.ENGINE_showFileWatcherInfo) SysOut.log("FILE-$path-CREATED")
+                                    vfs[path]?.let {
                                         vfs.notifyFileCreated(it)
                                     }
                                 }
 
                                 StandardWatchEventKinds.ENTRY_DELETE -> {
-                                    if (DebugTools.ENGINE_showFileWatcherInfo) nativeLog("FILE-$relativePath-DELETED")
-                                    vfs.findFile(relativePath)?.let {
+                                    if (DebugTools.ENGINE_showFileWatcherInfo) SysOut.log("FILE-$path-DELETED")
+                                    vfs[path]?.let {
                                         vfs.notifyFileDeleted(it)
                                     }
-                                    vfs.deleteFile(relativePath)
+                                    vfs.deleteFile(path)
                                 }
 
                                 StandardWatchEventKinds.ENTRY_MODIFY -> {
-                                    if (DebugTools.ENGINE_showFileWatcherInfo) nativeLog("FILE-$relativePath-MODIFIED")
-                                    vfs.findFile(relativePath)?.let {
+                                    if (DebugTools.ENGINE_showFileWatcherInfo) SysOut.log("FILE-$path-MODIFIED")
+                                    vfs[path]?.let {
                                         vfs.notifyFileChanged(it)
                                     }
                                 }

@@ -29,11 +29,6 @@ abstract class LanguageService {
     abstract val fileSuffix: String
 
     /**
-     * The run configuration associated with this language service.
-     */
-    abstract val runConfig: Runner<*>
-
-    /**
      * The code [CompletionProvider] associated with this language service.
      */
     abstract val completionProvider: CompletionProvider?
@@ -54,15 +49,13 @@ abstract class LanguageService {
     abstract val formatter: Formatter?
 
     /**
+     * The run configuration associated with this language service.
+     */
+    abstract val runConfig: Runner<*>
+
+    /**
      * Creates a [PsiManager] associated with this language service
      */
     abstract fun createManager(vfs: VFileSystem): PsiManager<*, *>
 
-    /**
-     * Updates the analytics associated with this language service for the given file.
-     */
-    fun updateAnalytics(file: PsiFile) {
-        completionProvider?.buildCompletionSet(file)
-        annotationProvider?.updateAnnotations(file)
-    }
 }

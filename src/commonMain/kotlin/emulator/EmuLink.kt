@@ -3,7 +3,7 @@ package emulator
 import emulator.archs.*
 import emulator.kit.ArchConfig
 import emulator.kit.Architecture
-import nativeLog
+
 import kotlin.reflect.KClass
 
 /**
@@ -20,7 +20,7 @@ enum class EmuLink(private val arch: () -> Architecture<*, *>, val classType: KC
     fun load(): Architecture<*, *> {
         val loaded = arch()
         loaded.resetMicroArch()
-        nativeLog("Architecture $name loaded!")
+        SysOut.log("Architecture $name loaded!")
         return loaded
     }
 

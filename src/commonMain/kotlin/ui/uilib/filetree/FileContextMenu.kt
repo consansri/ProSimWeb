@@ -1,5 +1,6 @@
 package ui.uilib.filetree
 
+import SysOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.geometry.Offset
@@ -47,7 +48,8 @@ fun FileContextMenu(
                 onDismiss()
                 project.projectState.ide.replaceRunnerAttrs(runner, attrs)
                 ioScope.launch {
-                    runner.run(project, file, *attrs.toTypedArray())
+                    val console = project.getOrCreateConsole()
+                    runner.run(console, project, file, *attrs.toTypedArray())
                 }
             }
         }

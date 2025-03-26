@@ -28,11 +28,6 @@ interface VirtualFile {
         get() = !isDirectory
 
     /**
-     * The parent directory of this file or directory, or null if this is the root.
-     */
-    val parent: VirtualFile?
-
-    /**
      * To add an execution event when the file changed through another application.
      */
     var onDiskChange: () -> Unit
@@ -45,7 +40,12 @@ interface VirtualFile {
     }
 
     /**
-     * Retrieves the child files and directories, or null if this is the root.
+     * Retrieves the parent directory, or null if this is the root.
+     */
+    fun parent(): VirtualFile?
+
+    /**
+     * Retrieves the child files and directories.
      *
      * @return A list of child [VirtualFile] objects, or an empty list if this is not a directory.
      */

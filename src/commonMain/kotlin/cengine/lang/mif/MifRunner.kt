@@ -1,36 +1,38 @@
 package cengine.lang.mif
 
+import ConsoleContext
 import cengine.lang.Runner
 import cengine.lang.mif.ast.MifPsiFile
-import cengine.lang.obj.ObjRunner
 import cengine.lang.vhdl.toVHDL
 import cengine.project.Project
 import cengine.vfs.FPath
-import cengine.vfs.VirtualFile
-import nativeError
-import nativeLog
+import cengine.vfs.FPath.Companion.toFPath
 
-object MifRunner : Runner<MifLang>(MifLang, "mifc") {
+object MifRunner : Runner<MifLang>("mifc") {
+    override val lang: MifLang
+        get() = MifLang
 
-    override suspend fun run(project: Project, vararg attrs: String): Boolean {
+    override suspend fun ConsoleContext.runWithContext(project: Project, vararg attrs: String): Boolean {
 
         var target = Target.VHDL
         var filename: String? = null // file.name.removeSuffix(lang.fileSuffix)
         var filepath: FPath? = null
         var constname = "mem"
 
-        for (i in attrs.indices) {
+        var i = 0
+        while(i in attrs.indices){
             val attr = attrs[i]
 
             when (attr) {
                 DEFAULT_FILEPATH_ATTR -> {
                     val next = attrs.getOrNull(i + 1) ?: continue
                     if (next.isNotEmpty()) {
-                        filepath = FPath.delimited(next)
+                        filepath = next.toFPath()
                     } else {
-                        nativeError("${this::class.simpleName} expected filepath!")
+                        error("${this::class.simpleName} expected filepath!")
                         return false
                     }
+                    i++
                 }
 
                 "-t", "--target" -> {
@@ -38,6 +40,7 @@ object MifRunner : Runner<MifLang>(MifLang, "mifc") {
                     target = Target.entries.firstOrNull {
                         it.name == next.uppercase()
                     } ?: continue
+                    i++
                 }
 
                 "-n", "--name" -> {
@@ -45,6 +48,7 @@ object MifRunner : Runner<MifLang>(MifLang, "mifc") {
                     if (next.isNotEmpty() && !next.startsWith("-")) {
                         constname = next
                     }
+                    i++
                 }
 
                 "-fn", "--filename" -> {
@@ -52,10 +56,12 @@ object MifRunner : Runner<MifLang>(MifLang, "mifc") {
                     if (next.isNotEmpty() && !next.startsWith("-")) {
                         filename = next
                     }
+                    i++
                 }
 
                 "-h", "--help" -> {
-                    nativeLog("""
+                    streamln(
+                        """
                         
                         -------------------------------------------------------- $name help --------------------------------------------------------
                             Arguments:
@@ -66,16 +72,28 @@ object MifRunner : Runner<MifLang>(MifLang, "mifc") {
                                 -h, --help              : show help
                              
                         -------------------------------------------------------- $name help --------------------------------------------------------
-                    """.trimIndent())
+                    """.trimIndent()
+                    )
                 }
 
                 else -> {
-                    nativeError("${name}: Invalid Argument $attr (display valid arguments with -h or --help)!")
+                    error("${name}: Invalid Argument $attr (display valid arguments with -h or --help)!")
                 }
             }
+
+            i++
         }
 
-        val file = resolveFilePath(project, filepath) ?: return false
+        if(filepath == null){
+            error("${name}: filepath is missing!")
+            return false
+        }
+
+        val file = project.fileSystem[directory, filepath]
+        if (file == null) {
+            error("${name}: Filepath invalid or missing.")
+            return false
+        }
 
         if (filename == null) filename = file.name.removeSuffix(lang.fileSuffix)
 
@@ -83,18 +101,18 @@ object MifRunner : Runner<MifLang>(MifLang, "mifc") {
         val psiFile = manager?.updatePsi(file) as? MifPsiFile
 
         if (manager == null) {
-            nativeError("${this::class.simpleName} Unable to find manager for ${file.name}!")
+            error("${this::class.simpleName} Unable to find manager for ${file.name}!")
             return false
         }
 
         if (psiFile == null) {
-            nativeError("${this::class.simpleName} Unable to find or create PsiFile for ${file.name}!")
+            error("${this::class.simpleName} Unable to find or create PsiFile for ${file.name}!")
             return false
         }
 
         when (target) {
             Target.VHDL -> {
-                val outputPath = FPath.of(project.fileSystem, MifLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".vhd")
+                val outputPath = FPath(MifLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".vhd")
 
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
