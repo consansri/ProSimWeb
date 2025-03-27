@@ -1,41 +1,56 @@
 package cengine.lang.mif
 
 import Constants
+import IOContext
 import cengine.lang.asm.Initializer
 import cengine.util.integer.BigInt.Companion.toBigInt
-import kotlinx.datetime.*
+import cengine.util.integer.IntNumberStatic
+import kotlin.math.log2
 import kotlin.math.pow
 
-
-fun Initializer.toMif(addrBitWidth: Int?, chunkSize: Int = 16, addrRadix: MifRadix = MifRadix.HEX, dataRadix: MifRadix = MifRadix.HEX): String {
-    val content = contents()
+fun Initializer.toMif(context: IOContext, addrBitWidth: Int, dataBitWidth: Int, chunkSize: Int): String {
+    val sections = contents()
     val entry = entry()
-    val type = content.values.firstOrNull()?.first?.firstOrNull()?.type
+    val type = sections.values.firstOrNull()?.first?.firstOrNull()?.type ?: return buildString {
+        context.error("Content is empty!")
+        appendLine("-- ${Constants.sign()}")
+        appendLine("-- ERROR: Content is empty!")
+    }
+
+    val depth = 2.0.pow(addrBitWidth).toBigInt()
+
+    if (dataBitWidth % type.BITS != 0) {
+        context.error("The specified bit width ($dataBitWidth) is not a multiple of the source bit width (${type.BITS})!")
+        return buildString {
+            appendLine("-- ${Constants.sign()}")
+            appendLine("-- ERROR: The specified bit width ($dataBitWidth) is not a multiple of the source bit width (${type.BITS})!")
+        }
+    }
+
+    val widthCount = dataBitWidth / type.BITS
+    val addrShift = log2(widthCount.toFloat()).toBigInt()
 
     return buildString {
         appendLine("-- ${Constants.sign()}")
 
-        val depthGiven = addrBitWidth?.let {
-            2.0.pow(addrBitWidth).toBigInt()
-        }
-
-        val depthCalc = depthGiven ?: content.entries.lastOrNull()?.let {
-            it.key + it.value.first.size
-        }
         appendLine()
-        appendLine("DEPTH           = ${depthCalc?.toString() ?: "UNKNOWN"};")
-        appendLine("WIDTH           = ${type?.BITS ?: "UNKNOWN"};")
-        appendLine("ADDRESS_RADIX   = $addrRadix;")
-        appendLine("DATA_RADIX      = $dataRadix;")
+        appendLine("DEPTH           = ${depth};")
+        appendLine("WIDTH           = ${dataBitWidth};")
+        appendLine("ADDRESS_RADIX   = ${MifRadix.HEX};")
+        appendLine("DATA_RADIX      = ${MifRadix.HEX};")
         appendLine()
         appendLine("CONTENT BEGIN")
         appendLine()
-        content.filter { it.value.first.isNotEmpty() }.forEach { (key, value) ->
-            value.first.chunked(chunkSize).forEachIndexed { chunkIndex, chunk ->
-                val startAddr = key + chunkIndex * chunkSize
+        sections.filter { it.value.first.isNotEmpty() }.forEach { (sectionAddr, sectionContent) ->
+
+            sectionContent.first.chunked(widthCount).chunked(chunkSize).forEachIndexed { chunkIndex, chunk ->
+                val startAddr = sectionAddr.shr(addrShift) + chunkIndex * chunkSize
                 val endAddr = startAddr + chunk.size - 1
-                appendLine("    [${addrRadix.format(startAddr)}..${addrRadix.format(endAddr)}] : ${chunk.joinToString(" ") { dataRadix.format(it) }};")
+                val addrRange = "[${startAddr.zeroPaddedHex()}..${endAddr.zeroPaddedHex()}]"
+                val content = chunk.map { value -> value.joinToString("") { it.zeroPaddedHex() } }.joinToString(" ") { it }
+                appendLine("    $addrRange : $content;")
             }
+
             appendLine()
         }
         appendLine("END;")

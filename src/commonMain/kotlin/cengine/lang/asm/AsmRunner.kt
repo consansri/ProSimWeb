@@ -33,7 +33,8 @@ class AsmRunner(override val lang: AsmLang) : Runner<AsmLang>(getRunnerName(lang
                     if (next.isNotEmpty()) {
                         filepath = next.toFPath()
                     } else {
-                        error("${this::class.simpleName} expected filepath!")
+                        error("expected filepath")
+                        usage("$DEFAULT_FILEPATH_ATTR <path>")
                         return false
                     }
                     i++
@@ -50,7 +51,6 @@ class AsmRunner(override val lang: AsmLang) : Runner<AsmLang>(getRunnerName(lang
                 "-h", "--help" -> {
                     streamln(
                         """
-                        
                         -------------------------------------------------------- $name help --------------------------------------------------------
                             Arguments:
                                 $DEFAULT_FILEPATH_ATTR  : file to run
@@ -63,21 +63,22 @@ class AsmRunner(override val lang: AsmLang) : Runner<AsmLang>(getRunnerName(lang
                 }
 
                 else -> {
-                    error("${name}: Invalid Argument $attr (display valid arguments with -h or --help)!")
+                    error("invalid argument $attr (display valid arguments with -h or --help)")
                 }
             }
             i++
         }
 
         if (filepath == null) {
-            error("${name}: Filepath is missing.")
+            error("filepath is missing")
+            usage("$DEFAULT_FILEPATH_ATTR <path>")
             return false
         }
 
         val file = project.fileSystem[directory, filepath]
         if (file == null) {
-            error("${name}: Filepath is invalid: $filepath")
-            info("$name: Usage: $DEFAULT_FILEPATH_ATTR <filepath>")
+            error("filepath is invalid: $filepath")
+            usage("$DEFAULT_FILEPATH_ATTR <path>")
             return false
         }
 
@@ -95,11 +96,10 @@ class AsmRunner(override val lang: AsmLang) : Runner<AsmLang>(getRunnerName(lang
 
     private suspend fun ConsoleContext.executable(vfs: VFileSystem, manager: PsiManager<*, *>, file: VirtualFile) {
         val asmFile = manager.updatePsi(file) as AsmFile
-        log("Updated PsiFile $asmFile ${manager.printCache()}")
 
         val generator =  lang.spec.createGenerator(manager)
 
-        val outputPath = FPath(AsmLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + generator.fileSuffix)
+        val outputPath = directory.path + FPath(file.name.removeSuffix(lang.fileSuffix) + generator.fileSuffix)
 
         vfs.deleteFile(outputPath)
         val outputFile = vfs.createFile(outputPath)
@@ -120,6 +120,8 @@ class AsmRunner(override val lang: AsmLang) : Runner<AsmLang>(getRunnerName(lang
         if (collector.annotations.none { it.severity == Severity.ERROR }) {
             outputFile.setContent(content)
         }
+
+        log("generated ${outputFile.path}")
     }
 
     enum class Target {

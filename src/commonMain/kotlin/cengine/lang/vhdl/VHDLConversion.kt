@@ -1,13 +1,15 @@
 package cengine.lang.vhdl
 
 import Constants
+import IOContext
 import cengine.lang.asm.Initializer
+import cengine.util.integer.BigInt.Companion.toBigInt
+import kotlin.math.log2
 
-fun Initializer.toVHDL(packageName: String, memoryName: String, chunkSize: Int = 16): String {
+fun Initializer.toVHDL(context: IOContext, packageName: String, memoryName: String, dataWidth: Int, chunkSize: Int): String {
 
     val content = contents()
     val entry = entry()
-    val type = content.values.firstOrNull()?.first?.firstOrNull()?.type
 
     return buildString {
         appendLine("-- ${Constants.sign()}")
@@ -19,18 +21,36 @@ fun Initializer.toVHDL(packageName: String, memoryName: String, chunkSize: Int =
         appendLine("PACKAGE $packageName IS")
         appendLine("    constant entrypoint : std_logic_vector(${entry.type.BITS - 1} downto 0) := X\"${entry.zeroPaddedHex()}\";")
         appendLine()
-        content.filter { it.value.first.isNotEmpty() }.forEach { (secaddr, values) ->
-            val constName = "${memoryName}_${secaddr.toString(16)}"
-            val typeName = "${constName}_t"
-            val secDataList = values.first.chunked(chunkSize)
-            appendLine("    type $typeName is array(0 to ${values.first.size - 1}) of std_logic_vector(${type?.BITS ?: "WORD_WIDTH"} - 1 downto 0);")
-            appendLine("    constant $constName : $typeName := (")
-            secDataList.forEachIndexed { index, chunk ->
-                val separator = if (index == secDataList.size - 1) "" else ", "
-                appendLine("        ${chunk.joinToString(", ") { "X\"${it.zeroPaddedHex()}\"" }}$separator ") // -- ${chunk.joinToString(" ") { it.int8s().toASCIIString() }}
+        content.filter { it.value.first.isNotEmpty() }.forEach { (secAddr, sectionContent) ->
+
+            val type = sectionContent.first.first().type
+
+            // Check if dataWidth is valid!
+            if (dataWidth % type.BITS != 0 && dataWidth > 0) {
+                context.error("The specified bit width ($dataWidth) is not a multiple of the source bit width (${type.BITS})!")
+                appendLine("-- ERROR: (Section: ${secAddr.zeroPaddedHex()}) The specified bit width ($dataWidth) is not a multiple of the source bit width (${type.BITS})!")
+            } else {
+                val widthCount = dataWidth / type.BITS
+                val addrShift = log2(widthCount.toFloat()).toBigInt()
+
+                val startAddr = secAddr.shr(addrShift)
+
+                val constName = "${memoryName}_${startAddr.zeroPaddedHex()}"
+                val typeName = "${constName}_t"
+                val secDataList = sectionContent.first.chunked(widthCount).chunked(chunkSize)
+
+                appendLine("    type $typeName is array(0 to ${sectionContent.first.size - 1}) of std_logic_vector(${dataWidth - 1} downto 0);")
+                appendLine("    constant $constName : $typeName := (")
+                secDataList.forEachIndexed { chunkIndex, chunk ->
+                    val separator = if (chunkIndex == secDataList.size - 1) "" else ", "
+
+                    val contentLine = chunk.joinToString(", ") { valueChunk -> "X\"${valueChunk.joinToString("") { part -> part.zeroPaddedHex() }}\"" }
+
+                    appendLine("        $contentLine$separator ") // -- ${chunk.joinToString(" ") { it.int8s().toASCIIString() }}
+                }
+                appendLine("    );")
+                appendLine()
             }
-            appendLine("    );")
-            appendLine()
         }
         appendLine("END $packageName;")
 

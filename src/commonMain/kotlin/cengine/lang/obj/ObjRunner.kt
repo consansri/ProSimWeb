@@ -1,9 +1,7 @@
 package cengine.lang.obj
 
 import ConsoleContext
-import cengine.lang.LanguageService
 import cengine.lang.Runner
-import cengine.lang.asm.AsmLang
 import cengine.lang.mif.toMif
 import cengine.lang.obj.ObjRunner.Target
 import cengine.lang.obj.elf.ELFFile
@@ -22,21 +20,24 @@ object ObjRunner : Runner<ObjLang>("objc") {
     override val lang: ObjLang get() = ObjLang
 
     override suspend fun ConsoleContext.runWithContext(project: Project, vararg attrs: String): Boolean {
-        var target = Target.MIF
+        var target: Target? = null
         var filepath: FPath? = null
         var filename: String? = null // file.name.removeSuffix(lang.fileSuffix)
         var constname = "mem"
-        var addrWidth: Int? = null
+        var addrWidth: Int = 32
+        var dataWidth: Int = 32
+        var chunkSize: Int = 4
 
         var index = 0
-        while(index in attrs.indices){
+        while (index in attrs.indices) {
             when (val attr = attrs[index]) {
                 DEFAULT_FILEPATH_ATTR -> {
                     val next = attrs.getOrNull(index + 1) ?: continue
                     if (next.isNotEmpty()) {
                         filepath = next.toFPath()
                     } else {
-                        error("${this::class.simpleName} expected filepath!")
+                        error("expected filepath")
+                        usage("$DEFAULT_FILEPATH_ATTR <path>")
                         return false
                     }
                     index++
@@ -66,11 +67,29 @@ object ObjRunner : Runner<ObjLang>("objc") {
                     index++
                 }
 
+                "-dw", "--data-width" -> {
+                    val next = attrs.getOrNull(index + 1) ?: continue
+                    val dw = next.toIntOrNull()
+                    if (next.isNotEmpty() && dw != null) {
+                        dataWidth = dw
+                    }
+                    index++
+                }
+
                 "-aw", "--address-width" -> {
                     val next = attrs.getOrNull(index + 1) ?: continue
                     val aw = next.toIntOrNull()
                     if (next.isNotEmpty() && aw != null) {
                         addrWidth = aw
+                    }
+                    index++
+                }
+
+                "-cs", "--chunk-size" -> {
+                    val next = attrs.getOrNull(index + 1) ?: continue
+                    val cs = next.toIntOrNull()
+                    if (next.isNotEmpty() && cs != null) {
+                        chunkSize = cs
                     }
                     index++
                 }
@@ -84,7 +103,9 @@ object ObjRunner : Runner<ObjLang>("objc") {
                                 -t, --target            : set the target (${Target.entries.joinToString { it.name }})
                                 -n, --name              : change name of constant
                                 -fn, --filename         : change output filename (without type suffix)
-                                -aw, --address-width    : customize address-width (in bits)
+                                -dw, --data-width       : customize data-width in bits (defaults to 32)
+                                -aw, --address-width    : customize address-width in bits (defaults to 32)
+                                -cs, --chunk-size       : customize chunk-size (defaults to 4)
                                 -h, --help              : show help
                              
                         -------------------------------------------------------- $name help --------------------------------------------------------
@@ -100,15 +121,17 @@ object ObjRunner : Runner<ObjLang>("objc") {
             index++
         }
 
-        if(filepath == null){
-            error("${name}: Filepath is missing.")
+        if (filepath == null) {
+            error("filepath is missing")
+            usage("$DEFAULT_FILEPATH_ATTR <path>")
             return false
         }
 
         val file = project.fileSystem[directory, filepath]
 
         if (file == null) {
-            error("$name: Filepath invalid or missing.")
+            error("filepath invalid or missing")
+            usage("-f <path>")
             return false
         }
 
@@ -116,40 +139,47 @@ object ObjRunner : Runner<ObjLang>("objc") {
 
         val manager = project.getManager(file)
         if (manager == null) {
-            error("${this::class.simpleName} Unable to find manager for ${file.name}!")
+            error("unable to find manager: ${file.name}")
             return false
         }
         val objFile = manager.getPsiFile(file) as? ELFFile ?: manager.updatePsi(file) as? ELFFile
         if (objFile == null) {
-            error("${this::class.simpleName} Unable to find or create PsiFile for ${file.name}!")
+            error("unable to find or create PsiFile: ${file.name}")
+            return false
+        }
+
+        if (target == null) {
+            error("invalid target (targets: ${Target.entries})")
+            usage("-t <target>")
             return false
         }
 
         when (target) {
             Target.MIF -> {
-                val outputPath = FPath(ObjLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".mif")
+                val outputPath = directory.path + FPath(file.name.removeSuffix(lang.fileSuffix) + ".mif")
 
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
 
-                val fileContent = objFile.toMif(addrWidth)
+                val fileContent = objFile.toMif(this, addrWidth, dataWidth, chunkSize)
                 outputFile.setAsUTF8String(fileContent)
+                log("generated ${outputFile.path}")
             }
 
             Target.VHDL -> {
-                val outputPath = FPath(ObjLang.OUTPUT_DIR, file.name.removeSuffix(lang.fileSuffix) + ".vhd")
+                val outputPath = directory.path + FPath(file.name.removeSuffix(lang.fileSuffix) + ".vhd")
 
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
 
-                val fileContent = objFile.toVHDL(filename, constname)
+                val fileContent = objFile.toVHDL(this, filename, constname, dataWidth, chunkSize)
                 outputFile.setAsUTF8String(fileContent)
+                log("generated ${outputFile.path}")
             }
         }
 
         return true
     }
-
 
     enum class Target {
         MIF,
