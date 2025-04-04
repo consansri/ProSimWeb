@@ -218,7 +218,7 @@ fun LazyListScope.nodes(
     depth: Dp,
     expandWidth: Dp,
 ) {
-    nodes.sortedBy { it.name }.forEach {
+    nodes.sortedBy { it.name }.sortedBy { !it.isDirectory }.forEach {
         node(
             it,
             expandedItems = expandedItems,

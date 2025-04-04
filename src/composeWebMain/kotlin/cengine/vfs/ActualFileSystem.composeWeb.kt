@@ -1,7 +1,10 @@
 package cengine.vfs
 
 import Keys
+import SysOut
 import kotlinx.browser.localStorage
+import org.w3c.dom.get
+import org.w3c.dom.set
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -21,7 +24,12 @@ actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
      */
     @OptIn(ExperimentalEncodingApi::class)
     actual fun readFile(path: FPath): ByteArray {
-        val content = Base64.decode(localStorage.getItem(getFileKey(path)) ?: "")
+        val content = if (!isDirectory(path)) {
+            Base64.decode(localStorage[getFileKey(path)] ?: "")
+        } else {
+            SysOut.error("Unable to read directory $path!")
+            ByteArray(0)
+        }
         // SysOut.log("ACTUAL ReadFile: $path ${content.size}")
         return content
     }
@@ -35,7 +43,11 @@ actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
     @OptIn(ExperimentalEncodingApi::class)
     actual fun writeFile(path: FPath, content: ByteArray) {
         // SysOut.log("ACTUAL WriteFile: $path ${content.size}")
-        localStorage.setItem(getFileKey(path), Base64.encode(content))
+        if (!isDirectory(path)) {
+            localStorage[getFileKey(path)] = Base64.encode(content)
+        } else {
+            SysOut.error("Unable to write to directory $path!")
+        }
     }
 
     /**
@@ -45,7 +57,11 @@ actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
      */
     actual fun deleteFile(path: FPath) {
         // SysOut.log("ACTUAL DeleteFile: $path")
-        localStorage.removeItem(getFileKey(path))
+        if (isDirectory(path)) {
+            localStorage.removeItem(getDirKey(path))
+        } else {
+            localStorage.removeItem(getFileKey(path))
+        }
     }
 
     /**
@@ -58,9 +74,9 @@ actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
     actual fun createFile(path: FPath, isDirectory: Boolean) {
         // SysOut.log("ACTUAL CreateFile: $path isDirectory=$isDirectory")
         if (isDirectory) {
-            // don't save!
+            localStorage[getDirKey(path)] = Base64.encode(ByteArray(0))
         } else {
-            localStorage.setItem(getFileKey(path), Base64.encode(ByteArray(0)))
+            localStorage[getFileKey(path)] = Base64.encode(ByteArray(0))
         }
     }
 
@@ -71,16 +87,23 @@ actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
      * @return A list of names of files and directories in the given directory.
      */
     actual fun listDirectory(path: FPath): List<String> {
-        val prefix = getDirPrefix(path)
+        val filePrefix = getFileKey(path) + FPath.DELIMITER
+        val dirPrefix = getDirKey(path) + FPath.DELIMITER
 
-        val paths = getLocalStorageKeys()
-            .filter { it.startsWith(prefix) }
-            .map { it.removePrefix(prefix).split(FPath.DELIMITER).firstOrNull() ?: "" }
-            .filter { it.isNotEmpty() }
+        val allKeys = getLocalStorageKeys()
+
+        val filePaths = allKeys
+            .filter { it.startsWith(filePrefix) }
+            .mapNotNull { it.removePrefix(filePrefix).split(FPath.DELIMITER).firstOrNull() }
+            .distinct()
+
+        val dirPaths = allKeys
+            .filter { it.startsWith(dirPrefix) }
+            .mapNotNull { it.removePrefix(dirPrefix).split(FPath.DELIMITER).firstOrNull() }
             .distinct()
 
         //SysOut.log("ACTUAL ListDirectories: path=$path prefix=$prefix ->\n ${paths}")
-        return paths
+        return dirPaths + filePaths
     }
 
     /**
@@ -90,8 +113,7 @@ actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
      * @return True if the path is a directory, false otherwise.
      */
     actual fun isDirectory(path: FPath): Boolean {
-        val prefix = getDirPrefix(path)
-        return getLocalStorageKeys().any { it.startsWith(prefix) && it != getFileKey(path) }
+        return localStorage[getDirKey(path)] != null
     }
 
     /**
@@ -101,12 +123,12 @@ actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
      * @return True if the file or directory exists, false otherwise.
      */
     actual fun exists(path: FPath): Boolean {
-        if (localStorage.getItem(getFileKey(path)) != null) {
+        if (localStorage[getFileKey(path)] != null) {
             // Exists as File
             return true
         }
 
-        if (getLocalStorageKeys().any { it.startsWith(getDirPrefix(path)) }) {
+        if (localStorage[getDirKey(path)] != null) {
             // Exists as Directory
             return true
         }
@@ -122,8 +144,8 @@ actual class ActualFileSystem actual constructor(actual val rootPath: FPath) {
      */
     actual fun getAbsolutePath(path: FPath): String = path.toString()
 
-    private fun getFileKey(path: FPath): String = "${Keys.FILE_PREFIX}${getAbsolutePath(path)}"
-    private fun getDirPrefix(path: FPath): String = "${Keys.FILE_PREFIX}${getAbsolutePath(path)}${FPath.DELIMITER}"
+    private fun getFileKey(path: FPath): String = Keys.FILE_PREFIX + getAbsolutePath(path)
+    private fun getDirKey(path: FPath): String = Keys.DIR_PREFIX + getAbsolutePath(path)
     private fun getLocalStorageKeys(): List<String> {
         val keys = mutableListOf<String>()
         for (i in 0 until localStorage.length) {

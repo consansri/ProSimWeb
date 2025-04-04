@@ -36,7 +36,7 @@ data class ShellCmd(val keyword: String, val onPrompt: ShellContext.(attrs: List
                     usage("mkdir <directory_name>")
                 } else {
                     val destPath = attrs[0].toFPath()
-                    val parentDir = project.fileSystem[directory, destPath] ?: return@ShellCmd error("Invalid path $destPath")
+                    val parentDir = project.fileSystem[directory, destPath.withoutLast()] ?: return@ShellCmd error("Invalid path $destPath")
 
                     if (parentDir.getChildren().any { it.name == destPath.last() }) {
                         streamln("Error: A file or directory named '${attrs[0]}' already exists")
