@@ -589,13 +589,13 @@ sealed class AsmDirective(
                         if (with(asmParser) { parseExpression() } == null) { error("Expected offset expression for $keyWord") }
                     }
                     // Handle other CFI directives similarly based on their expected arguments
-                    else -> {
+                    /*else -> {
                         // Default: Maybe consume remaining tokens on line as generic arguments?
                         // Or report "Parsing not fully implemented for $keyWord"
                         while (!isAtEnd() && !currentIs(PsiTokenType.LINEBREAK)) {
                             advance() // Consume remaining tokens as unknown args
                         }
-                    }
+                    }*/
                 }
                 marker.done(this@DebuggingT)
                 return true

@@ -14,6 +14,7 @@ data class AppState(
 ) {
 
     companion object {
+        const val APPSTATE_NAME = "appstate.json"
         val initial = AppState()
     }
 

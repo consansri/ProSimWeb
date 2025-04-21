@@ -1,5 +1,6 @@
 package cengine.vfs
 
+import cengine.system.getSystemLineBreak
 import cengine.vfs.FPath.Companion.DELIMITER
 import kotlinx.serialization.Serializable
 

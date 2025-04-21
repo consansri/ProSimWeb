@@ -61,4 +61,9 @@ expect object ActualFileSystem {
      */
     fun exists(path: FPath): Boolean
 
+    /**
+     * Returns the [FPath] to the app state directory.
+     */
+    fun getAppStateDir(): FPath
+
 }

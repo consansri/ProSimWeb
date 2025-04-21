@@ -1,5 +1,7 @@
 package cengine.vfs
 
+import cengine.console.SysOut
+
 /**
  * Virtual File System (VFS)
  *
@@ -140,7 +142,11 @@ class VFileSystem(val absRootPath: FPath) {
         }
 
         val deletedFile = get(path)
-        ActualFileSystem.deleteFile(path)
+        try {
+            ActualFileSystem.deleteFile(path)
+        } catch (e: Exception) {
+            SysOut.warn("Couldn't delete file $path! (maybe it's already deleted)")
+        }
         fileCache.remove(path)
         deletedFile?.let {
             notifyFileDeleted(it)
@@ -210,7 +216,7 @@ class VFileSystem(val absRootPath: FPath) {
      */
     inner class VirtualFileImpl(
         override val path: FPath,
-        override val isDirectory: Boolean
+        override val isDirectory: Boolean,
     ) : VirtualFile {
         override val name: String
             get() = path.last()
@@ -218,7 +224,7 @@ class VFileSystem(val absRootPath: FPath) {
         override var onDiskChange: () -> Unit = {}
 
         override fun parent(): VirtualFile? {
-            if(!ActualFileSystem.exists(path.withoutLast())) return null
+            if (!ActualFileSystem.exists(path.withoutLast())) return null
 
             return getOrCreateFile(path.withoutLast())
         }

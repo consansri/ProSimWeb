@@ -1,6 +1,8 @@
 package cengine.vfs
 
 import cengine.console.SysOut
+import cengine.vfs.FPath.Companion.toFPath
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -16,15 +18,7 @@ actual object ActualFileSystem {
      * @param path The relative path of the file to read.
      * @return The content of the file as ByteArray.
      */
-    actual fun readFile(path: FPath): ByteArray {
-        return try {
-            Files.readAllBytes(path.toNioPath())
-        } catch (e: Exception) {
-            SysOut.error("Couldn't read file $path! \n${e.message}")
-            SysOut.debug { e.stackTraceToString() }
-            ByteArray(0)
-        }
-    }
+    actual fun readFile(path: FPath): ByteArray = Files.readAllBytes(path.toNioPath())
 
     /**
      * Writes content to a file.
@@ -33,13 +27,9 @@ actual object ActualFileSystem {
      * @param content The content to write to the file.
      */
     actual fun writeFile(path: FPath, content: ByteArray) {
-        try {
-            Files.write(path.toNioPath(), content)
-        } catch (e: Exception) {
-            SysOut.error("Couldn't write file $path! \n${e.message}")
-            SysOut.debug { e.stackTraceToString() }
-        }
+        Files.write(path.toNioPath(), content)
     }
+
 
     /**
      * Deletes a file or directory.
@@ -62,16 +52,20 @@ actual object ActualFileSystem {
      */
     actual fun createFile(path: FPath, isDirectory: Boolean) {
         try {
-            if (!Files.exists(path.toNioPath())) {
-                if (isDirectory) {
-                    Files.createDirectory(path.toNioPath())
-                } else {
-                    Files.createFile(path.toNioPath())
-                }
+            if (path.withoutLast().isNotEmpty() && !Files.exists(path.withoutLast().toNioPath())) {
+                createFile(path.withoutLast(), true)
             }
+
+            if (isDirectory) {
+                Files.createDirectory(path.toNioPath())
+            } else {
+                Files.createFile(path.toNioPath())
+            }
+
         } catch (e: Exception) {
             SysOut.error("Couldn't create file $path! \n${e.message}")
             SysOut.debug { e.stackTraceToString() }
+            throw e
         }
     }
 
@@ -114,6 +108,23 @@ actual object ActualFileSystem {
      * @return True if the file or directory exists, false otherwise.
      */
     actual fun exists(path: FPath): Boolean = Files.exists(path.toNioPath())
+
+    /**
+     * Returns the [FPath] to the app state directory.
+     */
+    actual fun getAppStateDir(): FPath {
+        val os = System.getProperty("os.name").lowercase()
+        val userHome = System.getProperty("user.home")
+        val appName = Constants.NAME
+        val companyName = Constants.ORG
+
+        return when {
+            os.contains("mac") -> userHome.toFPath() + "Library" + "Application Support" + appName
+            os.contains("win") -> System.getenv("LOCALAPPDATA").toFPath() + companyName + appName
+            os.contains("nux") || os.contains("linux") -> userHome.toFPath() + ".local" + "share" + appName
+            else -> userHome.toFPath() + ".$appName"
+        }
+    }
 
     private fun FPath.toNioPath() = Paths.get(first(), *withoutFirst().parts)
 

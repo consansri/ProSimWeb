@@ -178,6 +178,16 @@ actual object ActualFileSystem {
         return localStorage[getFileKey(path)] != null || localStorage[getDirKey(path)] != null
     }
 
+    /**
+     * Returns the [FPath] to the app state directory.
+     */
+    actual fun getAppStateDir(): FPath {
+        val appName = Constants.NAME
+        val companyName = Constants.ORG
+
+        return FPath(companyName, appName)
+    }
+
     private fun getFileKey(path: FPath): String = Keys.FILE_PREFIX + path
     private fun getDirKey(path: FPath): String = Keys.DIR_PREFIX + path
     private fun getLocalStorageKeys(): List<String> {

@@ -6,6 +6,7 @@ val DIST_VERSION: String by project
 val DIST_YEAR: String by project
 val DIST_DEV: String by project
 val DIST_ORG: String by project
+val DIST_ORG_SHORT: String by project
 val DIST_FILENAME = "$DIST_NAME-$DIST_VERSION"
 
 plugins {
@@ -25,6 +26,7 @@ buildConfig {
     buildConfigField("String", "YEAR", "\"$DIST_YEAR\"")
     buildConfigField("String", "DEV", "\"$DIST_DEV\"")
     buildConfigField("String", "ORG", "\"$DIST_ORG\"")
+    buildConfigField("String", "ORG_SHORT", "\"$DIST_ORG_SHORT\"")
     buildConfigField("String", "FILENAME", "\"$DIST_FILENAME\"")
     buildConfigField("Boolean", "DEBUG", "false")
 }
@@ -47,6 +49,9 @@ kotlin {
                         add(projectDirPath)
                     }
                 }
+            }
+            testTask {
+                dependsOn(":app:wasmJsTestTestDevelopmentExecutableCompileSync")
             }
         }
         binaries.executable()
@@ -83,10 +88,10 @@ kotlin {
 }
 
 group = "prosim"
-version = "unspecified"
+version = DIST_VERSION
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17)
 }
 
 
