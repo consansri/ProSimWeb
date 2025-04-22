@@ -22,7 +22,20 @@ sealed class AsmDirective(
 ) : PsiStatement(type, range, *children) {
 
     companion object {
-        val all = Emissive.EmissiveT.entries + SectionControl.SectionControlT.entries + Include
+        val all = collect()
+
+        private fun collect(): List<AsmDirectiveT>{
+            val types = mutableListOf<AsmDirectiveT>(Include)
+            types.addAll(Emissive.EmissiveT.entries)
+            types.addAll(SectionControl.SectionControlT.entries)
+            types.addAll(SymbolManagement.SymbolManagementT.entries)
+            types.addAll(Alignment.AlignmentT.entries)
+            types.addAll(AssemblyControl.AssemblyControlT.entries)
+            types.addAll(MacroDefinition.MacroDefinitionT.entries)
+            types.addAll(ConditionalAssembly.ConditionalAssemblyT.entries)
+            types.addAll(Debugging.DebuggingT.entries)
+            return types
+        }
     }
 
     val keyWord = children.filterIsInstance<PsiToken>().firstOrNull { it.type == PsiTokenType.KEYWORD }
