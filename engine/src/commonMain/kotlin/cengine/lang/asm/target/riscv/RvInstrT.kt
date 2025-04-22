@@ -670,7 +670,7 @@ sealed interface RvInstrT : AsmInstructionT {
         // Helper to generate ADDI
         fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateAddi(rd: UInt32, rs1: UInt32, imm: UInt32, instr: AsmInstruction? = null): UInt32 {
             // Basic range check (can be more sophisticated if needed)
-            if (!imm.fitsInSigned(12)) instr?.addError("Internal Error: ADDI immediate out of range during pseudo-op expansion")
+            if (!imm.fitsInSignedOrUnsigned(12)) instr?.addError("Internal Error: ADDI immediate ($imm) out of range during pseudo-op expansion")
             return RvConst.packImmI(imm) or (rs1 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
         }
 
@@ -682,7 +682,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
         // Helper to generate ADDIW (RV64)
         fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateAddiw(rd: UInt32, rs1: UInt32, imm: UInt32, instr: AsmInstruction? = null): UInt32 {
-            if (!imm.fitsInSigned(12)) instr?.addError("Internal Error: ADDIW immediate out of range during pseudo-op expansion")
+            if (!imm.fitsInSignedOrUnsigned(12)) instr?.addError("Internal Error: ADDIW immediate ($imm) out of range during pseudo-op expansion")
             return RvConst.packImmI(imm) or (rs1 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM_WORD
         }
 
@@ -690,7 +690,7 @@ sealed interface RvInstrT : AsmInstructionT {
         fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateSlli(rd: UInt32, rs1: UInt32, shamtVal: UInt32, xlen: RvSpec.XLEN, instr: AsmInstruction? = null): UInt32 {
             val shamtBits = if (xlen == RvSpec.XLEN.X64) 6 else 5
             val shamtMask = (1u shl shamtBits) - 1u
-            if (!shamtVal.toBigInt().fitsInUnsigned(shamtBits)) instr?.addError("Internal Error: SLLI shift amount out of range during pseudo-op expansion")
+            if (!shamtVal.toBigInt().fitsInUnsigned(shamtBits)) instr?.addError("Internal Error: SLLI shift amount ($shamtVal) out of range during pseudo-op expansion")
             val shamt = shamtVal and shamtMask.toUInt32()
             val immField = if (xlen == RvSpec.XLEN.X64) {
                 shamt // RV64: funct7=0, shamt is imm[5:0]
@@ -708,7 +708,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
         // Helper to generate JALR
         fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateJalr(rd: UInt32, rs1: UInt32, imm: UInt32, instr: AsmInstruction? = null): UInt32 {
-            if (!imm.fitsInSigned(12)) instr?.addError("Internal Error: JALR immediate out of range during pseudo-op expansion")
+            if (!imm.fitsInSignedOrUnsigned(12)) instr?.addError("Internal Error: JALR immediate ($imm) out of range during pseudo-op expansion")
             return RvConst.packImmI(imm) or (rs1 shl 15) or (rd shl 7) or RvConst.OPC_JALR
         }
 
@@ -754,7 +754,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
             // Pseudo Jumps/Calls/Returns
             J(LABEL),              // -> jal x0, label
-            JAL(LABEL){
+            JAL(LABEL) {
 
             },            // -> jal x1, label (Syntactic sugar for common case)
             JR(PS_RS1),            // -> jalr x0, 0(rs1)
@@ -1028,124 +1028,142 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
                     }
 
-                    // --- Myriad Sequences based on reference implementation ---
-                    // The reference logic uses specific bit widths (44, 56, 64) and sequences.
-                    // Let's try to replicate the sequences.
+                    imm.fitsInSigned(44) -> {
+                        val resized = imm.toInt64()
 
-                    else -> { // Handle 64-bit general case using sequences
-                        // Goal: Materialize 'imm' using LUI, ADDIW, SLLI, ADDI steps
-                        // Strategy:
-                        // 1. Start with the highest possible LUI value.
-                        // 2. Repeatedly:
-                        //    a. Add the next 12-bit chunk (sign-extended) using ADDIW (if possible and non-zero) or ADDI.
-                        //    b. Shift left by 12 (SLLI rd, rd, 12).
-                        // This differs slightly from the reference, which seems custom-tailored. Let's try the reference sequence structure.
+                        /**
+                         *  val64 = lui + addiw + addi3 + addi2 + addi1
+                         *
+                         *  LUI
+                         *  ADDIW
+                         *  SLLI 12
+                         *  ADDI
+                         */
+                        val l1 = resized.lowest(12).toUInt32()
+                        val l2 = resized.shr(12).lowest(12).toUInt32() + l1.bit(11)
+                        val l3 = resized.shr(12 + 12).lowest(20).toUInt32() + l2.bit(11)
 
-                        val imm64 = imm.toInt64() // Work with signed 64-bit value
+                        // Build LUI Bundle
+                        writer(generateLui(rd, l3, instr))
 
-                        // Sequence from reference:
-                        // 1. Load upper bits (adjusting for sign extensions)
-                        // 2. Add chunks with shifts in between
-
-                        // Calculate chunks l1..l5 similarly to reference (handle sign extension)
-                        val l1 = (imm64.toUInt64() and 0xFFF).toUInt32() // imm[11:0]
-                        val l2 = ((imm64.toUInt64() shr 12) and 0xFFF).toUInt32() + l1.bit(11) // imm[23:12] + sign_ext(l1)
-                        val l3 = ((imm64.toUInt64() shr 24) and 0xFFF).toUInt32() + l2.bit(11) // imm[35:24] + sign_ext(l2)
-                        val l4 = ((imm64.toUInt64() shr 36) and 0xFFF).toUInt32() + l3.bit(11) // imm[47:36] + sign_ext(l3)
-                        // l5 needs remaining bits [63:48] + sign_ext(l4). Max 16 bits + 1 bit = 17 bits.
-                        // LUI takes 20 bits. We need imm[63:12] correctly placed.
-                        // Let imm = HHHH HHHH HHHH HHHH LLLL LLLL LLLL
-                        // lui rd, imm[63:12] (adjusted)
-                        // addiw rd, rd, imm[?]
-                        // slli rd, rd, 12
-                        // addi rd, rd, imm[11:0]
-
-                        // Simpler approach: GNU AS Manual sequence (up to 8 instructions)
-                        // 1. lui rd, %highest(imm)
-                        // 2. addi rd, rd, %higher(imm)
-                        // 3. slli rd, rd, 32
-                        // 4. addi rd, rd, %hi(imm)
-                        // 5. addi rd, rd, %lo(imm) >> 1? No, this is complex.
-
-                        // --- Let's try reconstructing the reference sequence logic directly ---
-                        // It seems to build the number from MSB down using LUI, ADDIW, SLLI, ADDI.
-
-                        // Get highest 20 bits for LUI (handle sign extension of lower part)
-                        val imm_lo32 = imm64.toInt32().toUInt32()
-                        val (lui_hi20, _) = RvConst.splitImm32(imm_lo32) // Get hi/lo of lower 32 bits
-                        val imm_hi32 = (imm64.toInt32().toUInt32() shr 32).toInt32().toUInt32()
-                        val (addiw_hi20, addiw_lo12) = RvConst.splitImm32(imm_hi32) // Split upper 32 bits
-
-                        var lui_val = addiw_hi20 // Start LUI with highest 20 bits
-                        if (addiw_lo12.bit(11) == UInt32.ONE) { // Adjust LUI if next chunk (addiw_lo12) is negative
-                            lui_val += 1
-                        }
-                        writer(generateLui(rd, lui_val, instr)) // 1. LUI
-
-                        var current_rd = rd
-                        var needsShift = false
-
-                        if (addiw_lo12 != UInt32.ZERO || lui_val == UInt32.ZERO) { // Need ADDIW?
-                            writer(generateAddiw(current_rd, current_rd, addiw_lo12, instr)) // 2. ADDIW rd, rd, imm[43:32] (adjusted)
-                            needsShift = true
+                        // Build ADDIW Bundle
+                        if (l2 != UInt32.ZERO) {
+                            writer(generateAddiw(rd, rd, l2, instr))
                         }
 
-                        // Now shift down to work on lower 32 bits
-                        if (needsShift) {
-                            writer(generateSlli(current_rd, current_rd, 12.toUInt32(), RvSpec.XLEN.X64, instr)) // Shift by 12 (or more?) Reference uses 12. Let's assume 12.
-                            // The reference SLLI amount varies. This needs more careful study.
-                            // Let's fallback to a simpler, possibly less optimal sequence for now.
-                            // Alternative: LUI + ADDIW + SLLI 32 + LUI + ADDI
-                            instr?.addError("Complex RV64 LI sequence generation is complex and potentially inaccurate here. Using LUI/ADDI for 32-bit portion.")
+                        // Build SLLI Bundle
+                        writer(generateSlli(rd, rd, 12U.toUInt32(), RvSpec.XLEN.X64, instr))
 
-                            // Generate lower 32 bits using LUI + ADDI into a temporary? No, modify rd.
-                            // Revert to simpler 32-bit logic if needed.
-
-                            // Let's try the GNU sequence logic simplified:
-                            // lui rd, imm[63:32] adjusted + imm[31:12] adjusted
-                            // addi rd, rd, imm[11:0] -- This is wrong
-
-                            // --- Sticking closer to reference structure attempt ---
-                            // After LUI + optional ADDIW for top bits:
-                            // Need to add imm[31:12] and imm[11:0]
-
-                            // Shift for next chunk (bits 31:12)
-                            // How many shifts? The reference code uses multiple SLLI 12
-                            // Let's recalculate chunks based on the reference code:
-                            val l1_ref = (imm64 and 0xFFF).toUInt32()
-                            val l2_ref = ((imm64.toUInt64() shr 12) and 0xFFF).toUInt32() + l1_ref.bit(11)
-                            val l3_ref = ((imm64.toUInt64() shr 24) and 0xFFF).toUInt32() + l2_ref.bit(11)
-                            val l4_ref = ((imm64.toUInt64() shr 36) and 0xFFF).toUInt32() + l3_ref.bit(11)
-                            val l5_ref = ((imm64.toUInt64() shr 48)).toUInt32() + l4_ref.bit(11) // Remaining bits + sign
-
-                            writer(generateLui(rd, l5_ref, instr)) // LUI rd, imm[63:48](adj)
-                            var shift = UInt32.ZERO
-
-                            if (l4_ref != UInt32.ZERO) {
-                                writer(generateAddiw(rd, rd, l4_ref, instr)) // ADDIW rd, rd, imm[47:36](adj)
-                            }
-                            shift += 12
-
-                            if (l3_ref != UInt32.ZERO) {
-                                if (shift > UInt32.ZERO) writer(generateSlli(rd, rd, shift, RvSpec.XLEN.X64, instr))
-                                writer(generateAddi(rd, rd, l3_ref, instr)) // ADDI rd, rd, imm[35:24](adj)
-                                shift = UInt32.ZERO
-                            }
-                            shift += 12
-
-                            if (l2_ref != UInt32.ZERO) {
-                                if (shift > UInt32.ZERO) writer(generateSlli(rd, rd, shift, RvSpec.XLEN.X64, instr))
-                                writer(generateAddi(rd, rd, l2_ref, instr)) // ADDI rd, rd, imm[23:12](adj)
-                                shift = UInt32.ZERO
-                            }
-                            shift += 12
-
-                            if (l1_ref != UInt32.ZERO) {
-                                if (shift > UInt32.ZERO) writer(generateSlli(rd, rd, shift, RvSpec.XLEN.X64, instr))
-                                writer(generateAddi(rd, rd, l1_ref, instr)) // ADDI rd, rd, imm[11:0]
-                            }
+                        if (l1 != UInt32.ZERO) {
+                            writer(generateAddi(rd, rd, l1, instr))
                         }
-                    } // end else (64-bit general case)
+                    }
+
+                    imm.fitsInSigned(56) -> {
+                        val resized = imm.toInt64()
+
+                        /**
+                         *  val64 = lui + addiw + addi3 + addi2 + addi1
+                         *
+                         *  LUI
+                         *  ADDIW
+                         *  SLLI 12
+                         *  ADDI
+                         */
+                        val l1 = resized.lowest(12).toUInt32()
+                        val l2 = resized.shr(12).lowest(12).toUInt32() + l1.bit(11)
+                        val l3 = resized.shr(12 + 12).lowest(12).toUInt32() + l2.bit(11)
+                        val l4 = resized.shr(12 + 12 + 12).lowest(20).toUInt32() + l3.bit(11)
+
+                        var shiftNeeded = UInt32.ZERO
+
+                        writer(generateLui(rd, l4, instr))
+
+                        if (l3 != UInt32.ZERO) {
+                            writer(generateAddiw(rd, rd, l3, instr))
+                        }
+
+                        shiftNeeded += 12
+
+                        if (l2 != UInt32.ZERO) {
+
+                            writer(generateSlli(rd, rd, shiftNeeded, RvSpec.XLEN.X64, instr))
+
+                            shiftNeeded = UInt32.ZERO
+
+                            writer(generateAddi(rd, rd, l2, instr))
+                        }
+
+                        shiftNeeded += 12
+
+                        writer(generateSlli(rd, rd, shiftNeeded, RvSpec.XLEN.X64, instr))
+
+                        if (l1 != UInt32.ZERO) {
+                            writer(generateAddi(rd, rd, l1, instr))
+                        }
+                    }
+
+                    else -> {
+                        val resized = try {
+                            imm.toInt64().toUInt64()
+                        } catch (e: Exception) {
+                            imm.toUInt64()
+                        }
+
+                        /**
+                         *  val64 = lui + addiw + addi3 + addi2 + addi1
+                         *
+                         *  LUI
+                         *  ADDIW
+                         *  SLLI 12
+                         *  ADDI
+                         *  SLLI 12
+                         *  ADDI
+                         *  SLLI 12
+                         *  ADDI
+                         */
+
+                        val l1 = resized.lowest(12).toUInt32()
+                        val l2 = resized.shr(12).lowest(12).toUInt32() + l1.bit(11)
+                        val l3 = resized.shr(12 + 12).lowest(12).toUInt32() + l2.bit(11)
+                        val l4 = resized.shr(12 + 12 + 12).lowest(12).toUInt32() + l3.bit(11)
+                        val l5 = resized.shr(12 + 12 + 12 + 12).toUInt32() + l4.bit(11)
+
+                        writer(generateLui(rd, l5, instr))
+
+                        var shiftNeeded = UInt32.ZERO
+
+                        if (l4 != UInt32.ZERO) {
+                            writer(generateAddiw(rd, rd, l4, instr))
+                        }
+
+                        shiftNeeded += 12
+
+                        if (l3 != UInt32.ZERO) {
+                            writer(generateSlli(rd, rd, shiftNeeded, RvSpec.XLEN.X64, instr))
+
+                            shiftNeeded = UInt32.ZERO
+
+                            writer(generateAddi(rd, rd, l3, instr))
+                        }
+
+                        shiftNeeded += 12
+                        if (l2 != UInt32.ZERO) {
+                            writer(generateSlli(rd, rd, shiftNeeded, RvSpec.XLEN.X64, instr))
+
+                            shiftNeeded = UInt32.ZERO
+
+                            writer(generateAddi(rd, rd, l2, instr))
+                        }
+
+                        shiftNeeded += 12
+
+                        writer(generateSlli(rd, rd, shiftNeeded, RvSpec.XLEN.X64, instr))
+
+                        if (l1 != UInt32.ZERO) {
+                            writer(generateAddi(rd, rd, l1, instr))
+                        }
+                    }
                 } // end when
             }
 
