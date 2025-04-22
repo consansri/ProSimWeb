@@ -174,30 +174,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
             success = false
         }
 
-        success == success && processFileForPreprocessing(this.entryPsiFile)
-
         io.info("Phase 2: Preprocessing complete (${if (success) "OK" else "with errors"}).")
-        return success
-    }
-
-    /** Helper to traverse PSI for preprocessing directives */
-    private fun processFileForPreprocessing(psiFile: PsiFile): Boolean {
-        var success = true
-        psiFile.children.filterIsInstance<AsmLine>().forEach { line ->
-            line.directive?.let { directive ->
-                when (directive) {
-                    is AsmDirective.AssemblyControl -> {
-                        if (!handleAssemblyControlDirective(directive)) success = false
-                    }
-                    // TODO: Handle .macro, .ifdef, .if, etc. here
-                    // Conditional assembly would involve skipping lines based on evaluated conditions.
-                    // Macros would involve storing definitions and expanding them later (complex).
-
-                    else -> {}
-                }
-            }
-            // Recursively process included files *is handled by collectLinkedFiles*
-        }
         return success
     }
 
@@ -260,6 +237,25 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                     // Skip includes, they are handled by the sequence generator
                     if (!handleDirectiveInSymbolPass(directive)) success = false
                 } // End directive handling
+
+                line.expr?.let { expr ->
+                    when (expr) {
+                        is PsiStatement.Expr.OperationInfix -> {
+                            if (expr.operator.value != "=") {
+                                expr.addError("Currently only supporting assignments in empty line")
+                                success = false
+                            } else {
+
+                            }
+
+                        }
+
+                        else -> {
+                            expr.addError("Currently only supporting assignments in empty line")
+                            success = false
+                        }
+                    }
+                }
 
             } // End loop through statement sequence
         } catch (e: Exception) {
@@ -389,6 +385,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
     private fun handleAssemblyControlDirective(
         directive: AsmDirective.AssemblyControl,
     ): Boolean {
+        io.info("Handle Assembly Control Directive: ${directive.type.keyWord} ${directive.symbol}")
         val symName = directive.symbol?.value
         val expr = directive.expression
         val type = directive.type
