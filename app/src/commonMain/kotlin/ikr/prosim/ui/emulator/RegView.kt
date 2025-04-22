@@ -56,7 +56,7 @@ fun RegTable(regFile: RegFile<*>) {
 
     var numberFormat by remember { mutableStateOf(Format.HEX) }
 
-    var showDescription by remember { mutableStateOf(true) }
+    var showDescription by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         Row(
