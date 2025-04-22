@@ -40,22 +40,6 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
     fun getTokenType(lookAhead: Int = 0): PsiTokenType? = peek(lookAhead)?.type
     fun getTokenText(lookAhead: Int = 0): String? = peek(lookAhead)?.value
 
-    /**
-     * Peeks ahead, skipping whitespace and comments unless the parser logic
-     * explicitly handles them. Returns the first significant token and its index offset.
-     * WARNING: Use carefully. Most parser logic should advance token by token.
-     * This is more for finding the *next* grammatical element.
-     */
-    fun peekSignificant(maxLookAhead: Int = 10): Pair<PsiToken, Int>? {
-        for (i in 0 until maxLookAhead) {
-            val token = peek(i) ?: return null // End of stream
-            if (token.type !is PsiTokenType.WHITESPACE && token.type !is PsiTokenType.COMMENT) {
-                return token to i
-            }
-        }
-        return null // No significant token found within lookahead
-    }
-
     // --- Advancement ---
 
     /**
@@ -316,7 +300,6 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
             }
             // No need to reset lastCompletedExpressionMarkerId anymore
         }
-
     }
 
     // Internal helper to create marker instance

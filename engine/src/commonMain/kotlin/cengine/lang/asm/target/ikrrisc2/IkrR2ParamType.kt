@@ -16,127 +16,127 @@ enum class IkrR2ParamType(val exampleString: String) {
     B_REG_TYPE("rb");
 
 
-    fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker) {
+    fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
 
         skipWhitespaceAndComments()
 
         peek() ?: run {
             error("")
-            return
+            return false
         }
 
         with(asmParser) {
 
             when (this@IkrR2ParamType) {
                 I_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(":")) return
-                    if (!expect("=")) return
+                    if (!expect(":")) return false
+                    if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("#")) return
+                    if (!expect("#")) return false
                     parseExpression()
                 }
 
                 R2_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(":")) return
-                    if (!expect("=")) return
+                    if (!expect(":")) return false
+                    if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                 }
 
                 R1_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(":")) return
-                    if (!expect("=")) return
+                    if (!expect(":")) return false
+                    if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                 }
 
                 L_OFF_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(":")) return
-                    if (!expect("=")) return
+                    if (!expect(":")) return false
+                    if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 L_INDEX_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(":")) return
-                    if (!expect("=")) return
+                    if (!expect(":")) return false
+                    if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
                     parseExpression()
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 S_OFF_TYPE -> {
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
                     parseExpression()
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(":")) return
-                    if (!expect("=")) return
+                    if (!expect(":")) return false
+                    if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
 
                 }
 
                 S_INDEX_TYPE -> {
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(":")) return
-                    if (!expect("=")) return
+                    if (!expect(":")) return false
+                    if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                 }
 
                 B_DISP18_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return
+                    if (!expect(*IkrR2BaseRegs.allNames)) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
                     parseExpression()
                 }
@@ -149,8 +149,9 @@ enum class IkrR2ParamType(val exampleString: String) {
                     expect(*IkrR2BaseRegs.allNames)
                 }
             }
-            return
         }
+
+        return true
     }
 
 }

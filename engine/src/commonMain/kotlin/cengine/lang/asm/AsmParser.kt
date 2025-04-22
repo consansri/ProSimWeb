@@ -10,7 +10,7 @@ import cengine.psi.parser.pratt.ConfigurableExpressionParser
 
 open class AsmParser(
     /** InstructionTypes which should get parsed */
-    val instructionTypes: Map<String, AsmInstructionT>,
+    val instructionTypes: List<AsmInstructionT>,
     /** DirectiveTypes which should get parsed */
     val directiveTypes: Map<String, AsmDirectiveT>,
 ) : PsiTreeParser, ConfigurableExpressionParser, StringExprParser {
@@ -136,31 +136,88 @@ open class AsmParser(
 
         // --- Case 1: Keyword Found (Instruction or Directive) ---
         if (firstToken.type == PsiTokenType.KEYWORD) {
-            val marker = mark() // Start marker for the instruction/directive node
-            advance() // Consume keyword
-
             val keywordText = firstToken.value
             io.debug { "Found keyword: $keywordText" }
 
-            val instrType = instructionTypes[keywordText]
-            if (instrType != null) {
-                io.debug { "Parsing as instruction: $keywordText" }
-                with(instrType) {
-                    // Assume instrType.parse is responsible for completing/dropping the marker
-                    parse(this@AsmParser, marker)
-                }
-                return true // Keyword processed
+            // --- Try parsing as Instruction (Handling Overloads) ---
+            val instructionCandidates = instructionTypes.filter { it.keyWord == keywordText }
+            var successfulCandidate: AsmInstructionT? = null
+            var overallSuccess = false
+
+            if (instructionCandidates.isNotEmpty()) {
+                io.debug { "Found ${instructionCandidates.size} instruction candidate(s) for: $keywordText" }
+
+                for (candidate in instructionCandidates) {
+                    // Marker for this specific trial attempt (keyword + operands)
+                    val trialMarker = mark()
+                    advance() // Consume keyword for this attempt
+
+                    val parseResult: Boolean
+                    // Use a nested mark/rollback *just for the operand part* if needed,
+                    // or rely on the parse method to handle internal rollback.
+                    // Let's assume `parse` handles its own rollback on failure for now.
+                    try {
+                        // Call the candidate's parse method.
+                        // It returns true on success AND completes trialMarker.
+                        // It returns false on failure AND should rollback internal state/not complete marker.
+                        parseResult = with(candidate) {
+                            parse(this@AsmParser, trialMarker)
+                        }
+                    } catch (e: Exception) {
+                        // Catch internal errors during parsing attempt
+                        error("Internal parser error for candidate ${candidate.keyWord}: ${e.message}")
+                        trialMarker.rollbackTo() // Rollback the keyword consumption for this failed attempt
+                        continue // Try next candidate
+                    }
+
+
+                    if (parseResult) {
+                        // Successfully parsed operands for this candidate.
+
+                        // Check for ambiguity
+                        if (successfulCandidate != null) {
+                            // AMBIGUOUS PARSE!
+                            trialMarker.rollbackTo() // Rollback this successful attempt
+                            // Need to somehow invalidate the *previous* successful marker completion. This is hard.
+                            // Easiest is to report error at the keyword position and stop.
+                            // Rollback the outer context if possible, or just add error to keyword.
+                            error("Ambiguous instruction syntax for '$keywordText'. Matches multiple candidates (e.g., ${successfulCandidate.keyWord} and ${candidate.keyWord}).")
+                            // We consumed the keyword, report error but return true as keyword was handled.
+                            return true
+                        }
+
+                        // First successful candidate found!
+                        io.debug { "Successfully parsed as instruction: ${candidate.keyWord}" }
+                        successfulCandidate = candidate
+                        overallSuccess = true
+                        trialMarker.done(candidate)
+                        // trialMarker was completed by the successful parse method
+                        break // Stop trying other candidates
+                    } else {
+                        // Parse failed for this candidate.
+                        // Rollback keyword consumption for this attempt.
+                        // The `parse` method should NOT have completed trialMarker.
+                        trialMarker.rollbackTo()
+                        io.debug { " -> Failed parse attempt for instruction candidate: ${candidate.keyWord}" }
+                        // Continue to the next candidate
+                    }
+                } // End loop through candidates
             }
 
             val directiveType = directiveTypes[keywordText]
             if (directiveType != null) {
                 io.debug { "Parsing as directive: $keywordText" }
+                val directiveMarker = mark()
+                advance()
+
                 with(directiveType) {
                     // Assume directiveType.parse is responsible for completing/dropping the marker
-                    parse(this@AsmParser, marker)
+                    parse(this@AsmParser, directiveMarker)
                 }
-                return true // Keyword processed
+                overallSuccess = true
             }
+
+            if (overallSuccess) return true
 
             // Keyword not recognized
             error("Unknown instruction or directive keyword: '$keywordText'")

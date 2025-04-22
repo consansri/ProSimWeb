@@ -82,12 +82,10 @@ enum class IkrR2InstrT(override val keyWord: String, val paramType: IkrR2ParamTy
     JMP("jmp", B_REG_TYPE, "springe an Adresse in rb"),
     JSR("jsr", B_REG_TYPE, "springe in Unterprg. an Adresse in rb (sichere Rücksprungadr. in r31)");
 
-    override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker) {
+    override fun PsiBuilder. parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
         skipWhitespaceAndComments()
 
-        parse(asmParser, marker)
-
-        marker.done(this@IkrR2InstrT)
+        return parse(asmParser, marker)
     }
 
     override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass1BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {

@@ -56,7 +56,7 @@ interface AsmSpec<T : AsmCodeGenerator<*>> {
     }
 
     fun createParser(): AsmParser = AsmParser(
-        instrTypes.associateBy { it.keyWord },
+        instrTypes,
         dirTypes.associateBy { it.keyWord }
     )
 

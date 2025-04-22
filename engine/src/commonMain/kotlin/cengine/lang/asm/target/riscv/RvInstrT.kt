@@ -24,15 +24,13 @@ sealed interface RvInstrT : AsmInstructionT {
     val paramT: RvParamT
 
     /** Default parsing logic using the specified paramT */
-    override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker) {
+    override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
         skipWhitespaceAndComments()
 
         // Use the specific operand parsing logic defined in RvParamT
         with(paramT) {
-            parse(asmParser)
+            return parse(asmParser)
         }
-
-        marker.done(this@RvInstrT)
     }
 
     /** Base RV32I/RV64I Instructions (+Zicsr, Zifencei) */
@@ -756,7 +754,9 @@ sealed interface RvInstrT : AsmInstructionT {
 
             // Pseudo Jumps/Calls/Returns
             J(LABEL),              // -> jal x0, label
-            JAL(LABEL),            // -> jal x1, label (Syntactic sugar for common case)
+            JAL(LABEL){
+
+            },            // -> jal x1, label (Syntactic sugar for common case)
             JR(PS_RS1),            // -> jalr x0, 0(rs1)
             JALR(PS_RS1),          // -> jalr x1, 0(rs1) (Syntactic sugar for common case)
             RET(PS_NONE),          // -> jalr x0, 0(x1)
@@ -779,7 +779,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
             // Determine required size for deferral in Pass 1
             // Returns null if not deferred or size cannot be determined in pass 1
-            fun <T : AsmCodeGenerator.Section> AsmBackend<T>.getDeferredSize(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext): Int? {
+            fun getDeferredSize(): Int? {
                 return when (this@BaseT) {
                     // Label dependent branches/jumps
                     BEQZ, BNEZ, BLEZ, BGEZ, BLTZ, BGTZ -> 4
@@ -793,40 +793,10 @@ sealed interface RvInstrT : AsmInstructionT {
                 }
             }
 
-            // Calculate size needed for LI based on immediate and XLEN
-            private fun <T : AsmCodeGenerator.Section> AsmBackend<T>.getLiSize(imm: IntNumber<*>, xlen: RvSpec.XLEN): Int {
-                return if (xlen == RvSpec.XLEN.X32) {
-                    if (imm.fitsInSigned(12)) 4 // addi
-                    else 8 // lui + addi
-                } else { // xlen == 64
-                    when {
-                        imm.fitsInSigned(12) -> 4 // addi
-                        imm.fitsInSigned(32) -> { // lui + addi
-                            val imm32 = imm.toInt32().toUInt32()
-                            val low12 = RvConst.packImmI(imm32) shr 20 // Extract lower 12 bits of ADDI imm
-                            if (low12 == UInt32.ZERO) 4 else 8 // Only LUI if low is zero
-                        }
-                        // Myriad sequences (sizes from reference implementation)
-                        // Note: The reference code's size calculations are slightly simplified.
-                        // It doesn't always skip ADDI/ADDIW if the chunk is zero.
-                        // Let's calculate based on actual non-zero chunks for more optimal size.
-                        else -> calculateRv64LiSequenceSize(imm) // Use helper for complex cases
-                    }
-                }
-            }
-
-            // Calculate size for RV64 LI myriad sequences more accurately
-            private fun <T : AsmCodeGenerator.Section> AsmBackend<T>.calculateRv64LiSequenceSize(imm: IntNumber<*>): Int {
-                // Replicate the sequence generation logic to count instructions
-                val builder = mutableListOf<UInt32>() // Dummy list to count instructions
-                generateRv64LiSequence(imm, 0u.toUInt32(), { builder.add(it) }, null) // rd=x0 is arbitrary for size calculation
-                return builder.size * 4
-            }
-
             override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass1BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {
                 val spec = context.spec as? RvSpec ?: throw Exception("Internal Error: RvSpec required for getDeferredSize")
 
-                val deferredSize = getDeferredSize(instr, context)
+                val deferredSize = getDeferredSize()
                 if (deferredSize != null) {
                     context.section.queueLateInit(instr, deferredSize)
                     return
@@ -1003,7 +973,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
                 } catch (e: Exception) {
                     instr.addError("Pass 1 Error during $keyWord expansion: ${e.message}")
-                    val size = getDeferredSize(instr, context) ?: 4 // Estimate size if possible
+                    val size = getDeferredSize() ?: 4 // Estimate size if possible
                     context.section.queueLateInit(instr, size)
                     return
                 }
@@ -1187,7 +1157,6 @@ sealed interface RvInstrT : AsmInstructionT {
                 val regs = instr.regs.map { it.type.numericalValue.toUInt32() } // Get register numbers
 
                 try {
-
                     when (this@BaseT) {
                         // --- Pseudo Branches (Zero Comparison) ---
                         BEQZ -> { // beq rs, x0, label

@@ -26,9 +26,9 @@ interface AsmInstructionT : PsiStatement.PsiStatementTypeDef {
 
     /**
      * Parses the arguments/parameters following a specific instruction mnemonic.
-     * @param marker Already consumed the instruction mnemonic token.
+     * @param marker Already consumed the instruction mnemonic token. Don't finish it or drop it [marker.done]! The caller will do this.
      */
-    fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker)
+    fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean
 
     /**
      * Phase 3: Generates the pass 1 binary machine code for the instruction.

@@ -128,7 +128,7 @@ enum class RvParamT(val exampleString: String) {
     PS_OFFSET_RS1("offset(rs1)"),  // call offset(reg), tail offset(reg)
     PS_NONE("");                   // ret, nop
 
-    fun PsiBuilder.parse(asmParser: AsmParser) {
+    fun PsiBuilder.parse(asmParser: AsmParser): Boolean {
 
         with(asmParser) {
 
@@ -140,120 +140,122 @@ enum class RvParamT(val exampleString: String) {
 
                 // === Base Integer Instructions (RV32I/RV64I) ===
                 RD_RS1_RS2 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2
+                    if (!parseRvIntReg()) return false // rs2
                 }
 
                 RD_RS1_IMM12, RD_RS1_SHAMT -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // imm12 or shamt
+                    if (parseExpression() == null) return false // imm12 or shamt
                 }
 
                 RD_IMM12_RS1 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // offset12 expr
+                    if (parseExpression() == null) return false // offset12 expr
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 base address
+                    if (!parseRvIntReg()) return false // rs1 base address
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 RS2_IMM12_RS1 -> {
-                    if (!parseRvIntReg()) return // rs2 source data
+                    if (!parseRvIntReg()) return false // rs2 source data
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // offset12 expr
+                    if (parseExpression() == null) return false // offset12 expr
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 base address
+                    if (!parseRvIntReg()) return false // rs1 base address
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 RS1_RS2_LABEL -> {
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2
+                    if (!parseRvIntReg()) return false // rs2
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // label
+                    if (parseExpression() == null) return false // label
                 }
 
                 RD_IMM20 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // imm20
+                    if (parseExpression() == null) return false // imm20
                 }
 
                 RD_LABEL -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // label
+                    if (parseExpression() == null) return false // label
                 }
 
                 LABEL, CLABEL -> {
-                    if (parseExpression() == null) return // label
+                    if (parseExpression() == null) return false // label
+                    skipWhitespaceAndComments()
+                    if (currentIs(",")) return false // no other operands expected!
                 }
 
                 // === A Standard Extension (Atomic Instructions) ===
                 RD_RS2_RS1ADDR, RD_RS2_RS1ADDR_STORE -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2
+                    if (!parseRvIntReg()) return false // rs2
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 RD_RS2_RS1ADDR_AQRL -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2
+                    if (!parseRvIntReg()) return false // rs2
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     // Optional AQ/RL flags (syntax varies, often part of mnemonic)
                     // If present as separate operands:
                     skipWhitespaceAndComments()
@@ -261,723 +263,725 @@ enum class RvParamT(val exampleString: String) {
                         advance() // Consume comma
                         skipWhitespaceAndComments()
                         // Parse aq/rl flags - using expression for flexibility
-                        if (parseExpression() == null) return
+                        if (parseExpression() == null) return false
                     }
                 }
 
                 RD_RS1ADDR -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 // === F, D Standard Extensions (Floating-Point) ===
                 FRD_FRS1_FRS2 -> {
-                    if (!parseRvFloatReg()) return // frd
+                    if (!parseRvFloatReg()) return false // frd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs1
+                    if (!parseRvFloatReg()) return false // frs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs2
+                    if (!parseRvFloatReg()) return false // frs2
                 }
 
                 FRD_FRS1 -> {
-                    if (!parseRvFloatReg()) return // frd
+                    if (!parseRvFloatReg()) return false // frd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs1
+                    if (!parseRvFloatReg()) return false // frs1
                 }
 
                 FRD_RS1 -> {
-                    if (!parseRvFloatReg()) return // frd
+                    if (!parseRvFloatReg()) return false // frd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                 }
 
                 RD_FRS1 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs1
+                    if (!parseRvFloatReg()) return false // frs1
                 }
 
                 FRD_FRS1_FRS2_FRS3_RM -> {
-                    if (!parseRvFloatReg()) return // frd
+                    if (!parseRvFloatReg()) return false // frd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs1
+                    if (!parseRvFloatReg()) return false // frs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs2
+                    if (!parseRvFloatReg()) return false // frs2
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs3
+                    if (!parseRvFloatReg()) return false // frs3
                     // Optional rounding mode
                     skipWhitespaceAndComments()
                     if (currentIs(",")) {
                         advance() // Consume comma
                         skipWhitespaceAndComments()
                         // Parse rounding mode - using expression for flexibility
-                        if (parseExpression() == null) return
+                        if (parseExpression() == null) return false
                     }
                 }
 
                 FRD_FRS1_FRS2_RM -> {
-                    if (!parseRvFloatReg()) return // frd
+                    if (!parseRvFloatReg()) return false // frd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs1
+                    if (!parseRvFloatReg()) return false // frs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs2
+                    if (!parseRvFloatReg()) return false // frs2
                     // Optional rounding mode
                     skipWhitespaceAndComments()
                     if (currentIs(",")) {
                         advance() // Consume comma
                         skipWhitespaceAndComments()
                         // Parse rounding mode - using expression for flexibility
-                        if (parseExpression() == null) return
+                        if (parseExpression() == null) return false
                     }
                 }
 
                 RD_FRS1_FRS2 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs1
+                    if (!parseRvFloatReg()) return false // frs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvFloatReg()) return // frs2
+                    if (!parseRvFloatReg()) return false // frs2
                 }
 
                 FRD_IMM12_RS1 -> {
-                    if (!parseRvFloatReg()) return // frd
+                    if (!parseRvFloatReg()) return false // frd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // offset12 expr
+                    if (parseExpression() == null) return false // offset12 expr
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 base address
+                    if (!parseRvIntReg()) return false // rs1 base address
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 FRS2_IMM12_RS1 -> {
-                    if (!parseRvFloatReg()) return // frs2 source data
+                    if (!parseRvFloatReg()) return false // frs2 source data
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // offset12 expr
+                    if (parseExpression() == null) return false // offset12 expr
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 base address
+                    if (!parseRvIntReg()) return false // rs1 base address
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 // === Zicsr Standard Extension (Control and Status Registers) ===
                 RD_CSR_RS1 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvCsrReg()) return // csr
+                    if (!parseRvCsrReg()) return false // csr
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                 }
 
                 RD_CSR_UIMM5 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvCsrReg()) return // csr
+                    if (!parseRvCsrReg()) return false // csr
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // uimm5
+                    if (parseExpression() == null) return false // uimm5
                 }
 
                 CSR_RS1 -> {
-                    if (!parseRvCsrReg()) return // csr
+                    if (!parseRvCsrReg()) return false // csr
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                 }
 
                 RD_CSR -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvCsrReg()) return // csr
+                    if (!parseRvCsrReg()) return false // csr
                 }
 
                 // === C Standard Extension (Compressed Instructions) ===
                 // IMPORTANT: Using generic parsers. Constraints (reg range, imm format) not checked here.
                 CRD_IMM6, CRD_NZIIMM6 -> { // c.li, c.lui, c.addi16sp
-                    if (!parseRvIntReg()) return // rd (may be restricted or sp)
+                    if (!parseRvIntReg()) return false // rd (may be restricted or sp)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // imm (may have constraints)
+                    if (parseExpression() == null) return false // imm (may have constraints)
                 }
 
                 CRDPRIME_CRS1PRIME_NZUIMM6 -> { // c.addi, c.addiw, c.slli
-                    if (!parseRvIntReg()) return // rd' (restricted range)
+                    if (!parseRvIntReg()) return false // rd' (restricted range)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1' (restricted range, or same as rd' for slli)
+                    if (!parseRvIntReg()) return false // rs1' (restricted range, or same as rd' for slli)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // nzuimm (non-zero)
+                    if (parseExpression() == null) return false // nzuimm (non-zero)
                 }
 
                 CRDPRIME_IMM6_SP -> { // c.lwsp, c.ldsp, ...
-                    if (!parseRvIntReg()) return // rd' (restricted, non-zero)
+                    if (!parseRvIntReg()) return false // rd' (restricted, non-zero)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // offset (scaled)
+                    if (parseExpression() == null) return false // offset (scaled)
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
                     // Expect 'sp' specifically for C-ext
                     val spMarker = mark()
                     if (expect("sp")) {
                         spMarker.done(RvRegT.IntT.SP) // Or specific SP element
                     } else {
-                        return
+                        return false
                     }
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 CRS2_IMM6_SP -> { // c.swsp, c.sdsp, ...
-                    if (!parseRvIntReg()) return // rs2' (restricted)
+                    if (!parseRvIntReg()) return false // rs2' (restricted)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // offset (scaled)
+                    if (parseExpression() == null) return false // offset (scaled)
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
                     // Expect 'sp' specifically for C-ext
                     val spMarker = mark()
                     if (expect("sp")) {
                         spMarker.done(RvRegT.IntT.SP) // Or specific SP element
                     } else {
-                        return
+                        return false
                     }
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 CRD_CRS1, CRD_CRS1_ADD -> { // c.mv, c.add, c.jr, c.jalr
-                    if (!parseRvIntReg()) return // rd (may be restricted, non-zero or x0/x1)
+                    if (!parseRvIntReg()) return false // rd (may be restricted, non-zero or x0/x1)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 (may be restricted, non-zero)
+                    if (!parseRvIntReg()) return false // rs1 (may be restricted, non-zero)
                 }
 
                 CRS1PRIME_LABEL -> { // c.beqz, c.bnez
-                    if (!parseRvIntReg()) return // rs1' (restricted)
+                    if (!parseRvIntReg()) return false // rs1' (restricted)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // label (offset)
+                    if (parseExpression() == null) return false // label (offset)
                 }
                 // CLABEL handled by LABEL
                 CRDPRIME_IMM6_CRS1PRIME -> { // c.lw, c.ld, c.flw, ...
-                    if (!parseRvIntReg()) return // rd' (restricted)
+                    if (!parseRvIntReg()) return false // rd' (restricted)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // offset (scaled)
+                    if (parseExpression() == null) return false // offset (scaled)
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1' base address (restricted)
+                    if (!parseRvIntReg()) return false // rs1' base address (restricted)
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 CRS2PRIME_IMM6_CRS1PRIME -> { // c.sw, c.sd, c.fsw, ...
-                    if (!parseRvIntReg()) return // rs2' source (restricted)
+                    if (!parseRvIntReg()) return false // rs2' source (restricted)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // offset (scaled)
+                    if (parseExpression() == null) return false // offset (scaled)
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1' base address (restricted)
+                    if (!parseRvIntReg()) return false // rs1' base address (restricted)
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
                 // CRDPRIME_CRS1PRIME_CRS2PRIME handled by RD_RS1_RS2
                 CRDPRIME_CRS1PRIME_NZUIMM5 -> { // c.srli, c.srai
-                    if (!parseRvIntReg()) return // rd' (restricted)
+                    if (!parseRvIntReg()) return false // rd' (restricted)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1' (restricted, same as rd')
+                    if (!parseRvIntReg()) return false // rs1' (restricted, same as rd')
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // nzuimm5 (shamt, non-zero)
+                    if (parseExpression() == null) return false // nzuimm5 (shamt, non-zero)
                 }
 
                 CRDPRIME_CRS1PRIME_IMM6_ANDI -> { // c.andi
-                    if (!parseRvIntReg()) return // rd' (restricted)
+                    if (!parseRvIntReg()) return false // rd' (restricted)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1' (restricted, same as rd')
+                    if (!parseRvIntReg()) return false // rs1' (restricted, same as rd')
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // imm6
+                    if (parseExpression() == null) return false // imm6
                 }
 
 
                 // === V Standard Extension (Vector Instructions) ===
                 VD_VS1_VS2 -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs1
+                    if (!parseRvVectorReg()) return false // vs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2
+                    if (!parseRvVectorReg()) return false // vs2
                 }
 
                 VD_RS1_VS2 -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2
+                    if (!parseRvVectorReg()) return false // vs2
                 }
 
                 VD_IMM5_VS2 -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // imm5
+                    if (parseExpression() == null) return false // imm5
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2
+                    if (!parseRvVectorReg()) return false // vs2
                 }
 
                 VD_VS1_VS2_VM -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs1
+                    if (!parseRvVectorReg()) return false // vs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2
+                    if (!parseRvVectorReg()) return false // vs2
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VD_RS1_VS2_VM -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2
+                    if (!parseRvVectorReg()) return false // vs2
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VD_IMM5_VS2_VM -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // imm5
+                    if (parseExpression() == null) return false // imm5
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2
+                    if (!parseRvVectorReg()) return false // vs2
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VD_VS1_RS2 -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs1
+                    if (!parseRvVectorReg()) return false // vs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2
+                    if (!parseRvIntReg()) return false // rs2
                 }
 
                 VD_VS1_IMM5 -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs1
+                    if (!parseRvVectorReg()) return false // vs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // imm5
+                    if (parseExpression() == null) return false // imm5
                 }
 
                 RD_VS2 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2
+                    if (!parseRvVectorReg()) return false // vs2
                 }
 
                 VD_RS1ADDR /* Also VLREG */ -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 VS3_RS1ADDR /* Also VSREG */ -> {
-                    if (!parseRvVectorReg()) return // vs3 source data
+                    if (!parseRvVectorReg()) return false // vs3 source data
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
 
                 VD_RS1ADDR_VM -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VS3_RS1ADDR_VM -> {
-                    if (!parseRvVectorReg()) return // vs3 source data
+                    if (!parseRvVectorReg()) return false // vs3 source data
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VD_RS1ADDR_RS2STRIDE -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2 stride
+                    if (!parseRvIntReg()) return false // rs2 stride
                 }
 
                 VS3_RS1ADDR_RS2STRIDE -> {
-                    if (!parseRvVectorReg()) return // vs3 source data
+                    if (!parseRvVectorReg()) return false // vs3 source data
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2 stride
+                    if (!parseRvIntReg()) return false // rs2 stride
                 }
 
                 VD_RS1ADDR_RS2STRIDE_VM -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2 stride
+                    if (!parseRvIntReg()) return false // rs2 stride
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VS3_RS1ADDR_RS2STRIDE_VM -> {
-                    if (!parseRvVectorReg()) return // vs3 source data
+                    if (!parseRvVectorReg()) return false // vs3 source data
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2 stride
+                    if (!parseRvIntReg()) return false // rs2 stride
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VD_RS1ADDR_VS2INDEXED -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2 index
+                    if (!parseRvVectorReg()) return false // vs2 index
                 }
 
                 VS3_RS1ADDR_VS2INDEXED -> {
-                    if (!parseRvVectorReg()) return // vs3 source data
+                    if (!parseRvVectorReg()) return false // vs3 source data
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2 index
+                    if (!parseRvVectorReg()) return false // vs2 index
                 }
 
                 VD_RS1ADDR_VS2INDEXED_VM -> {
-                    if (!parseRvVectorReg()) return // vd
+                    if (!parseRvVectorReg()) return false // vd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2 index
+                    if (!parseRvVectorReg()) return false // vs2 index
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VS3_RS1ADDR_VS2INDEXED_VM -> {
-                    if (!parseRvVectorReg()) return // vs3 source data
+                    if (!parseRvVectorReg()) return false // vs3 source data
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 address base
+                    if (!parseRvIntReg()) return false // rs1 address base
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvVectorReg()) return // vs2 index
+                    if (!parseRvVectorReg()) return false // vs2 index
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return // Comma before mask
+                    if (!expect(",")) return false // Comma before mask
                     skipWhitespaceAndComments()
-                    if (!parseVectorMask()) return // vm
+                    if (!parseVectorMask()) return false // vm
                 }
 
                 VSETVL_RD_RS1_RS2 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs2
+                    if (!parseRvIntReg()) return false // rs2
                 }
 
                 VSETVLI_RD_RS1_IMM11 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // imm11 (vtype encoding)
+                    if (parseExpression() == null) return false // imm11 (vtype encoding)
                 }
 
                 // === Fence Instructions ===
                 PRED_SUCC -> {
-                    if (parseExpression() == null) return // pred (e.g., 'iorw' identifier or number)
+                    if (parseExpression() == null) return false // pred (e.g., 'iorw' identifier or number)
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // succ
+                    if (parseExpression() == null) return false // succ
                 }
 
                 OPT_RS1_RS2 -> {
                     // Handle optionally type NONE
-                    if (currentIs(PsiTokenType.LINEBREAK)) return
+                    if (currentIs(PsiTokenType.LINEBREAK)) return false
 
-                    if (!parseRvIntReg()) return
+                    if (!parseRvIntReg()) return false
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return
+                    if (!parseRvIntReg()) return false
                 }
 
                 // === Pseudo Instructions (Common Syntactic Forms) ===
                 PS_RD_IMM -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // immediate
+                    if (parseExpression() == null) return false // immediate
                 }
 
                 PS_RD_SYMBOL -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // symbol (label)
+                    if (parseExpression() == null) return false // symbol (label)
                 }
 
                 PS_RD_RS1 -> {
-                    if (!parseRvIntReg()) return // rd
+                    if (!parseRvIntReg()) return false // rd
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                 }
 
                 PS_RS1_LABEL -> {
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                     skipWhitespaceAndComments()
-                    if (!expect(",")) return
+                    if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (parseExpression() == null) return // label
+                    if (parseExpression() == null) return false // label
                 }
 
                 PS_RS1 -> {
-                    if (!parseRvIntReg()) return // rs1
+                    if (!parseRvIntReg()) return false // rs1
                 }
 
                 PS_OFFSET_RS1 -> {
-                    if (parseExpression() == null) return // offset expr
+                    if (parseExpression() == null) return false // offset expr
                     skipWhitespaceAndComments()
-                    if (!expect("(")) return
+                    if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!parseRvIntReg()) return // rs1 base address
+                    if (!parseRvIntReg()) return false // rs1 base address
                     skipWhitespaceAndComments()
-                    if (!expect(")")) return
+                    if (!expect(")")) return false
                 }
             }
         }
+
+        return true
     }
 }
