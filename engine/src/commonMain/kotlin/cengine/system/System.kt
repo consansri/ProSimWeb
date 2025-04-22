@@ -1,26 +1,45 @@
 package cengine.system
 
+import kotlinx.serialization.Serializable
+
 /**
  * Returns the current platform system line break.
  */
 expect fun getSystemLineBreak(): String
 
 /**
- * Checks if the given path is valid on the current platform.
- */
-expect fun isAbsolutePathValid(path: String): Boolean
-
-/**
  * Downloads the desktop app.
  *
- * @param fileNameSuffix The suffix of the file name.
+ * @param type The distribution type.
  */
-expect fun downloadDesktopApp(fileNameSuffix: String)
+expect fun downloadDesktopApp(type: DesktopDistribution)
+
+/**
+ * @return A list of all DesktopDistributions downloadable through the resources.
+ */
+expect fun presentDistributions(): List<DesktopDistribution>
 
 /**
  * @return The target platform for the current app.
  */
 expect fun appTarget(): AppTarget
+
+/**
+ * DesktopDistribution Type which is possible to download
+ */
+enum class DesktopDistribution(val fileSuffix: String, val subfolder: String) {
+    JAR(".jar", "jar"),
+    MSI(".msi", "msi"),
+    DEB(".deb", "deb"),
+    DMG(".dmg", "dmg");
+
+    val path = "desktop/$subfolder/"
+    val fileName = "${Constants.NAME}-${Constants.VERSION}$fileSuffix"
+
+    companion object {
+        val presentDistributions = presentDistributions()
+    }
+}
 
 /**
  * Enum representing the target platform for the current app.

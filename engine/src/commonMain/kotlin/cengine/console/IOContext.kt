@@ -17,18 +17,18 @@ sealed interface IOContext {
 
     fun streamln(message: String = "") = stream(message + "\n")
 
-    fun error(message: String) = streamln(PREFIX_ERROR + message)
+    fun error(message: String, vararg elements: Any?) = streamln(PREFIX_ERROR + message + elements.joinToString("") { it.toString() })
 
-    fun warn(message: String) = streamln(PREFIX_WARN + message)
+    fun warn(message: String, vararg elements: Any?) = streamln(PREFIX_WARN + message + elements.joinToString("") { it.toString() })
 
-    fun info(message: String) = streamln(PREFIX_INFO + message)
+    fun info(message: String, vararg elements: Any?) = streamln(PREFIX_INFO + message + elements.joinToString("") { it.toString() })
 
     fun debug(message: () -> String) {
         if (BuildConfig.DEBUG) streamln(PREFIX_DEBUG + message())
     }
 
-    fun log(message: String) = streamln(PREFIX_LOG + message)
+    fun log(message: String, vararg elements: Any?) = streamln(PREFIX_LOG + message + elements.joinToString("") { it.toString() })
 
-    fun usage(message: String) = streamln(PREFIX_USAGE + message)
+    fun usage(message: String, vararg elements: Any?) = streamln(PREFIX_USAGE + message + elements.joinToString("") { it.toString() })
 
 }

@@ -1,4 +1,5 @@
 
+import cengine.system.DesktopDistribution
 import kotlinx.browser.document
 import org.w3c.dom.HTMLAnchorElement
 
@@ -14,5 +15,8 @@ object JSTools {
         document.body?.removeChild(anchor)
     }
 
+    fun exists(type: DesktopDistribution): Boolean {
+        TODO()
+    }
 
 }

@@ -16,7 +16,7 @@ import cengine.project.ProjectStateManager
 import cengine.system.AppTarget.DESKTOP
 import cengine.system.AppTarget.WEB
 import cengine.system.appTarget
-import cengine.system.isAbsolutePathValid
+import cengine.vfs.ActualFileSystem
 import cengine.vfs.FPath.Companion.toFPath
 import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.launch
@@ -81,7 +81,7 @@ fun CreateNewProjectScreen(onProjectCreated: (ProjectState) -> Unit, onCancel: (
                                     modifier = Modifier.weight(1.0f),
                                     onValueChange = {
                                         pathField = it
-                                        invalidProjectPath = !isAbsolutePathValid(it)
+                                        invalidProjectPath = !(ActualFileSystem.exists(it.toFPath()) && ActualFileSystem.isDirectory(it.toFPath()))
                                     },
                                     singleLine = true,
                                     error = invalidProjectPath
