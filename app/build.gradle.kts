@@ -77,7 +77,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ProSim"
+            packageName = DIST_NAME
             packageVersion = DIST_VERSION
         }
     }
@@ -88,16 +88,15 @@ val fatJarTask = tasks.register<Jar>("fatJar") {
     description = "Assembles a 'fat' JAR containing the application and all dependencies."
 
     // 1. Set a unique name for the output JAR
-    archiveBaseName.set(DIST_NAME) // e.g., "app-desktop-fat"
-    archiveVersion.set(DIST_VERSION) // Use project version (ensure DIST_VERSION is compatible or use project.version)
+    archiveBaseName.set(DIST_NAME)
+    archiveVersion.set(DIST_VERSION)
 
     // 2. Specify the Main Class in the Manifest
     manifest {
-        attributes["Main-Class"] = "ikr.prosim.AppKt" // Replace with your actual main class if different
+        attributes["Main-Class"] = "ikr.prosim.AppKt"
     }
 
     // 3. Include compiled classes from your desktop source set
-    // Assumes your JVM target is named "desktop" as in your kotlin block
     val desktopMainCompilation = kotlin.jvm("desktop").compilations.getByName("main")
     from(desktopMainCompilation.output.classesDirs)
 
