@@ -14,9 +14,4 @@ object JSTools {
         anchor.click()
         document.body?.removeChild(anchor)
     }
-
-    fun exists(type: DesktopDistribution): Boolean {
-        TODO()
-    }
-
 }

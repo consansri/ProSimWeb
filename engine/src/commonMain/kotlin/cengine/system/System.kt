@@ -35,10 +35,6 @@ enum class DesktopDistribution(val fileSuffix: String, val subfolder: String) {
 
     val path = "desktop/$subfolder/"
     val fileName = "${Constants.NAME}-${Constants.VERSION}$fileSuffix"
-
-    companion object {
-        val presentDistributions = presentDistributions()
-    }
 }
 
 /**
