@@ -1,4 +1,4 @@
-package ui.uilib.text
+package uilib.text
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -35,6 +35,7 @@ class KeywordHighlightTransformation(
                 }
             }
         }
+
         // IdentityOffsetMapping because we don't change text length.
         return TransformedText(annotated, OffsetMapping.Identity)
     }

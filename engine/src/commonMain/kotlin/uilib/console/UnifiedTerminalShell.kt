@@ -20,7 +20,7 @@ import cengine.util.string.commonPrefix
 import cengine.util.string.splitBySpaces
 import cengine.vfs.FPath.Companion.toFPath
 import kotlinx.coroutines.launch
-import ui.uilib.text.KeywordHighlightTransformation
+import uilib.text.KeywordHighlightTransformation
 import uilib.UIState
 
 
@@ -94,7 +94,7 @@ fun UnifiedTerminalShell(context: ShellContext) {
                 context.terminalState = newValue
             }
         },
-        textStyle = UIState.CodeStyle.current,
+        textStyle = UIState.CodeStyle.current.copy(UIState.Theme.value.COLOR_FG_0),
         modifier = Modifier
             .fillMaxSize()
             .focusRequester(focusRequester)
