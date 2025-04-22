@@ -37,7 +37,7 @@ data object Constants {
      */
     const val TITLE = "$NAME v$VERSION"
 
-    const val COPYRIGHT = "Copyright @ ${BuildConfig.YEAR} ${BuildConfig.ORG}"
+    const val COPYRIGHT = "Copyright @ ${BuildConfig.YEAR}-present ${BuildConfig.ORG}"
     const val DEV_SIGN = "Developed by ${BuildConfig.DEV}"
 
 
