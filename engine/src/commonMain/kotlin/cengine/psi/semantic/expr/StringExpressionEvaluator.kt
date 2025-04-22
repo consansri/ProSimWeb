@@ -3,6 +3,7 @@ package cengine.psi.semantic.expr
 import cengine.psi.elements.PsiStatement
 import cengine.psi.lexer.PsiToken
 import cengine.psi.lexer.PsiTokenType
+import cengine.psi.parser.pratt.OpType
 import cengine.util.integer.BigInt
 
 /**
@@ -16,8 +17,9 @@ import cengine.util.integer.BigInt
  * @param resolveIdentifierLambda A lambda function to resolve an identifier's value to String?.
  */
 open class StringExpressionEvaluator<C>(
+    processAssignment: (identifier: PsiStatement.Expr, value: String, context: C) -> Unit = { _, _, _ -> },
     resolveIdentifierLambda: (name: String, element: PsiStatement.Expr.Identifier, context: C) -> String?
-) : ExpressionEvaluator<String, C>(resolveIdentifierLambda) {
+) : ExpressionEvaluator<String, C>(processAssignment,resolveIdentifierLambda) {
 
     /**
      * Parses string, char, and other basic literals into their string representation.
@@ -37,31 +39,29 @@ open class StringExpressionEvaluator<C>(
     /**
      * Implements infix operations for String. '+' is concatenation. Returns "1"/"0" for comparisons.
      */
-    override fun evaluateInfixOperation(op: String, opToken: PsiToken, left: String, right: String, context: C): String {
+    override fun evaluateInfixOperation(op: OpType, opToken: PsiToken, left: String, right: String, context: C): String {
         return when (op) {
             // Concatenation
-            "+" -> left + right
+            OpType.ADD, OpType.ADD_ASSIGN -> left + right
 
             // Comparison (lexicographical, return "1" for true, "0" for false)
-            "==" -> if (left == right) "1" else "0"
-            "!=" -> if (left != right) "1" else "0"
-            "<" -> if (left < right) "1" else "0"
-            "<=" -> if (left <= right) "1" else "0"
-            ">" -> if (left > right) "1" else "0"
-            ">=" -> if (left >= right) "1" else "0"
+            OpType.EQUAL -> if (left == right) "1" else "0"
+            OpType.NOT_EQUAL -> if (left != right) "1" else "0"
+            OpType.LESS_THAN -> if (left < right) "1" else "0"
+            OpType.LESS_EQUAL -> if (left <= right) "1" else "0"
+            OpType.GREATER_THAN -> if (left > right) "1" else "0"
+            OpType.GREATER_EQUAL -> if (left >= right) "1" else "0"
 
             // Unsupported Operators
-            "-", "*", "/", "%", "&", "|", "^", "<<", ">>", "&&", "||" ->
+            else ->
                 throw EvaluationException("Operator '$op' is not supported for String evaluation", opToken)
-
-            else -> throw EvaluationException("Unknown infix operator: '$op'", opToken)
         }
     }
 
     /**
      * Prefix operations are generally not supported for String evaluation.
      */
-    override fun evaluatePrefixOperation(op: String, opToken: PsiToken, operand: String, context: C): String {
+    override fun evaluatePrefixOperation(op: OpType, opToken: PsiToken, operand: String, context: C): String {
         throw EvaluationException("Prefix operator '$op' is not supported for String evaluation", opToken)
     }
 

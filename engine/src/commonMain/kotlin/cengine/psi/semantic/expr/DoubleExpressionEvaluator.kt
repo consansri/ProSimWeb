@@ -3,6 +3,7 @@ package cengine.psi.semantic.expr
 import cengine.psi.elements.PsiStatement
 import cengine.psi.lexer.PsiToken
 import cengine.psi.lexer.PsiTokenType
+import cengine.psi.parser.pratt.OpType
 import cengine.util.integer.BigInt
 import kotlin.math.abs
 
@@ -14,8 +15,9 @@ import kotlin.math.abs
  * @param resolveIdentifierLambda A lambda function to resolve an identifier's value to Double?.
  */
 open class DoubleExpressionEvaluator<C>(
+    processAssignment: (identifier: PsiStatement.Expr, value: Double, context: C) -> Unit = { _, _, _ -> },
     resolveIdentifierLambda: (name: String, element: PsiStatement.Expr.Identifier, context: C) -> Double?
-) : ExpressionEvaluator<Double, C>(resolveIdentifierLambda) {
+) : ExpressionEvaluator<Double, C>(processAssignment,resolveIdentifierLambda) {
 
     // Using a small epsilon for double comparisons if needed, direct comparison often okay
     private val doubleEpsilon = 1e-9
@@ -34,52 +36,48 @@ open class DoubleExpressionEvaluator<C>(
     /**
      * Implements infix operations for Double. Returns 1.0/0.0 for comparisons/logical ops.
      */
-    override fun evaluateInfixOperation(op: String, opToken: PsiToken, left: Double, right: Double, context: C): Double {
+    override fun evaluateInfixOperation(op: OpType, opToken: PsiToken, left: Double, right: Double, context: C): Double {
         return when (op) {
             // Arithmetic
-            "+" -> left + right
-            "-" -> left - right
-            "*" -> left * right
-            "/" -> {
+            OpType.ADD, OpType.ADD_ASSIGN -> left + right
+            OpType.SUB, OpType.SUB_ASSIGN -> left - right
+            OpType.MUL, OpType.MUL_ASSIGN -> left * right
+            OpType.DIV, OpType.DIV_ASSIGN -> {
                 if (right == 0.0) throw EvaluationException("Division by zero", opToken)
                 left / right
             }
+
             // "%" -> left % right // Remainder
             // "**" -> left.pow(right) // Power
 
-            // Comparison (return 1.0 for true, 0.0 for false)
-            // Using epsilon comparison for robust float equality check
-            "==" -> if (abs(left - right) < doubleEpsilon) 1.0 else 0.0
-            "!=" -> if (abs(left - right) >= doubleEpsilon) 1.0 else 0.0
-            "<" -> if (left < right) 1.0 else 0.0
-            "<=" -> if (left <= right) 1.0 else 0.0
-            ">" -> if (left > right) 1.0 else 0.0
-            ">=" -> if (left >= right) 1.0 else 0.0
+            // Comparison (return 1.0f for true, 0.0f for false)
+            OpType.EQUAL -> if (abs(left - right) < doubleEpsilon) 1.0 else 0.0
+            OpType.NOT_EQUAL -> if (abs(left - right) >= doubleEpsilon) 1.0 else 0.0
+            OpType.LESS_THAN -> if (left < right) 1.0 else 0.0
+            OpType.LESS_EQUAL -> if (left <= right) 1.0 else 0.0
+            OpType.GREATER_THAN -> if (left > right) 1.0 else 0.0
+            OpType.GREATER_EQUAL -> if (left >= right) 1.0 else 0.0
 
-            // Logical (treat non-zero as true, return 1.0 for true, 0.0 for false)
-            "&&" -> if (left != 0.0 && right != 0.0) 1.0 else 0.0
-            "||" -> if (left != 0.0 || right != 0.0) 1.0 else 0.0
+            // Logical (treat non-zero as true, return 1.0f for true, 0.0f for false)
+            OpType.LOGICAL_AND -> if (left != 0.0 && right != 0.0) 1.0 else 0.0
+            OpType.LOGICAL_OR -> if (left != 0.0 || right != 0.0) 1.0 else 0.0
 
             // Unsupported Operators
-            "%", "&", "|", "^", "<<", ">>", "~", "!" ->
-                throw EvaluationException("Operator '$op' is not supported for Double evaluation", opToken)
-
-            else -> throw EvaluationException("Unknown infix operator: '$op'", opToken)
+            else ->
+                throw EvaluationException("Operator '$op' is not supported for Float evaluation", opToken)
         }
     }
 
     /**
      * Implements prefix operations for Double.
      */
-    override fun evaluatePrefixOperation(op: String, opToken: PsiToken, operand: Double, context: C): Double {
+    override fun evaluatePrefixOperation(op: OpType, opToken: PsiToken, operand: Double, context: C): Double {
         return when (op) {
-            "+" -> operand // Unary plus
-            "-" -> -operand // Unary minus
+            OpType.UNARY_PLUS -> operand // Unary plus
+            OpType.UNARY_MINUS -> -operand // Unary minus
 
             // Unsupported Operators
-            "~", "!" -> throw EvaluationException("Operator '$op' is not supported for Double evaluation", opToken)
-
-            else -> throw EvaluationException("Unsupported prefix operator: '$op'", opToken)
+            else -> throw EvaluationException("Operator '$op' is not supported for Double evaluation", opToken)
         }
     }
 

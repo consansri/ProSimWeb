@@ -290,7 +290,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
     )
 
     LaunchedEffect(initializer) {
-        SysOut.log("updated initializer!")
+        SysOut.debug { "updated initializer!" }
         architecture ?: return@LaunchedEffect
         architecture.initializer = initializer
         architecture.disassembler?.decodedContent?.value = emptyList()
@@ -305,7 +305,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
     }
 
     LaunchedEffect(emuInitFilePath) {
-        SysOut.log("emuInitFilePath changed!")
+        SysOut.debug { "emuInitFilePath changed!" }
         buildInitializer {
             initializer = it
         }

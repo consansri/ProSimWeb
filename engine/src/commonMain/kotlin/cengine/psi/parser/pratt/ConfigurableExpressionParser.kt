@@ -299,9 +299,9 @@ interface ConfigurableExpressionParser : PrattParserSupport {
      */
     private fun opTypeToElementType(opType: OpType): PsiElementTypeDef {
         return when (opType.loc) {
-            OpLoc.PREFIX -> PsiStatement.Expr.OperationPrefix
-            OpLoc.INFIX -> PsiStatement.Expr.OperationInfix
-            OpLoc.POSTFIX -> PsiStatement.Expr.OperationPostfix
+            OpLoc.PREFIX -> PsiStatement.Expr.OperationPrefix.OperationPrefixT(opType)
+            OpLoc.INFIX -> PsiStatement.Expr.OperationInfix.OperationInfixT(opType)
+            OpLoc.POSTFIX -> PsiStatement.Expr.OperationPostfix.OperationPostFixT(opType)
         }
     }
 }

@@ -26,7 +26,7 @@ abstract class Theme {
                 } else {
                     UIState.Theme.value = LightTheme
                 }
-                SysOut.log("Theme switched to ${theme.name}")
+                SysOut.debug { "Theme switched to ${theme.name}" }
             }, icon = theme.icon)
         }
     }

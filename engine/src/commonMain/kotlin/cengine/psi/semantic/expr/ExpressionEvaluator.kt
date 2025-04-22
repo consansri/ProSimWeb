@@ -2,6 +2,7 @@ package cengine.psi.semantic.expr
 
 import cengine.psi.elements.PsiStatement
 import cengine.psi.lexer.PsiToken
+import cengine.psi.parser.pratt.OpType
 
 /**
  * Abstract base class for evaluating expressions represented by PSI nodes (`PsiStatement.Expr`).
@@ -13,7 +14,8 @@ import cengine.psi.lexer.PsiToken
  * @property resolveIdentifierLambda The lambda function provided by the user to resolve identifiers.
  */
 abstract class ExpressionEvaluator<T, C>(
-    private val resolveIdentifierLambda: (name: String, element: PsiStatement.Expr.Identifier, context: C) -> T?
+    private val processAssignment: (identifier: PsiStatement.Expr, value: T, context: C) -> Unit = { _, _, _ -> },
+    private val resolveIdentifierLambda: (name: String, element: PsiStatement.Expr.Identifier, context: C) -> T?,
 ) {
 // --- Public Entry Point ---
 
@@ -45,17 +47,35 @@ abstract class ExpressionEvaluator<T, C>(
 
             // Operations: Recurse, then delegate calculation to abstract methods
             is PsiStatement.Expr.OperationInfix -> {
-                val left = evaluateRecursive(expr.leftOperand, context)
                 val right = evaluateRecursive(expr.rightOperand, context)
-                evaluateInfixOperation(expr.operator.value, expr.operator, left, right, context)
+                when (expr.type.opType) {
+                    OpType.ASSIGN -> {
+                        processAssignment(expr.leftOperand, right, context)
+                        right
+                    }
+
+                    OpType.ADD_ASSIGN, OpType.SUB_ASSIGN, OpType.MUL_ASSIGN, OpType.DIV_ASSIGN, OpType.MOD_ASSIGN -> {
+                        val left = evaluateRecursive(expr.leftOperand, context)
+                        val result = evaluateInfixOperation(expr.type.opType, expr.operator, left, right, context)
+                        processAssignment(expr.leftOperand, result, context)
+                        result
+                    }
+
+                    else -> {
+                        val left = evaluateRecursive(expr.leftOperand, context)
+                        evaluateInfixOperation(expr.type.opType, expr.operator, left, right, context)
+                    }
+                }
             }
+
             is PsiStatement.Expr.OperationPrefix -> {
                 val operand = evaluateRecursive(expr.operand, context)
-                evaluatePrefixOperation(expr.operator.value, expr.operator, operand, context)
+                evaluatePrefixOperation(expr.type.opType, expr.operator, operand, context)
             }
+
             is PsiStatement.Expr.OperationPostfix -> {
                 val operand = evaluateRecursive(expr.operand, context)
-                evaluatePostfixOperation(expr.operator.value, expr.operator, operand, context)
+                evaluatePostfixOperation(expr.type.opType, expr.operator, operand, context)
             }
 
             // Grouping: Recurse directly
@@ -98,7 +118,7 @@ abstract class ExpressionEvaluator<T, C>(
      * @return The result of the operation as type T.
      * @throws EvaluationException if the operator is unsupported for type T or an error occurs.
      */
-    protected abstract fun evaluateInfixOperation(op: String, opToken: PsiToken, left: T, right: T, context: C): T
+    protected abstract fun evaluateInfixOperation(op: OpType, opToken: PsiToken, left: T, right: T, context: C): T
 
     /**
      * Performs a prefix operation.
@@ -111,7 +131,7 @@ abstract class ExpressionEvaluator<T, C>(
      * @return The result of the operation as type T.
      * @throws EvaluationException if the operator is unsupported for type T or an error occurs.
      */
-    protected abstract fun evaluatePrefixOperation(op: String, opToken: PsiToken, operand: T, context: C): T
+    protected abstract fun evaluatePrefixOperation(op: OpType, opToken: PsiToken, operand: T, context: C): T
 
     /**
      * Performs a postfix operation.
@@ -126,10 +146,9 @@ abstract class ExpressionEvaluator<T, C>(
      * @return The result of the operation as type T.
      * @throws EvaluationException if the operator is unsupported for type T or an error occurs.
      */
-    protected open fun evaluatePostfixOperation(op: String, opToken: PsiToken, operand: T, context: C): T {
+    protected open fun evaluatePostfixOperation(op: OpType, opToken: PsiToken, operand: T, context: C): T {
         throw EvaluationException("Postfix operator '$op' is not supported by this evaluator.", opToken)
     }
-
 
     // --- Helper Methods ---
 

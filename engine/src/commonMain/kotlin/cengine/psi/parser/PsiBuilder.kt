@@ -75,7 +75,6 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
         val validTokenIndex = if (errorTokenIndex < tokens.size) errorTokenIndex else tokens.size - 1
 
         errors.add(IndexedParseError(message, range, validTokenIndex)) // Store the richer info
-        io.error("Parse Error at token $validTokenIndex, range $range: $message")
     }
 
     /**

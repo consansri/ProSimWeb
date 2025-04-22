@@ -27,7 +27,7 @@ abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(
 
     // Helper Functions
 
-    fun getOrCreateAbsSymbolInCurrentSection(name: String, value: BigInt): Boolean {
+    fun createAbsSymbolInCurrentSection(name: String, value: BigInt): Boolean {
         return symbols.add(Symbol.Abs(name, currentSection, symbols.firstOrNull { it.name == name }?.binding ?: Symbol.Binding.LOCAL, value))
     }
 
@@ -80,7 +80,7 @@ abstract class AsmCodeGenerator<T : AsmCodeGenerator.Section>(
         abstract override fun hashCode(): Int
         abstract override fun toString(): String
 
-        class Abs<T : Section>(name: String, section: T, binding: Binding, val value: BigInt) : Symbol<T>(name, section, binding) {
+        class Abs<T : Section>(name: String, section: T, binding: Binding, var value: BigInt) : Symbol<T>(name, section, binding) {
             override fun toString(): String = "Abs($name, $value, $binding)"
 
             override fun equals(other: Any?): Boolean {

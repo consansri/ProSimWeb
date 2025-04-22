@@ -3,11 +3,14 @@ package cengine.psi.elements
 import cengine.editor.annotation.Annotation
 import cengine.psi.core.NodeBuilderFn
 import cengine.psi.core.PsiElement
+import cengine.psi.core.PsiElementType
 import cengine.psi.core.PsiElementTypeDef
+import cengine.psi.elements.PsiStatement.Expr.OperationPostfix.OperationPostFixT
 import cengine.psi.feature.Named
 import cengine.psi.feature.PsiReference
 import cengine.psi.lexer.PsiToken
 import cengine.psi.lexer.PsiTokenType
+import cengine.psi.parser.pratt.OpType
 import cengine.util.collection.firstInstance
 
 /**
@@ -251,60 +254,64 @@ open class PsiStatement(type: PsiStatementTypeDef, override var range: IntRange,
             }
         }
 
-        class OperationInfix(range: IntRange, vararg children: PsiElement) : Expr(OperationInfix, range, *children) {
+        class OperationInfix(override val type: OperationInfixT, range: IntRange, vararg children: PsiElement) : Expr(type, range, *children) {
 
             val leftOperand = children[0] as Expr
             val operator = children[1] as PsiToken
             val rightOperand = children[2] as Expr
 
-            companion object : PsiStatementTypeDef {
-                override val typeName = "InfixOp"
+            class OperationInfixT(val opType: OpType) : PsiStatementTypeDef {
+                override val typeName = opType.name.lowercase()
                 override val builder: NodeBuilderFn = { markerInfo, children, range ->
                     if (
                         children.size == 3
                         && children[0] is Expr
                         && children[1].type == PsiTokenType.OPERATOR
                         && children[2] is Expr
+                        && markerInfo.elementType is OperationInfixT
                     ) {
-                        OperationInfix(range, *children)
+                        OperationInfix(markerInfo.elementType, range, *children)
                     } else null
                 }
             }
         }
 
-        class OperationPrefix(range: IntRange, vararg children: PsiElement) : Expr(OperationPrefix, range, *children) {
+        class OperationPrefix(override val type: OperationPrefixT, range: IntRange, vararg children: PsiElement) : Expr(type, range, *children) {
 
             val operator = children[0] as PsiToken
             val operand = children[1] as Expr
 
-            companion object : PsiStatementTypeDef {
-                override val typeName = "PrefixOp"
+            class OperationPrefixT(val opType: OpType) : PsiStatementTypeDef {
+                override val typeName = opType.name.lowercase()
                 override val builder: NodeBuilderFn = { markerInfo, children, range ->
                     if (
                         children.size == 2
                         && children[0].type == PsiTokenType.OPERATOR
                         && children[1] is Expr
+                        && markerInfo.elementType is OperationPrefixT
                     ) {
-                        OperationPrefix(range, *children)
+                        OperationPrefix(markerInfo.elementType, range, *children)
                     } else null
                 }
             }
         }
 
-        class OperationPostfix(range: IntRange, vararg children: PsiElement) : Expr(OperationPostfix, range, *children) {
+        class OperationPostfix(override val type: OperationPostFixT, range: IntRange, vararg children: PsiElement) : Expr(type, range, *children) {
 
             val operand = children[0] as Expr
             val operator = children[1] as PsiToken
 
-            companion object : PsiStatementTypeDef {
-                override val typeName = "PostfixOp"
+
+            class OperationPostFixT(val opType: OpType) : PsiStatementTypeDef {
+                override val typeName = opType.name.lowercase()
                 override val builder: NodeBuilderFn = { markerInfo, children, range ->
                     if (
                         children.size == 2
                         && children[0] is Expr
                         && children[1].type == PsiTokenType.OPERATOR
+                        && markerInfo.elementType is OperationPostFixT
                     ) {
-                        OperationPostfix(range, *children)
+                        OperationPostfix(markerInfo.elementType, range, *children)
                     } else null
                 }
             }

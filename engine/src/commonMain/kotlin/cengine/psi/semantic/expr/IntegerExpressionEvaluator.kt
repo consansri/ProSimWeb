@@ -4,6 +4,7 @@ import cengine.psi.core.PsiElement
 import cengine.psi.elements.PsiStatement
 import cengine.psi.lexer.PsiToken
 import cengine.psi.lexer.PsiTokenType
+import cengine.psi.parser.pratt.OpType
 import cengine.util.integer.BigInt
 
 /**
@@ -14,8 +15,9 @@ import cengine.util.integer.BigInt
  * @param resolveIdentifierLambda A lambda function to resolve an identifier's value to BigInt?.
  */
 open class IntegerExpressionEvaluator<C>(
+    processAssignment: (identifier: PsiStatement.Expr, value: BigInt, context: C) -> Unit = { _, _, _ -> },
     resolveIdentifierLambda: (name: String, element: PsiStatement.Expr.Identifier, context: C) -> BigInt?,
-) : ExpressionEvaluator<BigInt, C>(resolveIdentifierLambda) { // Pass lambda to super constructor
+) : ExpressionEvaluator<BigInt, C>(processAssignment,resolveIdentifierLambda) { // Pass lambda to super constructor
 
     /**
      * Parses integer and boolean literals. Throws exceptions for other literal types.
@@ -39,35 +41,35 @@ open class IntegerExpressionEvaluator<C>(
     /**
      * Implements infix operations for BigInt. Returns 1/0 for comparisons/logical ops.
      */
-    override fun evaluateInfixOperation(op: String, opToken: PsiToken, left: BigInt, right: BigInt, context: C): BigInt {
+    override fun evaluateInfixOperation(op: OpType, opToken: PsiToken, left: BigInt, right: BigInt, context: C): BigInt {
         try {
             return when (op) {
-                "+" -> left + right
-                "-" -> left - right
-                "*" -> left * right
-                "/" -> {
+                OpType.ADD, OpType.ADD_ASSIGN -> left + right
+                OpType.SUB, OpType.SUB_ASSIGN -> left - right
+                OpType.MUL, OpType.MUL_ASSIGN -> left * right
+                OpType.DIV, OpType.DIV_ASSIGN -> {
                     if (right == BigInt.ZERO) throw EvaluationException("Division by zero", opToken)
                     left / right // Integer division
                 }
 
-                "%" -> {
+                OpType.MOD, OpType.MOD_ASSIGN -> {
                     if (right == BigInt.ZERO) throw EvaluationException("Modulo by zero", opToken)
                     left % right
                 }
 
-                "<<" -> left shl right.toIntOrThrow(opToken, "Left shift amount")
-                ">>" -> left shr right.toIntOrThrow(opToken, "Right shift amount")
-                "&" -> left and right
-                "|" -> left or right
-                "^" -> left xor right
-                "==" -> if (left == right) BigInt.ONE else BigInt.ZERO
-                "!=" -> if (left != right) BigInt.ONE else BigInt.ZERO
-                "<" -> if (left < right) BigInt.ONE else BigInt.ZERO
-                "<=" -> if (left <= right) BigInt.ONE else BigInt.ZERO
-                ">" -> if (left > right) BigInt.ONE else BigInt.ZERO
-                ">=" -> if (left >= right) BigInt.ONE else BigInt.ZERO
-                "&&" -> if (left != BigInt.ZERO && right != BigInt.ZERO) BigInt.ONE else BigInt.ZERO
-                "||" -> if (left != BigInt.ZERO || right != BigInt.ZERO) BigInt.ONE else BigInt.ZERO
+                OpType.SHIFT_LEFT -> left shl right.toIntOrThrow(opToken, "Left shift amount")
+                OpType.SHIFT_RIGHT -> left shr right.toIntOrThrow(opToken, "Right shift amount")
+                OpType.BITWISE_AND -> left and right
+                OpType.BITWISE_OR -> left or right
+                OpType.BITWISE_XOR -> left xor right
+                OpType.EQUAL -> if (left == right) BigInt.ONE else BigInt.ZERO
+                OpType.NOT_EQUAL -> if (left != right) BigInt.ONE else BigInt.ZERO
+                OpType.LESS_THAN -> if (left < right) BigInt.ONE else BigInt.ZERO
+                OpType.LESS_EQUAL -> if (left <= right) BigInt.ONE else BigInt.ZERO
+                OpType.GREATER_THAN -> if (left > right) BigInt.ONE else BigInt.ZERO
+                OpType.GREATER_EQUAL -> if (left >= right) BigInt.ONE else BigInt.ZERO
+                OpType.LOGICAL_AND -> if (left != BigInt.ZERO && right != BigInt.ZERO) BigInt.ONE else BigInt.ZERO
+                OpType.LOGICAL_OR -> if (left != BigInt.ZERO || right != BigInt.ZERO) BigInt.ONE else BigInt.ZERO
                 else -> throw EvaluationException("Unsupported infix operator for Integer: '$op'", opToken)
             }
         } catch (e: ArithmeticException) {
@@ -78,12 +80,12 @@ open class IntegerExpressionEvaluator<C>(
     /**
      * Implements prefix operations for BigInt.
      */
-    override fun evaluatePrefixOperation(op: String, opToken: PsiToken, operand: BigInt, context: C): BigInt {
+    override fun evaluatePrefixOperation(op: OpType, opToken: PsiToken, operand: BigInt, context: C): BigInt {
         return when (op) {
-            "+" -> operand
-            "-" -> -operand
-            "~" -> operand.inv()
-            "!" -> if (operand == BigInt.ZERO) BigInt.ONE else BigInt.ZERO // Logical NOT
+            OpType.UNARY_PLUS -> operand
+            OpType.UNARY_MINUS -> -operand
+            OpType.BITWISE_NOT -> operand.inv()
+            OpType.LOGICAL_NOT -> if (operand == BigInt.ZERO) BigInt.ONE else BigInt.ZERO // Logical NOT
             else -> throw EvaluationException("Unsupported prefix operator for Integer: '$op'", opToken)
         }
     }

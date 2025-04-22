@@ -42,7 +42,7 @@ class AsmFileLinker(
      * Suspends until the entry file and all includes are processed or found cyclic.
      */
     suspend fun link(entryFile: PsiFile) {
-        io.info("Starting linking process for: ${entryFile.file.path}")
+        io.log("Starting linking process for: ${entryFile.file.path}")
         // Clear shared state under lock
         stateMutex.withLock {
             visitedFiles.clear()
@@ -70,7 +70,7 @@ class AsmFileLinker(
                 // and new ones might be added while joinAll was waiting.
             }
 
-            io.info("Linking process finished for: ${entryFile.file.path}")
+            io.log("Linking process finished for: ${entryFile.file.path}")
 
         } catch (e: CancellationException) {
             io.warn("Linking process was cancelled.")

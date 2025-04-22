@@ -3,6 +3,7 @@ package cengine.psi.semantic.expr
 import cengine.psi.elements.PsiStatement
 import cengine.psi.lexer.PsiToken
 import cengine.psi.lexer.PsiTokenType
+import cengine.psi.parser.pratt.OpType
 import cengine.util.integer.BigInt
 import kotlin.math.abs
 
@@ -14,8 +15,9 @@ import kotlin.math.abs
  * @param resolveIdentifierLambda A lambda function to resolve an identifier's value to Float?.
  */
 open class FloatExpressionEvaluator<C>(
+    processAssignment: (identifier: PsiStatement.Expr, value: Float, context: C) -> Unit = { _, _, _ -> },
     resolveIdentifierLambda: (name: String, element: PsiStatement.Expr.Identifier, context: C) -> Float?
-) : ExpressionEvaluator<Float, C>(resolveIdentifierLambda) {
+) : ExpressionEvaluator<Float, C>(processAssignment,resolveIdentifierLambda) {
 
     private val floatEpsilon = 1e-6f // Epsilon for float comparisons
 
@@ -33,49 +35,48 @@ open class FloatExpressionEvaluator<C>(
     /**
      * Implements infix operations for Float. Returns 1.0f/0.0f for comparisons/logical ops.
      */
-    override fun evaluateInfixOperation(op: String, opToken: PsiToken, left: Float, right: Float, context: C): Float {
+    override fun evaluateInfixOperation(op: OpType, opToken: PsiToken, left: Float, right: Float, context: C): Float {
         return when (op) {
             // Arithmetic
-            "+" -> left + right
-            "-" -> left - right
-            "*" -> left * right
-            "/" -> {
+            OpType.ADD, OpType.ADD_ASSIGN -> left + right
+            OpType.SUB, OpType.SUB_ASSIGN -> left - right
+            OpType.MUL, OpType.MUL_ASSIGN -> left * right
+            OpType.DIV, OpType.DIV_ASSIGN -> {
                 if (right == 0.0f) throw EvaluationException("Division by zero", opToken)
                 left / right
             }
+
             // "%" -> left % right // Remainder
             // "**" -> left.pow(right) // Power
 
             // Comparison (return 1.0f for true, 0.0f for false)
-            "==" -> if (abs(left - right) < floatEpsilon) 1.0f else 0.0f
-            "!=" -> if (abs(left - right) >= floatEpsilon) 1.0f else 0.0f
-            "<" -> if (left < right) 1.0f else 0.0f
-            "<=" -> if (left <= right) 1.0f else 0.0f
-            ">" -> if (left > right) 1.0f else 0.0f
-            ">=" -> if (left >= right) 1.0f else 0.0f
+            OpType.EQUAL -> if (abs(left - right) < floatEpsilon) 1.0f else 0.0f
+            OpType.NOT_EQUAL -> if (abs(left - right) >= floatEpsilon) 1.0f else 0.0f
+            OpType.LESS_THAN -> if (left < right) 1.0f else 0.0f
+            OpType.LESS_EQUAL -> if (left <= right) 1.0f else 0.0f
+            OpType.GREATER_THAN -> if (left > right) 1.0f else 0.0f
+            OpType.GREATER_EQUAL -> if (left >= right) 1.0f else 0.0f
 
             // Logical (treat non-zero as true, return 1.0f for true, 0.0f for false)
-            "&&" -> if (left != 0.0f && right != 0.0f) 1.0f else 0.0f
-            "||" -> if (left != 0.0f || right != 0.0f) 1.0f else 0.0f
+            OpType.LOGICAL_AND -> if (left != 0.0f && right != 0.0f) 1.0f else 0.0f
+            OpType.LOGICAL_OR -> if (left != 0.0f || right != 0.0f) 1.0f else 0.0f
 
             // Unsupported Operators
-            "%", "&", "|", "^", "<<", ">>", "~", "!" ->
+            else ->
                 throw EvaluationException("Operator '$op' is not supported for Float evaluation", opToken)
-
-            else -> throw EvaluationException("Unknown infix operator: '$op'", opToken)
         }
     }
 
     /**
      * Implements prefix operations for Float.
      */
-    override fun evaluatePrefixOperation(op: String, opToken: PsiToken, operand: Float, context: C): Float {
+    override fun evaluatePrefixOperation(op: OpType, opToken: PsiToken, operand: Float, context: C): Float {
         return when (op) {
-            "+" -> operand // Unary plus
-            "-" -> -operand // Unary minus
+            OpType.UNARY_PLUS -> operand // Unary plus
+            OpType.UNARY_MINUS -> -operand // Unary minus
 
             // Unsupported Operators
-            "~", "!" -> throw EvaluationException("Operator '$op' is not supported for Float evaluation", opToken)
+            OpType.BITWISE_NOT, OpType.LOGICAL_NOT -> throw EvaluationException("Operator '$op' is not supported for Float evaluation", opToken)
 
             else -> throw EvaluationException("Unsupported prefix operator: '$op'", opToken)
         }

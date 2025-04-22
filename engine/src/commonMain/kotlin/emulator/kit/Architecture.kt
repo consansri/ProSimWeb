@@ -117,7 +117,7 @@ abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(val ad
         resetPC()
         initializer?.initialize(memory)
         pcState.value = addrType.to(initializer?.entry() ?: BigInt.ZERO)
-        SysOut.log("${this::class.simpleName} resetting!")
+        SysOut.debug { "${this::class.simpleName} resetting!" }
         console.exeInfo("resetting")
     }
 
