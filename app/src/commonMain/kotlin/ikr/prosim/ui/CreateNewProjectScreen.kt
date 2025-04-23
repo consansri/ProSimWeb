@@ -81,7 +81,7 @@ fun CreateNewProjectScreen(onProjectCreated: (ProjectState) -> Unit, onCancel: (
                                     modifier = Modifier.weight(1.0f),
                                     onValueChange = {
                                         pathField = it
-                                        invalidProjectPath = !(ActualFileSystem.exists(it.toFPath()) && ActualFileSystem.isDirectory(it.toFPath()))
+                                        invalidProjectPath = false
                                     },
                                     singleLine = true,
                                     error = invalidProjectPath
@@ -120,6 +120,10 @@ fun CreateNewProjectScreen(onProjectCreated: (ProjectState) -> Unit, onCancel: (
                         CButton(
                             onClick = {
                                 if (!invalidProjectPath) {
+                                    val path = pathField.toFPath()
+                                    if (!ActualFileSystem.exists(path)) {
+                                        ActualFileSystem.createFile(path, true)
+                                    }
                                     val state = ProjectState(pathField.toFPath(), target.name)
                                     ProjectStateManager.appState = ProjectStateManager.appState.copy(
                                         projectStates = listOf(state) + ProjectStateManager.projects,
