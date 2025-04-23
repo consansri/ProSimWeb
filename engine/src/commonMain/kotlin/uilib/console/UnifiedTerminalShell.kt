@@ -11,6 +11,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -214,7 +215,8 @@ fun UnifiedTerminalShell(context: ShellContext) {
                 }
                 false
             },
-        visualTransformation = keyWordHighlighter
+        visualTransformation = keyWordHighlighter,
+        cursorBrush = SolidColor(theme.COLOR_FG_0)
     )
 
     // Make sure we initially request focus when the shell appears.
