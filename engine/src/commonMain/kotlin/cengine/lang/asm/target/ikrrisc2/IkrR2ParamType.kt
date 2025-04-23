@@ -1,6 +1,7 @@
 package cengine.lang.asm.target.ikrrisc2
 
 import cengine.lang.asm.AsmParser
+import cengine.lang.asm.target.ikrrisc2.IkrR2BaseRegs.Companion.parseIkrR2BaseReg
 import cengine.psi.parser.PsiBuilder
 
 enum class IkrR2ParamType(val exampleString: String) {
@@ -16,7 +17,7 @@ enum class IkrR2ParamType(val exampleString: String) {
     B_REG_TYPE("rb");
 
 
-    fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+    fun PsiBuilder.parse(asmParser: AsmParser): Boolean {
 
         skipWhitespaceAndComments()
 
@@ -29,12 +30,12 @@ enum class IkrR2ParamType(val exampleString: String) {
 
             when (this@IkrR2ParamType) {
                 I_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(":")) return false
                     if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(",")) return false
                     skipWhitespaceAndComments()
@@ -43,57 +44,57 @@ enum class IkrR2ParamType(val exampleString: String) {
                 }
 
                 R2_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(":")) return false
                     if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                 }
 
                 R1_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(":")) return false
                     if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                 }
 
                 L_OFF_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(":")) return false
                     if (!expect("=")) return false
                     skipWhitespaceAndComments()
                     if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    parseExpression()
                     skipWhitespaceAndComments()
                     if (!expect(")")) return false
                 }
 
                 L_INDEX_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(":")) return false
                     if (!expect("=")) return false
                     skipWhitespaceAndComments()
                     if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    parseExpression()
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(")")) return false
                 }
@@ -101,7 +102,7 @@ enum class IkrR2ParamType(val exampleString: String) {
                 S_OFF_TYPE -> {
                     if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(",")) return false
                     skipWhitespaceAndComments()
@@ -112,29 +113,29 @@ enum class IkrR2ParamType(val exampleString: String) {
                     if (!expect(":")) return false
                     if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
 
                 }
 
                 S_INDEX_TYPE -> {
                     if (!expect("(")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(",")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(")")) return false
                     skipWhitespaceAndComments()
                     if (!expect(":")) return false
                     if (!expect("=")) return false
                     skipWhitespaceAndComments()
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                 }
 
                 B_DISP18_TYPE -> {
-                    if (!expect(*IkrR2BaseRegs.allNames)) return false
+                    if (!parseIkrR2BaseReg()) return false
                     skipWhitespaceAndComments()
                     if (!expect(",")) return false
                     skipWhitespaceAndComments()
@@ -146,7 +147,7 @@ enum class IkrR2ParamType(val exampleString: String) {
                 }
 
                 B_REG_TYPE -> {
-                    expect(*IkrR2BaseRegs.allNames)
+                    parseIkrR2BaseReg()
                 }
             }
         }

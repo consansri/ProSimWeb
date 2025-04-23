@@ -1,6 +1,9 @@
 package cengine.lang.asm.target.ikrrisc2
 
 import cengine.lang.asm.psi.AsmRegisterT
+import cengine.lang.asm.target.riscv.RvRegT.IntT
+import cengine.psi.parser.PsiBuilder
+import kotlin.collections.get
 
 enum class IkrR2BaseRegs: AsmRegisterT {
     R0,
@@ -40,8 +43,26 @@ enum class IkrR2BaseRegs: AsmRegisterT {
     override val recognizable: List<String> = listOf(name.lowercase(), "x$ordinal")
     override val numericalValue: UInt = ordinal.toUInt()
 
+
+
     companion object{
         val allNames = entries.map { it.recognizable }.flatten().toSet().toTypedArray()
+        private val r2BaseRegs = IkrR2BaseRegs.entries.flatMap { entry -> entry.recognizable.map { name -> name to entry } }.associate { it }
+        fun PsiBuilder.parseIkrR2BaseReg(): Boolean {
+            val marker = mark()
+            val text = getTokenText()
+            val regType = r2BaseRegs[text]
+            if (regType != null) {
+                advance()
+                marker.done(regType)
+            } else {
+                error("Expected a ikr risc-ii integer register!")
+                marker.drop()
+            }
+
+            return regType != null
+        }
+
     }
 
 }

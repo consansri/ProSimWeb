@@ -1,10 +1,17 @@
 package cengine.lang.asm.target.ikrrisc2
 
+import cengine.lang.asm.AsmLexer
+import cengine.lang.asm.AsmLexer.ESCAPE_CHAR
+import cengine.lang.asm.AsmLexer.OPERATORS
+import cengine.lang.asm.AsmLexer.PUNCTUATIONS
+import cengine.lang.asm.AsmLexer.SPECIAL_CHARS
 import cengine.lang.asm.AsmSpec
+import cengine.lang.asm.psi.AsmDirective
 import cengine.lang.asm.psi.AsmDirectiveT
 import cengine.lang.asm.psi.AsmInstructionT
 import cengine.lang.mif.MifGenerator
 import cengine.lang.obj.elf.LinkerScript
+import cengine.psi.lexer.PsiLexerSet
 import cengine.util.Endianness
 import cengine.util.buffer.Int32Buffer
 import cengine.util.integer.BigInt
@@ -16,14 +23,24 @@ import emulator.EmuLink
 data object IkrR2Spec : AsmSpec<MifGenerator<Int32Buffer>> {
     override val name: String = "IKR RISC-II"
     override val emuLink: EmuLink = EmuLink.IKRRISC2
-    override val instrTypes: List<AsmInstructionT>
-        get() = TODO("Not yet implemented")
-    override val dirTypes: List<AsmDirectiveT>
-        get() = TODO("Not yet implemented")
-
+    override val instrTypes: List<AsmInstructionT> = IkrR2InstrT.entries
+    override val dirTypes: List<AsmDirectiveT> = AsmDirective.all
     override val commentSlAlt: String = ";"
     override val litIntBinPrefix: String = "%"
     override val litIntHexPrefix: String = "$"
+
+    override fun createLexerSet(): PsiLexerSet = PsiLexerSet(
+        keywordsLowerCase = instrTypes.map { it.keyWord.lowercase() }.toSet(),
+        keywordsCaseSensitive = dirTypes.map { it.keyWord }.toSet() + "true" + "false",
+        symbolSpecialChars = SPECIAL_CHARS + addSymbolSpecialChars,
+        punctuations = PUNCTUATIONS.sortedBy { it.length }.reversed().toSet() + "#",
+        operators = OPERATORS.map { it.string }.sortedBy { it.length }.reversed().toSet(),
+        commentSlAlt = commentSlAlt,
+        litIntHexPrefix = litIntHexPrefix,
+        litIntBinPrefix = litIntBinPrefix,
+        litStringEscape = ESCAPE_CHAR,
+        litCharEscape = ESCAPE_CHAR,
+    )
 
     override val contentExample: String
         get() = """
