@@ -12,34 +12,37 @@ enum class Format(val radix: Int) {
      * Binary (base 2)
      */
     BIN(2) {
-        override fun format(number: IntNumber<*>): String = number.zeroPaddedBin()
+        override fun format(number: UnsignedFixedSizeIntNumber<*>): String = number.uPaddedBin()
         override fun valid(char: Char): Boolean = when (char) {
             '1', '0' -> true
             else -> false
         }
     },
+
     /**
      * Octal (base 8)
      */
     OCT(8) {
-        override fun format(number: IntNumber<*>): String = number.toString(8)
+        override fun format(number: UnsignedFixedSizeIntNumber<*>): String = number.toString(8)
         override fun valid(char: Char): Boolean = when (char) {
             in '0'..'7' -> true
             else -> false
         }
     },
+
     /**
      * Decimal (base 10)
      */
     DEC(10) {
-        override fun format(number: IntNumber<*>): String = number.toString()
+        override fun format(number: UnsignedFixedSizeIntNumber<*>): String = number.toString()
         override fun valid(char: Char): Boolean = char.isDigit()
     },
+
     /**
      * Hexadecimal (base 16)
      */
     HEX(16) {
-        override fun format(number: IntNumber<*>): String = number.zeroPaddedHex()
+        override fun format(number: UnsignedFixedSizeIntNumber<*>): String = number.uPaddedHex()
         override fun valid(char: Char): Boolean = when (char) {
             in '0'..'9', 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f' -> true
             else -> false
@@ -59,7 +62,7 @@ enum class Format(val radix: Int) {
     /**
      * Get a string representing the given number in this format.
      */
-    abstract fun format(number: IntNumber<*>): String
+    abstract fun format(number: UnsignedFixedSizeIntNumber<*>): String
 
     /**
      * Check if the given character is valid in this format.

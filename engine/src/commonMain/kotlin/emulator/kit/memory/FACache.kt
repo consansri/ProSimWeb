@@ -1,6 +1,8 @@
 package emulator.kit.memory
 
 import cengine.util.integer.IntNumber
+import cengine.util.integer.UnsignedFixedSizeIntNumber
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import kotlin.math.log
 import kotlin.math.roundToInt
 
@@ -19,7 +21,7 @@ import kotlin.math.roundToInt
  *
  * @see Cache
  */
-class FACache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
+class FACache<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(
     backingMemory: Memory<ADDR, INSTANCE>,
     blockCount: Int,
     offsetBits: Int,

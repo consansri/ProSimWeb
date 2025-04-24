@@ -1,6 +1,6 @@
 package cengine.lang.asm.target.ikrrisc2
 
-import cengine.lang.asm.AsmParser
+import cengine.lang.asm.AsmTreeParser
 import cengine.lang.asm.gas.AsmBackend
 import cengine.lang.asm.gas.AsmCodeGenerator
 import cengine.lang.asm.psi.AsmInstruction
@@ -84,11 +84,11 @@ enum class IkrR2InstrT(override val keyWord: String, val paramType: IkrR2ParamTy
     JMP("jmp", B_REG_TYPE, "springe an Adresse in rb"),
     JSR("jsr", B_REG_TYPE, "springe in Unterprg. an Adresse in rb (sichere Rücksprungadr. in r31)");
 
-    override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+    override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
         skipWhitespaceAndComments()
 
         with(paramType) {
-            return parse(asmParser)
+            return parse(asmTreeParser)
         }
     }
 
@@ -99,7 +99,7 @@ enum class IkrR2InstrT(override val keyWord: String, val paramType: IkrR2ParamTy
         }
 
         val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) }
-        val regs = instr.regs.map { it.type.numericalValue.toUInt32() }
+        val regs = instr.regs.map { it.type.address.toUInt32() }
 
         when (paramType) {
             I_TYPE -> {
@@ -297,7 +297,7 @@ enum class IkrR2InstrT(override val keyWord: String, val paramType: IkrR2ParamTy
 
     override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass2BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {
         val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) }
-        val regs = instr.regs.map { it.type.numericalValue.toUInt32() }
+        val regs = instr.regs.map { it.type.address.toUInt32() }
 
         when (paramType) {
             B_DISP26_TYPE -> {

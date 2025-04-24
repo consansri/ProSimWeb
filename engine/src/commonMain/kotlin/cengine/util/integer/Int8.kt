@@ -6,12 +6,12 @@ import kotlin.experimental.inv
 import kotlin.experimental.or
 import kotlin.experimental.xor
 
-class Int8(override val value: Byte) : IntNumber<Int8> {
+class Int8(override val value: Byte) : SignedFixedSizeIntNumber<Int8> {
 
     constructor(value: Int) : this(value.toByte())
     constructor(value: Long) : this(value.toByte())
 
-    companion object: IntNumberStatic<Int8> {
+    companion object: SignedFixedSizeIntNumberT<Int8> {
 
         override val BITS: Int = 8
         override val BYTES: Int = 1
@@ -22,7 +22,7 @@ class Int8(override val value: Byte) : IntNumber<Int8> {
         fun Int.toInt8() = Int8(this)
 
         override fun to(number: IntNumber<*>): Int8 = number.toInt8()
-        override fun split(number: IntNumber<*>): List<Int8> = number.int8s()
+        override fun split(number: FixedSizeIntNumber<*>): List<Int8> = number.int8s()
         override fun of(value: Int): Int8 = Int8(value.toByte())
         override fun parse(string: String,radix: Int): Int8 = Int8(string.toByte(radix))
 
@@ -38,7 +38,7 @@ class Int8(override val value: Byte) : IntNumber<Int8> {
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<Int8>
+    override val type: FixedSizeIntNumberT<Int8>
         get() = Int8
 
     override fun plus(other: Int8): Int8 = Int8(value + other.value)
@@ -124,7 +124,7 @@ class Int8(override val value: Byte) : IntNumber<Int8> {
     override fun fitsInUnsigned(bitWidth: Int): Boolean = toUInt8().fitsInUnsigned(bitWidth)
 
     override fun int8s() = listOf(this)
-
+    override fun uInt8s(): List<UInt8> = listOf(this.toUInt8())
 
     override fun hashCode(): Int {
         return value.hashCode()

@@ -32,6 +32,7 @@ interface AsmSpec<T : AsmCodeGenerator<*>> {
     val commentSlAlt: String? get() = "#"
     val litIntHexPrefix: String get() = "0x"
     val litIntBinPrefix: String get() = "0b"
+    val addPunctuations: Set<String> get() = emptySet()
     val addSymbolSpecialChars: Set<Char> get() = emptySet()
 
     val contentExample: String
@@ -42,20 +43,25 @@ interface AsmSpec<T : AsmCodeGenerator<*>> {
 
     fun createLexerSet(): PsiLexerSet {
         return PsiLexerSet(
+            readNumberLiterals = true,
             keywordsLowerCase = instrTypes.map { it.keyWord.lowercase() }.toSet(),
             keywordsCaseSensitive = dirTypes.map { it.keyWord }.toSet() + "true" + "false",
             symbolSpecialChars = SPECIAL_CHARS + addSymbolSpecialChars,
-            punctuations = PUNCTUATIONS.sortedBy { it.length }.reversed().toSet(),
+            punctuations = (PUNCTUATIONS + addPunctuations).sortedBy { it.length }.reversed().toSet(),
             operators = OPERATORS.map { it.string }.sortedBy { it.length }.reversed().toSet(),
+            commentSl = "//",
             commentSlAlt = commentSlAlt,
+            commentMl = "/*" to "*/",
             litIntHexPrefix = litIntHexPrefix,
             litIntBinPrefix = litIntBinPrefix,
             litStringEscape = ESCAPE_CHAR,
             litCharEscape = ESCAPE_CHAR,
+            litStringSl = "\"" to "\"",
+            litChar = '\'' to '\''
         )
     }
 
-    fun createParser(): AsmParser = AsmParser(
+    fun createParser(): AsmTreeParser = AsmTreeParser(
         instrTypes,
         dirTypes.associateBy { it.keyWord }
     )

@@ -6,12 +6,12 @@ import kotlin.experimental.inv
 import kotlin.experimental.or
 import kotlin.experimental.xor
 
-class Int16(override val value: Short) : IntNumber<Int16> {
+class Int16(override val value: Short) : SignedFixedSizeIntNumber<Int16> {
 
     constructor(value: Int) : this(value.toShort())
     constructor(value: Long) : this(value.toShort())
 
-    companion object: IntNumberStatic<Int16> {
+    companion object: SignedFixedSizeIntNumberT<Int16> {
 
         override val BITS: Int = 16
         override val BYTES: Int = 2
@@ -25,7 +25,7 @@ class Int16(override val value: Short) : IntNumber<Int16> {
         fun fromUInt8(byte1: UInt8, byte0: UInt8): Int16 = (byte1.toInt16() shl 8) or byte0.toInt16()
 
         override fun to(number: IntNumber<*>): Int16 = number.toInt16()
-        override fun split(number: IntNumber<*>): List<Int16> = number.int16s()
+        override fun split(number: FixedSizeIntNumber<*>): List<Int16> = number.int16s()
         override fun of(value: Int): Int16 = Int16(value.toShort())
         override fun parse(string: String, radix: Int): Int16 = Int16(string.toShort(radix))
 
@@ -41,7 +41,7 @@ class Int16(override val value: Short) : IntNumber<Int16> {
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<Int16>
+    override val type: FixedSizeIntNumberT<Int16>
         get() = Int16
 
     override fun plus(other: Int16): Int16 = Int16(value + other.value)
@@ -131,6 +131,7 @@ class Int16(override val value: Short) : IntNumber<Int16> {
         return value.hashCode()
     }
 
-    override fun int8s() = (this shr bitWidth / 2).toInt8().int8s() + this.toInt8().int8s()
+    override fun int8s() = (this shr bitWidth / 2).toInt8().int8s() + this.toInt8()
+    override fun uInt8s(): List<UInt8> = int8s().map { it.toUInt8() }
 
 }

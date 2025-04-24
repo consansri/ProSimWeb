@@ -2,6 +2,7 @@ package cengine.util.buffer
 
 import cengine.util.Endianness
 import cengine.util.integer.Int16
+import cengine.util.integer.UInt16
 
 /**
  * A buffer for [Int16] values.
@@ -10,6 +11,6 @@ import cengine.util.integer.Int16
  * backed by a [MutableList] of [Int16] values and provides methods to interact with
  * the buffer.
  */
-class Int16Buffer(endianness: Endianness, initial: Array<Int16> = emptyArray()) : Buffer<Int16>(endianness, Int16){
+class Buffer16(endianness: Endianness, initial: Array<Int16> = emptyArray()) : Buffer<UInt16>(endianness, UInt16){
 
 }

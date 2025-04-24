@@ -1,7 +1,5 @@
 package cengine.system
 
-import kotlinx.serialization.Serializable
-
 /**
  * Returns the current platform system line break.
  */

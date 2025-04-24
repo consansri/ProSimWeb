@@ -6,12 +6,13 @@ import cengine.lang.obj.elf.Shdr
 import cengine.util.buffer.Buffer
 import cengine.util.integer.BigInt
 import cengine.util.integer.BigInt.Companion.toBigInt
-import cengine.util.integer.IntNumberStatic
+import cengine.util.integer.IntNumberT
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt64
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
-class MifGenerator<T : Buffer<*>>(linkerScript: LinkerScript, private val addrSize: IntNumberStatic<*>, val bufferInit: () -> T) : AsmCodeGenerator<AsmCodeGenerator.Section>(linkerScript) {
+class MifGenerator<T : Buffer<*>>(linkerScript: LinkerScript, private val addrSize: UnsignedFixedSizeIntNumberT<*>, val bufferInit: () -> T) : AsmCodeGenerator<AsmCodeGenerator.Section>(linkerScript) {
     override val outputFileSuffix: String
         get() = ".mif"
 

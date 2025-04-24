@@ -2,12 +2,12 @@ package cengine.util.integer
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
-class UInt8(override val value: UByte) : IntNumber<UInt8>, UnsignedExtension {
+class UInt8(override val value: UByte) : UnsignedFixedSizeIntNumber<UInt8> {
 
     constructor(value: UInt) : this(value.toUByte())
     constructor(value: ULong) : this(value.toUByte())
 
-    companion object: IntNumberStatic<UInt8> {
+    companion object: UnsignedFixedSizeIntNumberT<UInt8> {
 
         override val BITS: Int = 8
         override val BYTES: Int = 1
@@ -18,7 +18,7 @@ class UInt8(override val value: UByte) : IntNumber<UInt8>, UnsignedExtension {
         fun UInt.toUInt8() = UInt8(this)
 
         override fun to(number: IntNumber<*>): UInt8 = number.toUInt8()
-        override fun split(number: IntNumber<*>): List<UInt8> = number.uInt8s()
+        override fun split(number: FixedSizeIntNumber<*>): List<UInt8> = number.uInt8s()
         override fun parse(string: String,radix: Int): UInt8 = UInt8(string.toUByte(radix))
         override fun of(value: Int): UInt8 = UInt8(value.toUInt().toUByte())
 
@@ -34,7 +34,7 @@ class UInt8(override val value: UByte) : IntNumber<UInt8>, UnsignedExtension {
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<UInt8>
+    override val type: FixedSizeIntNumberT<UInt8>
         get() = UInt8
 
     override fun plus(other: UInt8): UInt8 = UInt8(value + other.value)
@@ -43,8 +43,6 @@ class UInt8(override val value: UByte) : IntNumber<UInt8>, UnsignedExtension {
     override fun div(other: UInt8): UInt8 = UInt8(value / other.value)
     override fun rem(other: UInt8): UInt8 = UInt8(value % other.value)
 
-    @Deprecated("Can't negotiate unsigned value!", ReplaceWith("toInt8().unaryMinus().toUInt8()"))
-    override fun unaryMinus(): UInt8 = throw Exception("Can't negotiate unsigned value!")
     override fun inc(): UInt8 = UInt8(value.inc())
     override fun dec(): UInt8 = UInt8(value.dec())
 
@@ -88,6 +86,7 @@ class UInt8(override val value: UByte) : IntNumber<UInt8>, UnsignedExtension {
 
     override fun compareTo(other: UInt): Int = value.compareTo(other)
     override fun compareTo(other: ULong): Int = value.compareTo(other)
+    override fun toSigned(): Int8 = toInt8()
 
     override fun compareTo(other: Int): Int = compareTo(other.toUInt())
     override fun compareTo(other: Long): Int = compareTo(other.toULong())
@@ -113,9 +112,6 @@ class UInt8(override val value: UByte) : IntNumber<UInt8>, UnsignedExtension {
     override fun toUInt64(): UInt64 = UInt64(value.toULong())
     override fun toUInt128(): UInt128 = UInt128(BigInteger.fromUByte(value))
 
-    @Deprecated("Unnecessary", ReplaceWith("this"))
-    override fun toUnsigned(): UInt8 = this
-
     override fun toString(radix: Int): String = value.toString(radix)
     override fun toString(): String = value.toString()
     override fun fitsInSigned(bitWidth: Int): Boolean = toInt8().fitsInSigned(bitWidth)
@@ -131,5 +127,6 @@ class UInt8(override val value: UByte) : IntNumber<UInt8>, UnsignedExtension {
     }
 
     override fun int8s() = listOf(this.toInt8())
+    override fun uInt8s(): List<UInt8> = listOf(this)
 
 }

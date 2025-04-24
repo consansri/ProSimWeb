@@ -7,7 +7,7 @@ import cengine.util.integer.UInt32.Companion.toUInt32
 
 sealed interface RvRegT : AsmRegisterT {
 
-    val uint32: UInt32 get() = numericalValue.toUInt32()
+    val uint32: UInt32 get() = address.toUInt32()
 
     enum class IntT(vararg additional: String) : RvRegT {
         ZERO, RA, SP, GP, TP, T0, T1, T2, S0("fp"),
@@ -35,7 +35,7 @@ sealed interface RvRegT : AsmRegisterT {
             }
         }
 
-        override val numericalValue: UInt
+        override val address: UInt
             get() = ordinal.toUInt()
 
         override val recognizable: List<String> = listOf(name.lowercase(), "x$ordinal") + additional
@@ -66,7 +66,7 @@ sealed interface RvRegT : AsmRegisterT {
             }
         }
 
-        override val numericalValue: UInt
+        override val address: UInt
             get() = ordinal.toUInt()
 
         override val recognizable: List<String> = listOf( name.lowercase(), "f$ordinal") + additional
@@ -101,7 +101,7 @@ sealed interface RvRegT : AsmRegisterT {
             }
         }
 
-        override val numericalValue: UInt
+        override val address: UInt
             get() = ordinal.toUInt()
 
         // Generate names like "v0", "v1", ... "v31"
@@ -109,7 +109,7 @@ sealed interface RvRegT : AsmRegisterT {
     }
 
     data object VectorMaskT : RvRegT {
-        override val numericalValue: UInt = 0U
+        override val address: UInt = 0U
         override val recognizable: List<String> = listOf("vm")
 
         /**
@@ -189,7 +189,7 @@ sealed interface RvRegT : AsmRegisterT {
 
             ;
 
-            override val numericalValue: UInt = name.removePrefix("X").toUInt(16)
+            override val address: UInt = name.removePrefix("X").toUInt(16)
 
             override val recognizable: List<String> = listOf(alias, name.lowercase())
         }
@@ -368,7 +368,7 @@ sealed interface RvRegT : AsmRegisterT {
             X7A3("tdata3", "Third Debug/Trace trigger data register"),
             X7A8("mcontext", "Machine-mode context register");
 
-            override val numericalValue: UInt = name.removePrefix("X").toUInt(16)
+            override val address: UInt = name.removePrefix("X").toUInt(16)
 
             override val recognizable: List<String> = listOf(alias, name.lowercase())
         }
@@ -389,7 +389,7 @@ sealed interface RvRegT : AsmRegisterT {
 
             ;
 
-            override val numericalValue: UInt = name.removePrefix("X").toUInt(16)
+            override val address: UInt = name.removePrefix("X").toUInt(16)
 
             override val recognizable: List<String> = listOf(alias, name.lowercase())
         }
@@ -437,7 +437,7 @@ sealed interface RvRegT : AsmRegisterT {
             XC1F("hpmcounter31", "Performance-monitoring counter"),
             ;
 
-            override val numericalValue: UInt = name.removePrefix("X").toUInt(16)
+            override val address: UInt = name.removePrefix("X").toUInt(16)
 
             override val recognizable: List<String> = listOf(alias, name.lowercase())
 
@@ -514,7 +514,7 @@ sealed interface RvRegT : AsmRegisterT {
 
             ;
 
-            override val numericalValue: UInt = name.removePrefix("X").toUInt(16)
+            override val address: UInt = name.removePrefix("X").toUInt(16)
 
             override val recognizable: List<String> = listOf(alias, name.lowercase())
 

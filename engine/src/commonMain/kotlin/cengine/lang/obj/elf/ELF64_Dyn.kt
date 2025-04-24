@@ -1,8 +1,9 @@
 package cengine.lang.obj.elf
 
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
+import cengine.util.buffer.Buffer8
 import cengine.util.integer.Int8
+import cengine.util.integer.UInt8
 
 /**
  * Data class representing the Elf32_Dyn structure in the ELF format.
@@ -16,8 +17,8 @@ data class ELF64_Dyn(
     var d_val: Elf_Xword,
     var d_ptr: Elf64_Addr
 ): Dyn(){
-    override fun build(endianness: Endianness): Array<Int8> {
-        val b = Int8Buffer(endianness)
+    override fun build(endianness: Endianness): Array<UInt8> {
+        val b = Buffer8(endianness)
 
         b.put(d_tag)
         b.put(d_val)

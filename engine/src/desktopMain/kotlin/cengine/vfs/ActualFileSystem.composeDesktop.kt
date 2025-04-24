@@ -2,7 +2,6 @@ package cengine.vfs
 
 import cengine.console.SysOut
 import cengine.vfs.FPath.Companion.toFPath
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 

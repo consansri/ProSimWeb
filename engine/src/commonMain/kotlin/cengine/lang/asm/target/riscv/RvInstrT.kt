@@ -1,6 +1,6 @@
 package cengine.lang.asm.target.riscv
 
-import cengine.lang.asm.AsmParser
+import cengine.lang.asm.AsmTreeParser
 import cengine.lang.asm.gas.AsmBackend
 import cengine.lang.asm.gas.AsmCodeGenerator
 import cengine.lang.asm.psi.AsmInstruction
@@ -24,12 +24,12 @@ sealed interface RvInstrT : AsmInstructionT {
     val paramT: RvParamT
 
     /** Default parsing logic using the specified paramT */
-    override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+    override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
         skipWhitespaceAndComments()
 
         // Use the specific operand parsing logic defined in RvParamT
         with(paramT) {
-            return parse(asmParser)
+            return parse(asmTreeParser)
         }
     }
 
@@ -136,7 +136,7 @@ sealed interface RvInstrT : AsmInstructionT {
             // Evaluate expressions - expect simple integers or constants here
             val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) }
             // Get register numbers
-            val regs = instr.regs.map { it.type.numericalValue.toUInt32() }
+            val regs = instr.regs.map { it.type.address.toUInt32() }
             // --- Generate binary for instructions resolvable in Pass 1 ---
             var binary: UInt32 = UInt32.ZERO
 
@@ -358,7 +358,7 @@ sealed interface RvInstrT : AsmInstructionT {
             val spec = context.spec as? RvSpec ?: throw Exception("Internal error: RISC-V backend requires RvSpec")
 
             try {
-                val regs = instr.regs.map { it.type.numericalValue.toUInt32() }
+                val regs = instr.regs.map { it.type.address.toUInt32() }
                 // Evaluate expressions - label references MUST be resolved here
                 val exprs = instr.exprs.map {
                     integerEvaluator.evaluate(it, context) // Pass 2 context resolves labels
@@ -457,7 +457,7 @@ sealed interface RvInstrT : AsmInstructionT {
             }
 
             // Write the final binary to the reserved location (using Int address)
-            context.section.content.put(binary)
+            context.section.content[context.offsetInSection] = binary
         }
     }
 
@@ -484,7 +484,7 @@ sealed interface RvInstrT : AsmInstructionT {
             if (context.spec != Rv64Spec) throw Exception("Internal error: I64 extension does need $Rv64Spec as context.")
 
             val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) } // Evaluate expressions
-            val regs = instr.regs.map { it.type.numericalValue.toUInt32() } // Get register numbers
+            val regs = instr.regs.map { it.type.address.toUInt32() } // Get register numbers
 
             var binary: UInt32 = UInt32.ZERO
             try {
@@ -592,7 +592,7 @@ sealed interface RvInstrT : AsmInstructionT {
         override val keyWord: String = name.lowercase()
 
         override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass2BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {
-            val regs = instr.regs.map { it.type.numericalValue.toUInt32() }
+            val regs = instr.regs.map { it.type.address.toUInt32() }
             var binary: UInt32 = UInt32.ZERO
             try {
                 val rd = regs[0];
@@ -610,7 +610,7 @@ sealed interface RvInstrT : AsmInstructionT {
             } catch (ae: Exception) {
                 instr.addError("Pass 1 Error: Could not evaluate expression: ${ae.message}") // Should not happen for R-type
             }
-            context.section.content.put(binary)
+            context.section.content[context.offsetInSection] = binary
 
         }
 
@@ -632,7 +632,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
         override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass2BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {
             // Get register numbers
-            val regs = instr.regs.map { it.type.numericalValue.toUInt32() }
+            val regs = instr.regs.map { it.type.address.toUInt32() }
             var binary: UInt32 = UInt32.ZERO
             try {
 
@@ -651,7 +651,7 @@ sealed interface RvInstrT : AsmInstructionT {
             } catch (ae: Exception) {
                 instr.addError("Pass 1 Error: Could not evaluate expression: ${ae.message}")
             }
-            context.section.content.put(binary)
+            context.section.content[context.offsetInSection] = binary
         }
 
         override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass1BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {
@@ -803,7 +803,7 @@ sealed interface RvInstrT : AsmInstructionT {
                 }
 
                 val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) } // Evaluate expressions
-                val regs = instr.regs.map { it.type.numericalValue.toUInt32() } // Get register numbers
+                val regs = instr.regs.map { it.type.address.toUInt32() } // Get register numbers
 
                 // Handle non-deferred pseudo-instructions by expanding them now
                 try {
@@ -984,7 +984,7 @@ sealed interface RvInstrT : AsmInstructionT {
             private fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateRv32LiSequence(
                 imm: IntNumber<*>, rd: UInt32, writer: (UInt32) -> Unit, instr: AsmInstruction? = null,
             ) {
-                if (!imm.fitsInSigned(32)) {
+                if (!imm.fitsInSignedOrUnsigned(32)) {
                     instr?.addError("Immediate $imm exceeds 32 bits for RV32 LI")
                     return
                 }
@@ -1007,7 +1007,7 @@ sealed interface RvInstrT : AsmInstructionT {
             private fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateRv64LiSequence(
                 imm: IntNumber<*>, rd: UInt32, writer: (UInt32) -> Unit, instr: AsmInstruction? = null,
             ) {
-                if (!imm.fitsInSigned(64)) {
+                if (!imm.fitsInSignedOrUnsigned(64)) {
                     instr?.addError("Immediate $imm exceeds 64 bits for RV64 LI")
                     return
                 }
@@ -1172,7 +1172,7 @@ sealed interface RvInstrT : AsmInstructionT {
                 // Handle deferred pseudo-instructions (Branches, Jumps, LA, CALL, TAIL)
                 val instructionAddress = context.currentAddress
                 val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) } // Evaluate expressions
-                val regs = instr.regs.map { it.type.numericalValue.toUInt32() } // Get register numbers
+                val regs = instr.regs.map { it.type.address.toUInt32() } // Get register numbers
 
                 try {
                     when (this@BaseT) {
@@ -1183,7 +1183,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(rs1, RvRegT.IntT.ZERO.uint32, imm, RvConst.FUNCT3_CBRA_BEQ, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(rs1, RvRegT.IntT.ZERO.uint32, imm, RvConst.FUNCT3_CBRA_BEQ, instr)
                         }
 
                         BNEZ -> { // bne rs, x0, label
@@ -1192,7 +1192,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(rs1, RvRegT.IntT.ZERO.uint32, imm, RvConst.FUNCT3_CBRA_BNE, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(rs1, RvRegT.IntT.ZERO.uint32, imm, RvConst.FUNCT3_CBRA_BNE, instr)
                         }
 
                         BLEZ -> { // bge x0, rs, label
@@ -1201,7 +1201,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(RvRegT.IntT.ZERO.uint32, rs1, imm, RvConst.FUNCT3_CBRA_BGE, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(RvRegT.IntT.ZERO.uint32, rs1, imm, RvConst.FUNCT3_CBRA_BGE, instr)
                         }
 
                         BGEZ -> { // bge rs, x0, label
@@ -1210,7 +1210,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(rs1, RvRegT.IntT.ZERO.uint32, imm, RvConst.FUNCT3_CBRA_BGE, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(rs1, RvRegT.IntT.ZERO.uint32, imm, RvConst.FUNCT3_CBRA_BGE, instr)
                         }
 
                         BLTZ -> { // blt rs, x0, label
@@ -1219,7 +1219,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(rs1, RvRegT.IntT.ZERO.uint32, imm, RvConst.FUNCT3_CBRA_BLT, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(rs1, RvRegT.IntT.ZERO.uint32, imm, RvConst.FUNCT3_CBRA_BLT, instr)
                         }
 
                         BGTZ -> { // blt x0, rs, label
@@ -1228,7 +1228,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(RvRegT.IntT.ZERO.uint32, rs1, imm, RvConst.FUNCT3_CBRA_BLT, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(RvRegT.IntT.ZERO.uint32, rs1, imm, RvConst.FUNCT3_CBRA_BLT, instr)
                         }
 
                         // --- Pseudo Branches (Reversed Compare) ---
@@ -1239,7 +1239,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(rs2, rs1, imm, RvConst.FUNCT3_CBRA_BLT, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(rs2, rs1, imm, RvConst.FUNCT3_CBRA_BLT, instr)
                         }
 
                         BLE -> { // bge rs2, rs1, label
@@ -1249,7 +1249,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(rs2, rs1, imm, RvConst.FUNCT3_CBRA_BGE, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(rs2, rs1, imm, RvConst.FUNCT3_CBRA_BGE, instr)
                         }
 
                         BGTU -> { // bltu rs2, rs1, label
@@ -1259,7 +1259,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(rs2, rs1, imm, RvConst.FUNCT3_CBRA_BLTU, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(rs2, rs1, imm, RvConst.FUNCT3_CBRA_BLTU, instr)
                         }
 
                         BLEU -> { // bgeu rs2, rs1, label
@@ -1269,7 +1269,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
                             val imm = RvConst.packImmB(offset.toInt32().toUInt32())
-                            context.section.content.put(generateBranch(rs2, rs1, imm, RvConst.FUNCT3_CBRA_BGEU, instr))
+                            context.section.content[context.offsetInSection] = generateBranch(rs2, rs1, imm, RvConst.FUNCT3_CBRA_BGEU, instr)
                         }
 
                         // --- Pseudo Jumps ---
@@ -1278,7 +1278,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(21) || offset % 2 != BigInt.ZERO) instr.addError("Jump target out of range/misaligned")
                             val imm = RvConst.packImmJ(offset.toInt32().toUInt32())
-                            context.section.content.put(generateJal(UInt32.ZERO, imm, instr))
+                            context.section.content[context.offsetInSection] = generateJal(UInt32.ZERO, imm, instr)
                         }
 
                         JAL -> { // jal x1, label
@@ -1286,7 +1286,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(21) || offset % 2 != BigInt.ZERO) instr.addError("Jump target out of range/misaligned")
                             val imm = RvConst.packImmJ(offset.toInt32().toUInt32())
-                            context.section.content.put(generateJal(RvRegT.IntT.RA.uint32, imm, instr))
+                            context.section.content[context.offsetInSection] = generateJal(RvRegT.IntT.RA.uint32, imm, instr)
                         }
 
                         // --- PC-Relative Addressing / Calls ---
@@ -1295,18 +1295,18 @@ sealed interface RvInstrT : AsmInstructionT {
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             val (imm_u, imm_i) = RvConst.calculateImmUPCRelAndImmI(offset) // Helper to get hi20(adj) and lo12
-                            context.section.content.put(generateAuipc(rd, imm_u, instr))
-                            context.section.content.put(generateAddi(rd, rd, imm_i, instr))
+                            context.section.content[context.offsetInSection] = generateAuipc(rd, imm_u, instr)
+                            context.section.content[context.offsetInSection + 4] = generateAddi(rd, rd, imm_i, instr)
                         }
 
                         CALL -> { // auipc t1, %pcrel_hi(lbl) + jalr ra, t1, %pcrel_lo(lbl)
                             val targetAddr = exprs[0]
-                            val tempReg = RvRegT.IntT.T1.numericalValue.toUInt32() // Use t1 (x6) as temporary
-                            val linkReg = RvRegT.IntT.RA.numericalValue.toUInt32() // Use ra (x1) for return address
+                            val tempReg = RvRegT.IntT.T1.address.toUInt32() // Use t1 (x6) as temporary
+                            val linkReg = RvRegT.IntT.RA.address.toUInt32() // Use ra (x1) for return address
                             val offset = targetAddr - instructionAddress
                             val (imm_u, imm_i) = RvConst.calculateImmUPCRelAndImmI(offset)
-                            context.section.content.put(generateAuipc(tempReg, imm_u, instr))
-                            context.section.content.put(generateJalr(linkReg, tempReg, imm_i, instr))
+                            context.section.content[context.offsetInSection] = generateAuipc(tempReg, imm_u, instr)
+                            context.section.content[context.offsetInSection + 4] = generateJalr(linkReg, tempReg, imm_i, instr)
                         }
 
                         TAIL -> { // auipc t1, %pcrel_hi(lbl) + jalr x0, t1, %pcrel_lo(lbl)
@@ -1315,8 +1315,8 @@ sealed interface RvInstrT : AsmInstructionT {
                             val linkReg = RvRegT.IntT.ZERO.uint32 // No return address saved
                             val offset = targetAddr - instructionAddress
                             val (imm_u, imm_i) = RvConst.calculateImmUPCRelAndImmI(offset)
-                            context.section.content.put(generateAuipc(tempReg, imm_u, instr))
-                            context.section.content.put(generateJalr(linkReg, tempReg, imm_i, instr))
+                            context.section.content[context.offsetInSection] = generateAuipc(tempReg, imm_u, instr)
+                            context.section.content[context.offsetInSection + 4] = generateJalr(linkReg, tempReg, imm_i, instr)
                         }
 
                         // Should have been handled in Pass 1

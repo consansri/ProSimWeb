@@ -27,7 +27,7 @@ fun AsmBinaryProvider.toMif(context: IOContext, addrBitWidth: Int, dataBitWidth:
     }
 
     val widthCount = dataBitWidth / type.BITS
-    val addrShift = log2(widthCount.toFloat()).toBigInt()
+    val addrShift = log2(widthCount.toFloat()).toInt()
 
     return buildString {
         appendLine("-- ${Constants.sign()}")
@@ -41,12 +41,12 @@ fun AsmBinaryProvider.toMif(context: IOContext, addrBitWidth: Int, dataBitWidth:
         appendLine("CONTENT BEGIN")
         appendLine()
         sections.filter { it.value.first.isNotEmpty() }.forEach { (sectionAddr, sectionContent) ->
-
+            appendLine("    -- Section ${sectionAddr.toString(16)}")
             sectionContent.first.chunked(widthCount).chunked(chunkSize).forEachIndexed { chunkIndex, chunk ->
                 val startAddr = sectionAddr.shr(addrShift) + chunkIndex * chunkSize
                 val endAddr = startAddr + chunk.size - 1
-                val addrRange = "[${startAddr.zeroPaddedHex()}..${endAddr.zeroPaddedHex()}]"
-                val content = chunk.map { value -> value.joinToString("") { it.zeroPaddedHex() } }.joinToString(" ") { it }
+                val addrRange = "[${startAddr.toString(16)}..${endAddr.toString(16)}]"
+                val content = chunk.map { value -> value.joinToString("") { it.uPaddedHex() } }.joinToString(" ") { it }
                 appendLine("    $addrRange : $content;")
             }
 

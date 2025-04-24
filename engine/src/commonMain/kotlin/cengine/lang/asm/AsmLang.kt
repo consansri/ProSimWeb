@@ -6,9 +6,9 @@ import cengine.lang.PsiSupport
 import cengine.lang.Runner
 import cengine.lang.asm.features.AsmAnnotator
 import cengine.lang.asm.features.AsmCompleter
-import cengine.lang.asm.features.AsmHighlighter
 import cengine.project.Project
 import cengine.psi.PsiManager
+import cengine.psi.elements.PsiFile
 import cengine.vfs.VFileSystem
 
 class AsmLang(val spec: AsmSpec<*>) : LanguageService() {
@@ -19,9 +19,9 @@ class AsmLang(val spec: AsmSpec<*>) : LanguageService() {
     override val psiSupport: PsiSupport = PsiSupport(
         spec.createLexerSet(),
         spec.createParser(),
+        PsiFile,
         AsmCompleter(spec),
         AsmAnnotator(spec),
-        AsmHighlighter(spec),
     )
 
     override fun init(project: Project) {

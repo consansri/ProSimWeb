@@ -6,7 +6,8 @@ import cengine.psi.core.PsiElement
 import cengine.psi.elements.PsiFile
 import cengine.psi.style.CodeStyle
 import cengine.psi.visitor.PsiElementVisitor
-import cengine.util.integer.IntNumber.Companion.overlaps
+import cengine.util.integer.IntNumberUtils.overlaps
+
 
 /**
  * Interface to mark a [PsiElement] as having a defined highlighting color.

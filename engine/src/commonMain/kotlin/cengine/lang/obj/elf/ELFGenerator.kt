@@ -3,9 +3,9 @@ package cengine.lang.obj.elf
 import cengine.lang.asm.gas.AsmCodeGenerator
 import cengine.lang.obj.elf.Shdr.Companion.SHF_ALLOC
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
-import cengine.util.buffer.Int8Buffer.Companion.toASCIIByteArray
-import cengine.util.buffer.Int8Buffer.Companion.toASCIIString
+import cengine.util.buffer.Buffer8
+import cengine.util.buffer.Buffer8.Companion.toASCIIByteArray
+import cengine.util.buffer.Buffer8.Companion.toASCIIString
 import cengine.util.integer.BigInt
 import cengine.util.integer.Int8.Companion.toInt8
 import cengine.util.integer.UInt16
@@ -14,6 +14,7 @@ import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
 import cengine.util.integer.UInt64
 import cengine.util.integer.UInt64.Companion.toUInt64
+import cengine.util.integer.UInt8
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
 abstract class ELFGenerator(
@@ -75,7 +76,7 @@ abstract class ELFGenerator(
     }
 
     override fun writeFile(): ByteArray {
-        val buffer = Int8Buffer(endianness)
+        val buffer = Buffer8(endianness)
 
         sections.add(SymTab(strTab))
         sections.add(strTab)
@@ -158,7 +159,7 @@ abstract class ELFGenerator(
         return ehdr
     }
 
-    private fun Int8Buffer.writeELFHeader(ehdr: Ehdr, phoff: UInt64, shoff: UInt64) {
+    private fun Buffer8.writeELFHeader(ehdr: Ehdr, phoff: UInt64, shoff: UInt64) {
         when (ehdr) {
             is ELF32_Ehdr -> {
                 if (segments.isNotEmpty()) ehdr.e_phoff = phoff.toUInt32()
@@ -174,7 +175,7 @@ abstract class ELFGenerator(
         putAll(ehdr.build(endianness))
     }
 
-    private fun Int8Buffer.writePHDRs(fileIndexOfDataStart: UInt64) {
+    private fun Buffer8.writePHDRs(fileIndexOfDataStart: UInt64) {
         // Serialize the program header (Phdr) into the byte buffer
         segments.forEach { segment ->
             // Set FileOffset of Segment Start
@@ -187,7 +188,7 @@ abstract class ELFGenerator(
         }
     }
 
-    private fun Int8Buffer.writeSections(shdr: List<Pair<ELFSection, Shdr>>) {
+    private fun Buffer8.writeSections(shdr: List<Pair<ELFSection, Shdr>>) {
         shdr.forEach { (section, header) ->
             val start = size
             putAll(section.content)
@@ -203,7 +204,7 @@ abstract class ELFGenerator(
         }
     }
 
-    private fun Int8Buffer.writeSHDRs(shdrs: List<Shdr>) {
+    private fun Buffer8.writeSHDRs(shdrs: List<Shdr>) {
         shdrs.forEachIndexed { index, shdr ->
             putAll(shdr.build(endianness))
         }
@@ -274,7 +275,7 @@ abstract class ELFGenerator(
         entSize = Sym.size(ei_class).toUInt64()
     ) {
         override val name = ".symtab"
-        override val content: Int8Buffer = Int8Buffer(endianness).apply {
+        override val content: Buffer8 = Buffer8(endianness).apply {
             symbols.forEach {
                 putAll(it.toSym().build(endianness))
             }
@@ -290,14 +291,14 @@ abstract class ELFGenerator(
         Shdr.SHT_STRTAB
     ) {
         override val name = ".shstrtab"
-        override val content: Int8Buffer = Int8Buffer(endianness)
+        override val content: Buffer8 = Buffer8(endianness)
         override val reservations: MutableList<InstrReservation> = mutableListOf()
         private val stringIndexMap = mutableMapOf<String, UInt32>()
 
         fun addString(str: String): UInt32 {
             return stringIndexMap.getOrPut(str) {
                 val currentOffset = content.size
-                content.putAll(str.toASCIIByteArray() + (0).toInt8())
+                content.putAll(str.toASCIIByteArray() + UInt8.ZERO)
                 currentOffset.toUInt32()
             }
         }
@@ -319,14 +320,14 @@ abstract class ELFGenerator(
     ) {
 
         override val name = ".strtab"
-        override val content: Int8Buffer = Int8Buffer(endianness)
+        override val content: Buffer8 = Buffer8(endianness)
         override val reservations: MutableList<InstrReservation> = mutableListOf()
         private val stringIndexMap = mutableMapOf<String, UInt32>()
 
         fun addString(str: String): UInt32 {
             return stringIndexMap.getOrPut(str) {
                 val currentOffset = content.size
-                content.putAll(str.toASCIIByteArray() + 0.toInt8())
+                content.putAll(str.toASCIIByteArray() + UInt8.ZERO)
                 currentOffset.toUInt32()
             }
         }
@@ -366,7 +367,7 @@ abstract class ELFGenerator(
             }
         }
 
-        override val content: Int8Buffer = Int8Buffer(endianness)
+        override val content: Buffer8 = Buffer8(endianness)
         override val reservations: MutableList<InstrReservation> = mutableListOf()
 
         override fun toString(): String = print()

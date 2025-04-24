@@ -2,6 +2,7 @@ package cengine.lang.mif
 
 import cengine.console.ConsoleContext
 import cengine.lang.Runner
+import cengine.lang.vhdl.toVHDL
 import cengine.project.Project
 import cengine.vfs.FPath
 import cengine.vfs.FPath.Companion.toFPath
@@ -132,6 +133,11 @@ object MifRunner : Runner<MifLang>("mifc") {
             return false
         }
 
+        if (psiFile !is MifPsiFile || !psiFile.valid) {
+            error("${file.name} is not a valid MIF file")
+            return false
+        }
+
         if (target == null) {
             error("invalid target (targets: ${Target.entries})")
             usage("-t <target>")
@@ -145,10 +151,8 @@ object MifRunner : Runner<MifLang>("mifc") {
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
 
-                TODO()
-
-                /*val fileContent = psiFile.toVHDL(this, filename, constname, dataWidth, chunkSize)
-                outputFile.setAsUTF8String(fileContent)*/
+                val fileContent = psiFile.toVHDL(this, filename, constname, dataWidth, chunkSize)
+                outputFile.setAsUTF8String(fileContent)
                 log("generated ${outputFile.path}")
             }
         }

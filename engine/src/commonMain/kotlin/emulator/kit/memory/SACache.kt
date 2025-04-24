@@ -1,10 +1,11 @@
 package emulator.kit.memory
 
 import cengine.util.integer.IntNumber
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 import kotlin.math.log
 import kotlin.math.roundToInt
 
-class SACache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
+class SACache<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(
     backingMemory: Memory<ADDR, INSTANCE>,
     rowBits: Int,
     offsetBits: Int,

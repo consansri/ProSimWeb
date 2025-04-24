@@ -133,7 +133,7 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
     private fun readComment(): PsiToken? {
         val start = position
         when {
-            set.commentSl.isNext() -> {
+            set.commentSl != null && set.commentSl.isNext() -> {
                 advance(set.commentSl.length)
                 while (peek() != null && peek() != '\n') {
                     advance()
@@ -141,21 +141,21 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
                 // Don't consume the newline, let the main loop handle it
             }
 
-            set.commentSlAlt.isNext() -> {
-                advance(set.commentSlAlt!!.length) // null check handled by isNext
+            set.commentSlAlt != null && set.commentSlAlt.isNext() -> {
+                advance(set.commentSlAlt.length) // null check handled by isNext
                 while (peek() != null && peek() != '\n') {
                     advance()
                 }
                 // Don't consume the newline
             }
 
-            set.commentMlStart.isNext() -> {
-                advance(set.commentMlStart.length)
-                while (peek() != null && !set.commentMlEnd.isNext()) {
+            set.commentMl != null && set.commentMl.first.isNext() -> {
+                advance(set.commentMl.first.length)
+                while (peek() != null && !set.commentMl.second.isNext()) {
                     advance()
                 }
-                if (set.commentMlEnd.isNext()) {
-                    advance(set.commentMlEnd.length)
+                if (set.commentMl.second.isNext()) {
+                    advance(set.commentMl.second.length)
                 } // else: unterminated comment, error handled implicitly by EOF or next token
             }
 
@@ -173,7 +173,7 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
 
         when {
             // Hexadecimal (Check before decimal because of '0')
-            set.litIntHexPrefix.isNotEmpty() && set.litIntHexPrefix.isNext() -> {
+            set.litIntHexPrefix != null && set.litIntHexPrefix.isNotEmpty() && set.litIntHexPrefix.isNext() -> {
                 advance(set.litIntHexPrefix.length)
                 val afterPrefix = position
 
@@ -184,8 +184,19 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
                 return PsiToken(source.substring(afterPrefix, position), PsiTokenType.LITERAL.INTEGER.Hex, start..<position)
             }
 
+            set.litIntOctPrefix != null && set.litIntOctPrefix.isNotEmpty() && set.litIntOctPrefix.isNext() -> {
+                advance(set.litIntOctPrefix.length)
+
+                val afterPrefix = position
+                if (!peek().isOctDigit()) {
+                    return PsiToken("Invalid oct literal: missing digits after ${set.litIntOctPrefix}", PsiTokenType.ERROR, start..<position)
+                }
+                while (peek().isOctDigit()) advance()
+                return PsiToken(source.substring(afterPrefix, position), PsiTokenType.LITERAL.INTEGER.Oct, start..<position)
+            }
+
             // Binary (Check before decimal because of '0')
-            set.litIntBinPrefix.isNotEmpty() && set.litIntBinPrefix.isNext() -> {
+            set.litIntBinPrefix != null && set.litIntBinPrefix.isNotEmpty() && set.litIntBinPrefix.isNext() -> {
                 advance(set.litIntBinPrefix.length)
 
                 val afterPrefix = position
@@ -225,7 +236,7 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
                 }
 
                 // Check for float suffix (only if it was potentially a float/double)
-                if (isDouble && set.litFloatPostfix.isNotEmpty() && set.litFloatPostfix.isNext()) {
+                if (isDouble && set.litFloatPostfix != null && set.litFloatPostfix.isNotEmpty() && set.litFloatPostfix.isNext()) {
                     advance(set.litFloatPostfix.length)
                     isFloat = true
                     isDouble = false
@@ -300,17 +311,17 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
             } else {
                 // Error: invalid escape sequence
                 // Consume until postfix or error
-                while (peek() != null && !set.litCharPostfix.isNext() && peek() != '\n') {
+                while (peek() != null && !set.litChar?.second.isNext() && peek() != '\n') {
                     advance()
                 }
-                if (set.litCharPostfix.isNext()) advance() // Consume postfix if present
+                if (set.litChar?.second.isNext()) advance() // Consume postfix if present
                 return PsiToken("Invalid escape sequence in char literal", PsiTokenType.ERROR, start..<position)
             }
         } else {
             // Regular character
             charValue = advance()
             if (charValue != null) {
-                if (charValue == set.litCharPostfix && set.litCharEscape == null) {
+                if (charValue == set.litChar?.second && set.litCharEscape == null) {
                     // Empty char literal '' and no escape defined -> error
                     return PsiToken("Empty character literal", PsiTokenType.ERROR, start..<position)
                 }
@@ -324,13 +335,13 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
         }
 
         // Check for postfix
-        if (set.litCharPostfix != null) {
-            if (set.litCharPostfix.isNext()) {
+        if (set.litChar != null) {
+            if (set.litChar.second.isNext()) {
                 advance() // Consume postfix
             } else {
                 // Error: postfix missing
                 // backtrack? No, just report error with current span
-                return PsiToken("Character literal missing postfix '${set.litCharPostfix}'", PsiTokenType.ERROR, start..<position)
+                return PsiToken("Character literal missing postfix '${set.litChar.second}'", PsiTokenType.ERROR, start..<position)
             }
         }
 
@@ -356,11 +367,11 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
             when {
                 peek() == null -> break // EOF
                 !multiLine && peek() == '\n' && !multiLine -> break
-                !multiLine && set.litStringSlPostfix.isNext() -> break
-                multiLine && set.litStringMlPostfix.isNext() -> break
+                !multiLine && set.litStringSl?.second.isNext() -> break
+                multiLine && set.litStringMl != null && set.litStringMl.second.isNext() -> break
 
                 set.litStringInterpSingle.isNext() -> break
-                set.litStringInterpBlockStart.isNext() -> break
+                set.litStringInterpBlock != null && set.litStringInterpBlock.first.isNext() -> break
                 set.litStringEscape.isNext() -> break
                 else -> advance() // Consume character
             }
@@ -377,12 +388,12 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
         val tokens = mutableListOf<PsiToken>()
         val stringStartPos = position
 
-        if (multiLine && set.litStringMlPrefix != null) {
-            advance(set.litStringMlPrefix.length)
-            tokens.add(PsiToken(set.litStringMlPrefix, PsiTokenType.LITERAL.STRING.MlStart, stringStartPos..<position))
-        } else {
-            advance(set.litStringSlPrefix.length)
-            tokens.add(PsiToken(set.litStringSlPrefix, PsiTokenType.LITERAL.STRING.SlStart, stringStartPos..<position))
+        if (multiLine && set.litStringMl != null) {
+            advance(set.litStringMl.first.length)
+            tokens.add(PsiToken(set.litStringMl.first, PsiTokenType.LITERAL.STRING.MlStart, stringStartPos..<position))
+        } else if(set.litStringSl != null) {
+            advance(set.litStringSl.first.length)
+            tokens.add(PsiToken(set.litStringSl.first, PsiTokenType.LITERAL.STRING.SlStart, stringStartPos..<position))
         }
 
         while (true) {
@@ -395,19 +406,19 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
                 }
 
                 !multiLine && peek() == '\n' -> {
-                    tokens.add(PsiToken("Missing terminating ${set.litStringSlPostfix}", PsiTokenType.ERROR, loopStartPos..<position))
+                    tokens.add(PsiToken("Missing terminating ${set.litStringSl?.second}", PsiTokenType.ERROR, loopStartPos..<position))
                     break
                 }
 
-                multiLine && set.litStringMlPostfix != null && set.litStringMlPostfix.isNext() -> {
-                    advance(set.litStringMlPostfix.length)
-                    tokens.add(PsiToken(set.litStringMlPostfix, PsiTokenType.LITERAL.STRING.MlEnd, loopStartPos..<position))
+                multiLine && set.litStringMl != null && set.litStringMl.second.isNext() -> {
+                    advance(set.litStringMl.second.length)
+                    tokens.add(PsiToken(set.litStringMl.second, PsiTokenType.LITERAL.STRING.MlEnd, loopStartPos..<position))
                     break // End of string
                 }
 
-                !multiLine && set.litStringSlPostfix.isNext() -> {
-                    advance(set.litStringSlPostfix.length)
-                    tokens.add(PsiToken(set.litStringSlPostfix, PsiTokenType.LITERAL.STRING.SlEnd, loopStartPos..<position))
+                !multiLine && set.litStringSl != null && set.litStringSl.second.isNext() -> {
+                    advance(set.litStringSl.second.length)
+                    tokens.add(PsiToken(set.litStringSl.second, PsiTokenType.LITERAL.STRING.SlEnd, loopStartPos..<position))
                     break // End of string
                 }
 
@@ -422,18 +433,18 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
                     }
                 }
 
-                set.litStringInterpBlockStart != null && set.litStringInterpBlockStart.isNext() -> {
-                    advance(set.litStringInterpBlockStart.length)
-                    tokens.add(PsiToken(set.litStringInterpBlockStart, PsiTokenType.LITERAL.STRING.INTERP.BlockStart, loopStartPos..<position))
+                set.litStringInterpBlock != null && set.litStringInterpBlock.first.isNext() -> {
+                    advance(set.litStringInterpBlock.first.length)
+                    tokens.add(PsiToken(set.litStringInterpBlock.first, PsiTokenType.LITERAL.STRING.INTERP.BlockStart, loopStartPos..<position))
 
                     tokens.addAll(tokenize(inString = true, stopAtStringEnd = true)) // Recursive call
 
-                    if (set.litStringInterpBlockEnd.isNext()) {
+                    if (set.litStringInterpBlock.second.isNext()) {
                         val blockEndStart = position
-                        advance(set.litStringInterpBlockEnd!!.length) // *** FIX 4: Advance past BlockEnd ***
-                        tokens.add(PsiToken(set.litStringInterpBlockEnd, PsiTokenType.LITERAL.STRING.INTERP.BlockEnd, blockEndStart..<position))
+                        advance(set.litStringInterpBlock.second.length) // *** FIX 4: Advance past BlockEnd ***
+                        tokens.add(PsiToken(set.litStringInterpBlock.second, PsiTokenType.LITERAL.STRING.INTERP.BlockEnd, blockEndStart..<position))
                     } else {
-                        tokens.add(PsiToken("Unterminated string interpolation block, expected '${set.litStringInterpBlockEnd}'", PsiTokenType.ERROR, position..<position))
+                        tokens.add(PsiToken("Unterminated string interpolation block, expected '${set.litStringInterpBlock.second}'", PsiTokenType.ERROR, position..<position))
                     }
                 }
 
@@ -513,7 +524,7 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
 
             // --- Check for interpolation end (only if stopAtStringEnd is true) ---
             // Check if we are existing an interpolation block like ${...} or just }
-            if (inString && stopAtStringEnd && curlyBraceDepth == 0 && set.litStringInterpBlockEnd.isNext()) {
+            if (inString && stopAtStringEnd && curlyBraceDepth == 0 && set.litStringInterpBlock != null && set.litStringInterpBlock.second.isNext()) {
                 // Don't consume '}', let the caller handle it by finding it via isNext()
                 break@mainLoop
             }
@@ -552,12 +563,12 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
 
                 next == '}' -> {
                     // We only decrement depth if inside interpolation AND it's the closing curly
-                    // Note: If litStringInterpBlockEnd is '}', the break@mainLoop above handles exit.
+                    // Note: If litStringInterpBlock.second is '}', the break@mainLoop above handles exit.
                     // This handles nested curlies *within* an interpolation.
                     if (inString && curlyBraceDepth > 0) curlyBraceDepth-- // Track for interpolation exit
                     advance(); tokens.add(PsiToken("}", PsiTokenType.PUNCTUATION, tokenStartPos..<position))
                     // Check again immediately if this closing brace ends the interpolation block
-                    if (inString && stopAtStringEnd && curlyBraceDepth == 0 && set.litStringInterpBlockEnd == "}") {
+                    if (inString && stopAtStringEnd && curlyBraceDepth == 0 && set.litStringInterpBlock != null && set.litStringInterpBlock.second == "}") {
                         break@mainLoop // Exit loop, let caller handle BlockEnd
                     }
                 }
@@ -592,20 +603,21 @@ class PsiLexer(private val source: String, private val set: PsiLexerSet, private
                 // --- Literals ---
 
                 // String literals
-                set.litStringMlPrefix != null && set.litStringMlPrefix.isNext() -> tokens.addAll(readString(true))
-                set.litStringSlPrefix.isNext() -> tokens.addAll(readString(false)) // Check SL after ML
+                set.litStringMl != null && set.litStringMl.first.isNext() -> tokens.addAll(readString(true))
+                set.litStringSl?.first.isNext() -> tokens.addAll(readString(false)) // Check SL after ML
 
                 // Char literal
-                set.litCharPrefix.isNext() -> tokens.add(readChar())
+                set.litChar?.first.isNext() -> tokens.add(readChar())
 
                 // Number literals (Handles Hex, Bin, Dec, Float, Double prefixes)
-                next.isDigit() || (next == '.' && peekAheadIsDigit()) -> tokens.add(readNumber()) // Handle starting with '.' like .5
+                set.readNumberLiterals && next.isDigit() || (next == '.' && peekAheadIsDigit()) -> tokens.add(readNumber()) // Handle starting with '.' like .5
                 // Hex/Bin checks also needed if prefixes don't start with digit/dot (e.g., #...)
-                set.litIntHexPrefix.isNotEmpty() && set.litIntHexPrefix.isNext() -> tokens.add(readNumber())
-                set.litIntBinPrefix.isNotEmpty() && set.litIntBinPrefix.isNext() -> tokens.add(readNumber())
+                set.readNumberLiterals && set.litIntHexPrefix != null && set.litIntHexPrefix.isNotEmpty() && set.litIntHexPrefix.isNext() -> tokens.add(readNumber())
+                set.readNumberLiterals && set.litIntBinPrefix != null && set.litIntBinPrefix.isNotEmpty() && set.litIntBinPrefix.isNext() -> tokens.add(readNumber())
+                set.readNumberLiterals && set.litIntOctPrefix != null && set.litIntOctPrefix.isNotEmpty() && set.litIntOctPrefix.isNext() -> tokens.add(readNumber())
 
                 // Keywords and Identifiers (Must come after checking specific literal keywords)
-                next.isAlpha() -> tokens.add(readIdentifierOrKeyword())
+                next.isAlphaNumeric() -> tokens.add(readIdentifierOrKeyword())
 
                 // --- Error / Unknown Token ---
                 else -> {

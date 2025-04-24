@@ -3,12 +3,14 @@ package cengine.lang.asm.target.ikrrisc2
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.asm.target.ikrrisc2.IkrR2Disassembler.InstrType.*
 import cengine.util.integer.BigInt
+import cengine.util.integer.FixedSizeIntNumber
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 
 object IkrR2Disassembler : AsmDisassembler() {
-    override fun disassemble(startAddr: BigInt, buffer: List<IntNumber<*>>): List<Decoded> {
+    override fun disassemble(startAddr: UnsignedFixedSizeIntNumber<*>, buffer: List<FixedSizeIntNumber<*>>): List<Decoded> {
         var currIndex = 0
         var currInstr: IKRR2InstrProvider
         val decoded = mutableListOf<Decoded>()
@@ -105,7 +107,7 @@ object IkrR2Disassembler : AsmDisassembler() {
             else -> null
         }
 
-        override fun decode(segmentAddr: BigInt, offset: Int): Decoded {
+        override fun decode(segmentAddr: UnsignedFixedSizeIntNumber<*>, offset: Int): Decoded {
             val hexPrefix = IkrR2Spec.litIntHexPrefix
             return when (type) {
                 ADD, ADDX, SUB, SUBX, AND, OR, XOR, CMPU, CMPS -> Decoded(offset, binary, "${type.lc5Name} $rcReg := $rbReg, $raReg")
@@ -118,13 +120,13 @@ object IkrR2Disassembler : AsmDisassembler() {
                 BEQ, BNE, BLT, BGT, BLE, BGE -> {
                     val offset18 = disp18.signExtend(18)
                     val target = segmentAddr.toUInt32() + offset.toUInt32() + offset18
-                    Decoded(offset, binary, "${type.lc5Name} $rcReg, $hexPrefix${disp18.toString(16)}", target.toBigInt())
+                    Decoded(offset, binary, "${type.lc5Name} $rcReg, $hexPrefix${disp18.toString(16)}", target)
                 }
 
                 BRA, BSR -> {
                     val offset26 = disp26.signExtend(26)
                     val target = segmentAddr.toUInt32() + offset.toUInt32() + offset26
-                    Decoded(offset, binary, "${type.lc5Name} $hexPrefix${disp26.toString(16)}", target.toBigInt())
+                    Decoded(offset, binary, "${type.lc5Name} $hexPrefix${disp26.toString(16)}", target)
                 }
 
                 JMP, JSR -> Decoded(offset, binary, "${type.lc5Name} $rbReg")

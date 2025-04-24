@@ -4,10 +4,15 @@ import androidx.compose.runtime.mutableStateListOf
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt16
 import cengine.util.integer.UInt16.Companion.toUInt16
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import emulator.kit.register.FieldProvider
 import emulator.kit.register.RegFile
 
 class IKRMiniBaseRegs : RegFile<UInt16> {
+
+    override val type: UnsignedFixedSizeIntNumberT<UInt16>
+        get() = UInt16
+
     override val name: String = "base"
     override val indentificators: List<FieldProvider> = listOf(
         object : FieldProvider {
@@ -25,9 +30,9 @@ class IKRMiniBaseRegs : RegFile<UInt16> {
     )
     override val regValues = mutableStateListOf(*Array(2) { UInt16.ZERO })
 
-    override fun set(index: Int, value: IntNumber<*>) {
+    override fun set(index: Int, value: UInt16) {
         require(index in 0..<2) { "index $index must be in 0..2" }
-        regValues[index] = value.toUInt16()
+        regValues[index] = value
     }
 
     operator fun set(index: Int, value: UShort) {

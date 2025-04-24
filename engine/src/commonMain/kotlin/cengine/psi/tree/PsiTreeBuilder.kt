@@ -83,7 +83,7 @@ class PsiTreeBuilder(
         }
 
         io.debug { "Building PsiFile (isValid=$isValid) with ${allFileChildren.size} children." }
-        val psiFile = PsiFile(PsiFile.PsiFileT(file, isValid), *allFileChildren.toTypedArray())
+        val psiFile = result.psiFileType.builder(this, file, isValid, allFileChildren.toTypedArray())
 
         // Dump the built tree
         io.debug {
@@ -151,7 +151,6 @@ class PsiTreeBuilder(
         }
         return looseTokens
     }
-
 
     /**
      * Recursively builds a PsiElement node for the given marker information.

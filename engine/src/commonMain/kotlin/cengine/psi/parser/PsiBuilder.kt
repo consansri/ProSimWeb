@@ -3,13 +3,15 @@ package cengine.psi.parser
 import cengine.console.IOContext
 import cengine.console.SysOut
 import cengine.psi.core.PsiElementTypeDef
+import cengine.psi.core.PsiFileTypeDef
+import cengine.psi.elements.PsiFile
 import cengine.psi.lexer.PsiToken
 import cengine.psi.lexer.PsiTokenType
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
 
-class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
+class PsiBuilder(initialTokens: List<PsiToken>, val psiFileType: PsiFileTypeDef = PsiFile, val io: IOContext = SysOut) {
 
     // Use a unique ID generator for markers
     @OptIn(ExperimentalAtomicApi::class)
@@ -55,10 +57,10 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
     }
 
     /** Advances the pointer *past* any whitespace or comment tokens. */
-    fun skipWhitespaceAndComments() {
+    fun skipWhitespaceAndComments(skipLinebreaks: Boolean = false) {
         while (!isAtEnd()) {
             val type = getTokenType()
-            if (type is PsiTokenType.WHITESPACE || type is PsiTokenType.COMMENT) {
+            if (type is PsiTokenType.WHITESPACE || type is PsiTokenType.COMMENT || (skipLinebreaks && type == PsiTokenType.LINEBREAK)) {
                 advance()
             } else {
                 break
@@ -70,7 +72,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
 
     fun error(message: String) {
         val errorTokenIndex = current // Capture the index *before* potential peeking/advancing
-        val range = peek()?.range ?: tokens.getOrNull(errorTokenIndex -1)?.range ?: (0..0) // Adjusted range finding slightly
+        val range = peek()?.range ?: tokens.getOrNull(errorTokenIndex - 1)?.range ?: (0..0) // Adjusted range finding slightly
         // Ensure tokenIndex is valid
         val validTokenIndex = if (errorTokenIndex < tokens.size) errorTokenIndex else tokens.size - 1
 
@@ -81,56 +83,32 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
      * Consumes the next token if it matches the expected type, otherwise reports an error.
      * NOTE: This does NOT skip whitespace/comments. The parser should call skipWhitespaceAndComments() first if needed.
      */
-    fun expect(expected: PsiTokenType, errorMessage: String? = null): Boolean {
-        if (getTokenType() == expected) {
-            advance()
-            return true
-        } else {
-            error(errorMessage ?: "Expected ${expected.typeName} but found ${getTokenType()?.typeName}")
-            return false
-        }
+    fun expect(expected: PsiTokenType, errorMessage: String? = null): Boolean = currentIs(expected).apply {
+        if (this) advance() else error(errorMessage ?: "Expected ${expected.typeName} but found ${getTokenType()?.typeName}")
+    }
+
+    /**
+     * Consumes the next token if it matches the expected [PsiTokenType]s, otherwise reports an error.
+     * NOTE: This does NOT skip whitespace/comments.
+     */
+    fun expect(vararg expectedTypes: PsiTokenType, errorMessage: String? = null): Boolean = currentIs(*expectedTypes).apply {
+        if (this) advance() else error(errorMessage ?: "Expected one of ${expectedTypes.joinToString(" or ") { it.typeName }} but found ${getTokenType()?.typeName}")
     }
 
     /**
      * Consumes the next token if it matches the expected value (as String), otherwise reports an error.
      * NOTE: This does NOT skip whitespace/comments.
      */
-    fun expect(expectedValue: String, errorMessage: String? = null): Boolean {
-        if (getTokenText() == expectedValue) {
-            advance()
-            return true
-        } else {
-            error(errorMessage ?: "Expected '$expectedValue' but found '${getTokenText()}'")
-            return false
-        }
+    fun expect(expectedValue: String, errorMessage: String? = null, ignoreCase: Boolean = false): Boolean = currentIs(expectedValue, ignoreCase = ignoreCase).apply {
+        if (this) advance() else error(errorMessage ?: "Expected '$expectedValue' but found '${getTokenText()}'")
     }
 
     /**
      * Consumes the next token if it matches the expected [PsiTokenType]s, otherwise reports an error.
      * NOTE: This does NOT skip whitespace/comments.
      */
-    fun expect(vararg expectedTypes: PsiTokenType, errorMessage: String? = null): Boolean {
-        if (expectedTypes.contains(getTokenType())) {
-            advance()
-            return true
-        } else {
-            error(errorMessage ?: "Expected '${expectedTypes.joinToString(" or ", limit = 5) { it.typeName }}' but found '${getTokenType()?.typeName}'")
-            return false
-        }
-    }
-
-    /**
-     * Consumes the next token if it matches the expected [PsiTokenType]s, otherwise reports an error.
-     * NOTE: This does NOT skip whitespace/comments.
-     */
-    fun expect(vararg expectedValues: String, errorMessage: String? = null): Boolean {
-        if (expectedValues.contains(getTokenText())) {
-            advance()
-            return true
-        } else {
-            error(errorMessage ?: "Expected '${expectedValues.joinToString(" or ", limit = 5) { it }}' but found '${getTokenType()?.typeName}'")
-            return false
-        }
+    fun expect(vararg expectedValues: String, errorMessage: String? = null): Boolean = currentIs(*expectedValues).apply {
+        if (this) advance() else error(errorMessage ?: "Expected one of ${expectedValues.joinToString(" or ") { "'$it'" }} but found '${getTokenText()}'.")
     }
 
     // --- Marker API ---
@@ -141,7 +119,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
      */
     inner class Marker(
         internal val id: Long,
-        internal val start: Int
+        internal val start: Int,
     ) {
 
         // These flags prevent misuse but shouldn't be part of the primary user interaction model.
@@ -180,7 +158,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
             // Add the new marker to the active stack. Adding to the end is simpler
             // and sufficient, as the tree builder relies on `precededMarkerId`.
             activeMarkers.add(newMarker)
-            io.debug{"Marker ${newMarker.id} Precedes Marker ${this.id} (Started at ${newMarker.start})"}
+            io.debug { "Marker ${newMarker.id} Precedes Marker ${this.id} (Started at ${newMarker.start})" }
             return newMarker
         }
 
@@ -215,7 +193,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
             )
             completedMarkers.add(info)
 
-            io.debug{"Marker $id Done: ${type.typeName} [${this.start}..$end). Precedes: ${this.precededMarkerId ?: "None"}"}
+            io.debug { "Marker $id Done: ${type.typeName} [${this.start}..$end). Precedes: ${this.precededMarkerId ?: "None"}" }
         }
 
         /**
@@ -236,7 +214,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
             activeMarkers.remove(this)
             this.explicitlyDropped = true
 
-            io.debug{"Marker $id Dropped: Covered tokens from $start up to ${this@PsiBuilder.current}"}
+            io.debug { "Marker $id Dropped: Covered tokens from $start up to ${this@PsiBuilder.current}" }
             // Dropped markers are usually not added to results, unless needed for complex error recovery.
         }
 
@@ -259,11 +237,11 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
 
             val ownIndexInActive = activeMarkers.indexOf(this)
             if (ownIndexInActive == -1) {
-                io.debug{"Marker $id rollback requested, but it's no longer active. Assuming already handled by outer rollback."}
+                io.debug { "Marker $id rollback requested, but it's no longer active. Assuming already handled by outer rollback." }
                 return // Already handled or invalid state
             }
 
-            io.debug{"Rolling back to Marker $id (start index: $start)"}
+            io.debug { "Rolling back to Marker $id (start index: $start)" }
 
             // 1. Reset Pointer
             this@PsiBuilder.current = this.start
@@ -275,7 +253,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
                     val markerToRemove = activeMarkers.removeAt(i)
                     // Mark as dropped conceptually, even though they are just removed here
                     markerToRemove.explicitlyDropped = true // Mark state for safety, though object is inaccessible
-                    io.debug{"  - Removing rolled-back active marker ${markerToRemove.id} (started at ${markerToRemove.start})"}
+                    io.debug { "  - Removing rolled-back active marker ${markerToRemove.id} (started at ${markerToRemove.start})" }
                 }
             }
 
@@ -283,7 +261,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
             completedMarkers.removeAll { completedInfo ->
                 val shouldRemove = completedInfo.start >= this.start // Remove if started within rolled-back range
                 if (shouldRemove) {
-                    io.debug{"  - Removing rolled-back completed marker ${completedInfo.id} (${completedInfo.elementType.typeName} at [${completedInfo.start}..${completedInfo.end}))"}
+                    io.debug { "  - Removing rolled-back completed marker ${completedInfo.id} (${completedInfo.elementType.typeName} at [${completedInfo.start}..${completedInfo.end}))" }
                 }
                 shouldRemove
             }
@@ -293,7 +271,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
                 val errorStartOffset = errorPair.startTokenIndex // Get start offset of error range
                 val shouldRemove = errorStartOffset >= this.start // Remove if error occurred within rolled-back range
                 if (shouldRemove) {
-                    io.debug{"  - Removing rolled-back error: '${errorPair.message}' at ${errorPair.startTokenIndex}"}
+                    io.debug { "  - Removing rolled-back error: '${errorPair.message}' at ${errorPair.startTokenIndex}" }
                 }
                 shouldRemove
             }
@@ -303,7 +281,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
 
     // Internal helper to create marker instance
     @OptIn(ExperimentalAtomicApi::class)
-    private fun createMarkerObject(startIndex: Int): Marker{
+    private fun createMarkerObject(startIndex: Int): Marker {
         return Marker(markerIdCounter.incrementAndFetch(), startIndex)
     }
 
@@ -316,7 +294,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
     fun mark(startIndex: Int = current): Marker {
         val marker = createMarkerObject(startIndex)
         activeMarkers.add(marker)
-        io.debug{"Marker ${marker.id} Started at $startIndex"}
+        io.debug { "Marker ${marker.id} Started at $startIndex" }
         return marker
     }
 
@@ -324,12 +302,12 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
 
     fun currentIs(type: PsiTokenType) = getTokenType() == type
     fun currentIs(vararg types: PsiTokenType) = types.contains(getTokenType())
-    fun currentIs(value: String) = getTokenText() == value
+    fun currentIs(value: String, ignoreCase: Boolean = false) = getTokenText()?.equals(value, ignoreCase) == true
     fun currentIs(vararg values: String) = values.contains(getTokenText())
 
     fun advanceIf(type: PsiTokenType): Boolean = currentIs(type).apply { if (this) advance() }
     fun advanceIf(vararg types: PsiTokenType): Boolean = currentIs(*types).apply { if (this) advance() }
-    fun advanceIf(value: String): Boolean = currentIs(value).apply { if (this) advance() }
+    fun advanceIf(value: String, ignoreCase: Boolean = false): Boolean = currentIs(value, ignoreCase).apply { if (this) advance() }
     fun advanceIf(vararg values: String) = currentIs(*values).apply { if (this) advance() }
 
     // --- Result ---
@@ -350,6 +328,7 @@ class PsiBuilder(initialTokens: List<PsiToken>, val io: IOContext = SysOut) {
         }
 
         return ParseResult(
+            psiFileType = psiFileType,
             tokens = this.tokens, // Pass the original token list
             completedMarkers = this.completedMarkers.toList(), // Return immutable copies
             errors = this.errors.toList()

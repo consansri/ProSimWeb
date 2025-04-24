@@ -20,6 +20,7 @@ import cengine.editor.highlighting.HighlightProvider
 import cengine.editor.highlighting.HighlightProvider.Companion.spanStyles
 import cengine.lang.asm.AsmDisassembler
 import cengine.util.integer.BigInt
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.Architecture
 import ui.uilib.label.CLabel
 import uilib.UIState
@@ -34,7 +35,7 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
     val icons = UIState.Icon.value
 
     var decodedRenderingValues by remember { mutableStateOf<List<Pair<AsmDisassembler.DecodedSegment, AsmDisassembler.Decoded>>>(emptyList()) }
-    var decodedRenderingLabels by remember { mutableStateOf<Map<BigInt, AsmDisassembler.Label>>(emptyMap()) }
+    var decodedRenderingLabels by remember { mutableStateOf<Map<UnsignedFixedSizeIntNumber<*>, AsmDisassembler.Label>>(emptyMap()) }
 
     if (disassembler == null || architecture == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -115,7 +116,7 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
                         }
                         Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
                         Box(Modifier.weight(0.75f), contentAlignment = Alignment.Center) {
-                            Text(decoded.data.zeroPaddedHex(), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = if (pcPointsOn) theme.COLOR_GREEN else theme.COLOR_FG_0)
+                            Text(decoded.data.uPaddedHex(), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = if (pcPointsOn) theme.COLOR_GREEN else theme.COLOR_FG_0)
                         }
                         Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
                         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
@@ -132,7 +133,7 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
                         }
                         Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            val targetName = decodedRenderingLabels[decoded.target]?.name ?: decoded.target?.zeroPaddedHex() ?: ""
+                            val targetName = decodedRenderingLabels[decoded.target]?.name ?: decoded.target?.toString(16) ?: ""
                             pointsOn?.let {
                                 Icon(icons.chevronRight, "src", Modifier.size(scale.SIZE_CONTROL_SMALL).background(it.third, RoundedCornerShape(scale.SIZE_CORNER_RADIUS)), tint = theme.COLOR_BG_0)
                             }

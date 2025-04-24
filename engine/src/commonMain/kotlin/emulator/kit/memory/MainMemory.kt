@@ -3,7 +3,9 @@ package emulator.kit.memory
 import androidx.compose.runtime.mutableStateMapOf
 import cengine.util.Endianness
 import cengine.util.integer.IntNumber
-import cengine.util.integer.IntNumberStatic
+import cengine.util.integer.IntNumberT
+import cengine.util.integer.UnsignedFixedSizeIntNumber
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 
 /**
  * Represents the main memory of a system.
@@ -26,10 +28,10 @@ import cengine.util.integer.IntNumberStatic
  * @param endianness The endianess of the memory.
  * @param name The name of the memory.
  */
-class MainMemory<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
+class MainMemory<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(
     endianness: Endianness,
-    addrType: IntNumberStatic<ADDR>,
-    instanceType: IntNumberStatic<INSTANCE>,
+    addrType: UnsignedFixedSizeIntNumberT<ADDR>,
+    instanceType: UnsignedFixedSizeIntNumberT<INSTANCE>,
     override val name: String = "Memory",
 ) : Memory<ADDR, INSTANCE>(
     addrType, instanceType
@@ -42,7 +44,7 @@ class MainMemory<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
         this.endianness = endianness
     }
 
-    override fun globalEndianess(): Endianness = endianness
+    override fun globalEndianness(): Endianness = endianness
 
     override fun loadInstance(address: ADDR, tracker: AccessTracker): INSTANCE {
         return memList[address] ?: init

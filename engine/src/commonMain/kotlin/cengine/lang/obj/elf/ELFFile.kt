@@ -2,13 +2,14 @@ package cengine.lang.obj.elf
 
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.obj.ObjPsiFile
-import cengine.util.integer.BigInt
 import cengine.util.integer.Int16.Companion.toInt16
-import cengine.util.integer.Int8.Companion.toInt8
 import cengine.util.integer.IntNumber
+import cengine.util.integer.IntNumberT
+import cengine.util.integer.UInt8
 import cengine.util.integer.UInt8.Companion.toUInt8
+import cengine.util.integer.UnsignedFixedSizeIntNumber
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import cengine.vfs.VirtualFile
-import emulator.kit.memory.Memory
 
 sealed class ELFFile(file: VirtualFile) : ObjPsiFile(file, true) {
 
@@ -28,37 +29,15 @@ sealed class ELFFile(file: VirtualFile) : ObjPsiFile(file, true) {
     val shstrtab: Shdr? = sectionHeaders.getOrNull(ehdr.e_shstrndx.toInt())
     val strTab = sectionHeaders.firstOrNull { getSectionName(it) == ".strtab" }
 
-    override fun initialize(memory: Memory<*, *>) {
-        for (phdr in programHeaders) {
+    override val wordType: UnsignedFixedSizeIntNumberT<UInt8> = UInt8
 
-            val startAddr = when (phdr) {
-                is ELF32_Phdr -> phdr.p_vaddr.toBigInt()
-                is ELF64_Phdr -> phdr.p_vaddr.toBigInt()
-            }
-
-            val startOffset = when (phdr) {
-                is ELF32_Phdr -> phdr.p_offset.toInt()
-                is ELF64_Phdr -> phdr.p_offset.toInt()
-            }
-
-            val size = when (phdr) {
-                is ELF32_Phdr -> phdr.p_filesz.toInt()
-                is ELF64_Phdr -> phdr.p_filesz.toInt()
-            }
-
-            bytes.copyOfRange(startOffset, startOffset + size).forEachIndexed { index, byte ->
-                memory.storeEndianAware(startAddr + index, byte.toInt8())
-            }
-        }
+    override fun entry(): UnsignedFixedSizeIntNumber<*> = when (ehdr) {
+        is ELF32_Ehdr -> addrType.to(ehdr.e_entry.toBigInt())
+        is ELF64_Ehdr -> addrType.to(ehdr.e_entry.toBigInt())
     }
 
-    override fun entry(): IntNumber<*> = when(ehdr){
-        is ELF32_Ehdr -> ehdr.e_entry
-        is ELF64_Ehdr -> ehdr.e_entry
-    }
-
-    override fun contents(): Map<BigInt, Pair<List<IntNumber<*>>, List<AsmDisassembler.Label>>> {
-        val contents = mutableMapOf<BigInt, Pair<List<IntNumber<*>>, List<AsmDisassembler.Label>>>()
+    override fun contents(): Map<UnsignedFixedSizeIntNumber<*>, Pair<List<UInt8>, List<AsmDisassembler.Label>>> {
+        val contents = mutableMapOf<UnsignedFixedSizeIntNumber<*>, Pair<List<UInt8>, List<AsmDisassembler.Label>>>()
 
         for (group in segmentToSectionGroup.filterIsInstance<Segment>()) {
             val phdr = group.phdr
@@ -111,7 +90,7 @@ sealed class ELFFile(file: VirtualFile) : ObjPsiFile(file, true) {
                 byte.toUByte().toUInt8()
             }
 
-            contents[startAddr] = segmentBytes to labels
+            contents[addrType.to(startAddr)] = segmentBytes to labels
         }
 
         return contents

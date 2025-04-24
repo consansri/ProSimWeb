@@ -11,6 +11,7 @@ import cengine.lang.asm.target.ikrrisc2.IkrR2Disassembler.InstrType.*
 import cengine.util.Endianness
 import cengine.util.integer.Int32.Companion.toInt32
 import cengine.util.integer.UInt32
+import cengine.util.integer.UInt32.Companion.toUInt32
 import emulator.archs.ikrrisc2.IKRR2BaseRegs
 import emulator.kit.ArchConfig
 import emulator.kit.MicroSetup
@@ -88,14 +89,14 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
             CMPU -> {
                 val comparison = baseRegs[decoded.rb].toUInt().compareTo(baseRegs[decoded.ra].toUInt())
 
-                baseRegs[decoded.rc] = comparison.toInt32()
+                baseRegs[decoded.rc] = comparison.toUInt32()
                 pc += 1
             }
 
             CMPS -> {
                 val comparison = baseRegs[decoded.rb].toInt().compareTo(baseRegs[decoded.ra].toInt())
 
-                baseRegs[decoded.rc] = comparison.toInt32()
+                baseRegs[decoded.rc] = comparison.toUInt32()
                 pc += 1
             }
 
@@ -103,7 +104,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
                 val imm16 = decoded.imm16
                 val comparison = baseRegs[decoded.rb].compareTo(imm16)
 
-                baseRegs[decoded.rc] = comparison.toInt32()
+                baseRegs[decoded.rc] = comparison.toUInt32()
                 pc += 1
             }
 
@@ -111,7 +112,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
                 val imm16 = decoded.imm16.toInt32().signExtend(16)
                 val comparison = baseRegs[decoded.rb].toInt32().compareTo(imm16)
 
-                baseRegs[decoded.rc] = comparison.toInt32()
+                baseRegs[decoded.rc] = comparison.toUInt32()
                 pc += 1
             }
 
@@ -176,14 +177,14 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
             ASL -> {
                 val result = baseRegs[decoded.rb].toInt32() shl 1
 
-                baseRegs[decoded.rc] = result
+                baseRegs[decoded.rc] = result.toUInt32()
                 pc += 1
             }
 
             ASR -> {
                 val result = baseRegs[decoded.rb].toInt32() shr 1
 
-                baseRegs[decoded.rc] = result
+                baseRegs[decoded.rc] = result.toUInt32()
                 pc += 1
             }
 
@@ -198,12 +199,12 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
             }
 
             EXTB -> {
-                baseRegs[decoded.rc] = baseRegs[decoded.rb].toInt8().toInt32()
+                baseRegs[decoded.rc] = baseRegs[decoded.rb].toInt8().toInt32().toUInt32()
                 pc += 1
             }
 
             EXTH -> {
-                baseRegs[decoded.rc] = baseRegs[decoded.rb].toInt16().toInt32()
+                baseRegs[decoded.rc] = baseRegs[decoded.rb].toInt16().toInt32().toUInt32()
                 pc += 1
             }
 

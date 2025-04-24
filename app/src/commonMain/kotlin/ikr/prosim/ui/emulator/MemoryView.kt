@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import cengine.util.integer.IntNumber
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.Architecture
 import emulator.kit.MicroSetup
 import emulator.kit.memory.*
@@ -39,7 +40,7 @@ fun MemView(arch: Architecture<*, *>) {
 }
 
 @Composable
-fun MemoryView(memory: Memory<*, *>, pc: IntNumber<*>) {
+fun MemoryView(memory: Memory<*, *>, pc: UnsignedFixedSizeIntNumber<*>) {
     when (memory) {
         is SACache -> SACacheView(memory, pc)
         is DMCache -> DMCacheView(memory, pc)
@@ -49,7 +50,7 @@ fun MemoryView(memory: Memory<*, *>, pc: IntNumber<*>) {
 }
 
 @Composable
-fun MainMemoryView(memory: MainMemory<*, *>, pc: IntNumber<*>) {
+fun MainMemoryView(memory: MainMemory<*, *>, pc: UnsignedFixedSizeIntNumber<*>) {
 
     val theme = UIState.Theme.value
     val scale = UIState.Scale.value
@@ -60,7 +61,7 @@ fun MainMemoryView(memory: MainMemory<*, *>, pc: IntNumber<*>) {
 
     val entrysInRow = 32 / fillValue.byteCount
     val offsetBits = log2(entrysInRow.toFloat()).roundToInt()
-    val offsetMask = IntNumber.bitMask(offsetBits)
+    val offsetMask = pc.type.createBitMask(offsetBits)
 
     Column {
         Row(
@@ -106,7 +107,7 @@ fun MainMemoryView(memory: MainMemory<*, *>, pc: IntNumber<*>) {
                 val ascii = remember {
                     (0..<entrysInRow).joinToString("") { offset ->
                         val char = instances.firstOrNull {
-                            (it.first and offsetMask).toInt() == offset
+                            (it.first and offsetMask.toInt()).toInt() == offset
                         }?.second?.toInt()
 
                         when (char) {
@@ -128,7 +129,7 @@ fun MainMemoryView(memory: MainMemory<*, *>, pc: IntNumber<*>) {
                     Row(Modifier.weight(0.5f)) {
                         for (i in 0..<entrysInRow) {
                             val instance = instances.firstOrNull {
-                                val instanceIndex = (it.first and offsetMask).toInt()
+                                val instanceIndex = (it.first and offsetMask.toInt()).toInt()
                                 instanceIndex == i
                             }
 
@@ -137,14 +138,14 @@ fun MainMemoryView(memory: MainMemory<*, *>, pc: IntNumber<*>) {
                                     modifier = Modifier.weight(1f),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(instance.second.zeroPaddedHex(), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = if (instance.first == pc) theme.COLOR_GREEN else theme.COLOR_FG_0)
+                                    Text(instance.second.uPaddedHex(), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = if (instance.first == pc) theme.COLOR_GREEN else theme.COLOR_FG_0)
                                 }
                             } else {
                                 Box(
                                     modifier = Modifier.weight(1f),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(fillValue.zeroPaddedHex(), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = theme.COLOR_FG_1)
+                                    Text(fillValue.uPaddedHex(), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = theme.COLOR_FG_1)
                                 }
                             }
                         }
@@ -305,7 +306,7 @@ fun DMCacheView(memory: DMCache<*, *>, pc: IntNumber<*>) {
                                         val addr = memory.addrFor(row.rowIndex, block.tag, index)
                                         Box(Modifier.weight(1f)) {
                                             Text(
-                                                cacheInstance.zeroPaddedHex(),
+                                                cacheInstance.uPaddedHex(),
                                                 Modifier.fillMaxWidth(),
                                                 fontFamily = codeStyle.fontFamily,
                                                 fontSize = codeStyle.fontSize,
@@ -410,7 +411,7 @@ fun FACacheView(memory: FACache<*, *>, pc: IntNumber<*>) {
                                 val addr = memory.addrFor(row.rowIndex, block.tag, index)
                                 Box(Modifier.weight(1f)) {
                                     Text(
-                                        cacheInstance.zeroPaddedHex(),
+                                        cacheInstance.uPaddedHex(),
                                         Modifier.fillMaxWidth(),
                                         fontFamily = codeStyle.fontFamily,
                                         fontSize = codeStyle.fontSize,
@@ -509,7 +510,7 @@ fun SACacheView(memory: SACache<*, *>, pc: IntNumber<*>) {
                                         val addr = memory.addrFor(row.rowIndex, block.tag, index)
                                         Box(Modifier.weight(1f)) {
                                             Text(
-                                                cacheInstance.zeroPaddedHex(),
+                                                cacheInstance.uPaddedHex(),
                                                 Modifier.fillMaxWidth(),
                                                 fontFamily = codeStyle.fontFamily,
                                                 fontSize = codeStyle.fontSize,

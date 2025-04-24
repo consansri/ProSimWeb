@@ -2,6 +2,7 @@ package cengine.util.buffer
 
 import cengine.util.Endianness
 import cengine.util.integer.*
+import cengine.util.integer.BigInt.Companion.toBigInt
 
 /**
  * Base class for mutable buffers holding elements of type [T] (a subtype of [IntNumber]).
@@ -24,10 +25,10 @@ import cengine.util.integer.*
  */
 // Note: Made non-abstract as the core logic can now be generalized.
 // You could make it abstract again if subclasses need to override toArray() or other specifics.
-abstract class Buffer<T : IntNumber<T>>(
+abstract class Buffer<T : UnsignedFixedSizeIntNumber<*>>(
     // T constrained to IntNumber<T>
     endianness: Endianness,
-    val type: IntNumberStatic<T>,
+    val type: UnsignedFixedSizeIntNumberT<T>,
 ) : Collection<T> { // Implement MutableList for full List API + mutations
 
     var endianness: Endianness = endianness
@@ -40,9 +41,9 @@ abstract class Buffer<T : IntNumber<T>>(
      * Merges a list of `T` elements into a larger number `R`.
      * Requires `targetType.BYTES` to be a multiple of `type.BYTES`.
      */
-    private fun <R : IntNumber<*>> mergePartsTo(
+    private fun <R : UnsignedFixedSizeIntNumber<R>> mergePartsTo(
         parts: List<T>,
-        targetType: IntNumberStatic<R>,
+        targetType: UnsignedFixedSizeIntNumberT<R>,
     ): R {
         if (parts.isEmpty()) {
             // Return zero of the target type if parts list is empty
@@ -55,23 +56,19 @@ abstract class Buffer<T : IntNumber<T>>(
             throw IllegalArgumentException("Incorrect number of parts (${parts.size}) provided to merge into target type ${targetType::class.simpleName} (expected ${targetType.BYTES / type.BYTES}).")
         }
 
-        // Use BigInteger for arbitrary-size intermediate calculations
-        var combined = BigInt.ZERO
-        val partShift = type.BITS
+        var combined: R = targetType.ZERO
+        val partShift: R = targetType.of(type.BITS)
 
         // Adjust iteration order based on buffer's endianness
         val effectiveParts = if (endianness == Endianness.LITTLE) parts.reversed() else parts
 
         for (part in effectiveParts) {
-            combined = combined.shl(partShift)
-            // Convert part to BigInt, ensuring it's treated unsigned during merge
-            // Or directly handle BigInt/Int128 cases
-            val partAsBigInt = part.toBigInt()
-            combined = combined.or(partAsBigInt)
+            combined = combined shl partShift
+            val partAsTargetType = targetType.to(part)
+            combined = combined or partAsTargetType
         }
 
-        // Convert the final BigInt result to the desired target type R
-        return targetType.to(combined)
+        return combined
     }
 
     /**
@@ -79,7 +76,7 @@ abstract class Buffer<T : IntNumber<T>>(
      * Relies on `type.split()`. Handles endianness by reversing the list if needed.
      * Assumes `type.split()` returns parts in big-endian order (most significant first).
      */
-    private fun splitValue(value: IntNumber<*>): List<T> {
+    private fun splitValue(value: UnsignedFixedSizeIntNumber<*>): List<T> {
         if (value.byteCount % type.BYTES != 0) {
             throw IllegalArgumentException("Value byte count (${value.byteCount}) must be a multiple of buffer element byte count (${type.BYTES}) for splitting.")
         }
@@ -100,7 +97,7 @@ abstract class Buffer<T : IntNumber<T>>(
      * @return The value at the index, converted to type R.
      * @throws IndexOutOfBoundsException if the required indices are out of range.
      */
-    operator fun <R : IntNumber<*>> get(index: Int, targetType: IntNumberStatic<R>): R {
+    operator fun <R : UnsignedFixedSizeIntNumber<R>> get(index: Int, targetType: UnsignedFixedSizeIntNumberT<R>): R {
         if (index < 0) throw IndexOutOfBoundsException("Index cannot be negative: $index")
 
         if (targetType.BYTES <= type.BYTES) {
@@ -128,7 +125,7 @@ abstract class Buffer<T : IntNumber<T>>(
      * @param value The IntNumber value to add.
      * @return `true` (conform to MutableCollection.add).
      */
-    fun put(value: IntNumber<*>): Boolean {
+    fun put(value: UnsignedFixedSizeIntNumber<*>): Boolean {
         if (value.byteCount <= type.BYTES) {
             // Smaller or equal size: Convert to T and add single element
             data.add(type.to(value))
@@ -140,7 +137,9 @@ abstract class Buffer<T : IntNumber<T>>(
         return true
     }
 
-    operator fun plusAssign(value: IntNumber<*>) {
+    fun put(value: SignedFixedSizeIntNumber<*>): Boolean = put(value.toUnsigned())
+
+    operator fun plusAssign(value: UnsignedFixedSizeIntNumber<*>) {
         put(value)
     }
 
@@ -153,7 +152,7 @@ abstract class Buffer<T : IntNumber<T>>(
      * @param value The IntNumber value to set.
      * @throws IndexOutOfBoundsException if the required indices are out of range.
      */
-    operator fun set(index: Int, value: IntNumber<*>) {
+    operator fun set(index: Int, value: UnsignedFixedSizeIntNumber<*>) {
         if (index < 0) throw IndexOutOfBoundsException("Index cannot be negative: $index")
 
         if (value.byteCount <= type.BYTES) {
@@ -190,7 +189,7 @@ abstract class Buffer<T : IntNumber<T>>(
             throw UnsupportedOperationException("putBytes is only directly supported for Int8Buffer or UInt8Buffer.")
         }
         // Option 2: Assume T=Int8/UInt8 equivalent behavior (potentially slow/complex)
-        bytes.forEach { put(Int8(it)) } // Add byte by byte, letting 'put' handle conversion to T
+        bytes.forEach { put(UInt8(it.toUByte())) } // Add byte by byte, letting 'put' handle conversion to T
     }
 
     operator fun plusAssign(bytes: ByteArray) {
@@ -215,7 +214,7 @@ abstract class Buffer<T : IntNumber<T>>(
             // Needs careful thought based on T's size if we generalize beyond Int8/UInt8.
             throw IndexOutOfBoundsException("Setting bytes would exceed buffer size.")
         }
-        bytes.forEachIndexed { i, byte -> set(index + i, Int8(byte)) } // Set byte by byte
+        bytes.forEachIndexed { i, byte -> set(index + i, UInt8(byte.toUByte())) } // Set byte by byte
     }
 
     // --- MutableList<T> Implementation ---

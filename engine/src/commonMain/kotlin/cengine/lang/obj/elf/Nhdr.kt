@@ -1,8 +1,9 @@
 package cengine.lang.obj.elf
 
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
+import cengine.util.buffer.Buffer8
 import cengine.util.integer.Int8
+import cengine.util.integer.UInt8
 
 /**
  * Note Information
@@ -58,8 +59,8 @@ data class Nhdr(
 
     override fun byteSize(): Int = 12
 
-    override fun build(endianness: Endianness): Array<Int8> {
-        val b = Int8Buffer(endianness)
+    override fun build(endianness: Endianness): Array<UInt8> {
+        val b = Buffer8(endianness)
 
         b.put(n_namesz)
         b.put(n_descsz)

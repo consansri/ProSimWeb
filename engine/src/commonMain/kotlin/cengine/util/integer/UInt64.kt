@@ -2,9 +2,9 @@ package cengine.util.integer
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
-class UInt64(override val value: ULong) : IntNumber<UInt64>, UnsignedExtension {
+class UInt64(override val value: ULong) : UnsignedFixedSizeIntNumber<UInt64> {
 
-    companion object: IntNumberStatic<UInt64> {
+    companion object: UnsignedFixedSizeIntNumberT<UInt64> {
 
         override val BITS: Int = 64
         override val BYTES: Int = 8
@@ -20,7 +20,7 @@ class UInt64(override val value: ULong) : IntNumber<UInt64>, UnsignedExtension {
         fun fromUInt32(value1: UInt32, value0: UInt32): UInt64 = (value1.toUInt64() shl 32) or value0.toUInt64()
 
         override fun to(number: IntNumber<*>): UInt64 = number.toUInt64()
-        override fun split(number: IntNumber<*>): List<UInt64> = number.uInt64s()
+        override fun split(number: FixedSizeIntNumber<*>): List<UInt64> = number.uInt64s()
         override fun of(value: Int): UInt64 = UInt64(value.toUInt().toULong())
         override fun parse(string: String, radix: Int): UInt64 = UInt64(string.toULong(radix))
 
@@ -36,7 +36,7 @@ class UInt64(override val value: ULong) : IntNumber<UInt64>, UnsignedExtension {
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<UInt64>
+    override val type: FixedSizeIntNumberT<UInt64>
         get() = UInt64
 
     override fun plus(other: UInt64): UInt64 = UInt64(value + other.value)
@@ -45,8 +45,6 @@ class UInt64(override val value: ULong) : IntNumber<UInt64>, UnsignedExtension {
     override fun div(other: UInt64): UInt64 = UInt64(value / other.value)
     override fun rem(other: UInt64): UInt64 = UInt64(value % other.value)
 
-    @Deprecated("Can't negotiate unsigned value!", ReplaceWith("toInt64().unaryMinus().toUInt64()"))
-    override fun unaryMinus(): UInt64 = throw Exception("Can't negotiate unsigned value!")
     override fun inc(): UInt64 = UInt64(value.inc())
     override fun dec(): UInt64 = UInt64(value.dec())
 
@@ -114,8 +112,7 @@ class UInt64(override val value: ULong) : IntNumber<UInt64>, UnsignedExtension {
     override fun toUInt64(): UInt64 = this
     override fun toUInt128(): UInt128 = UInt128(BigInteger.fromULong(value))
 
-    @Deprecated("Unnecessary", ReplaceWith("this"))
-    override fun toUnsigned(): UInt64 = this
+    override fun toSigned(): Int64 = toInt64()
 
     override fun toString(radix: Int): String = value.toString(radix)
     override fun toString(): String = value.toString()
@@ -130,5 +127,6 @@ class UInt64(override val value: ULong) : IntNumber<UInt64>, UnsignedExtension {
     override fun hashCode(): Int = value.hashCode()
 
     override fun int8s() = (this shr bitWidth / 2).toUInt32().int8s() + this.toUInt32().int8s()
+    override fun uInt8s(): List<UInt8> = (this shr bitWidth / 2).toUInt32().uInt8s() + this.toUInt32().uInt8s()
 
 }

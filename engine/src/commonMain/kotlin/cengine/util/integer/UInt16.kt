@@ -2,12 +2,12 @@ package cengine.util.integer
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
-class UInt16(override val value: UShort) : IntNumber<UInt16>, UnsignedExtension {
+class UInt16(override val value: UShort) : UnsignedFixedSizeIntNumber<UInt16> {
 
     constructor(value: UInt) : this(value.toUShort())
     constructor(value: ULong) : this(value.toUShort())
 
-    companion object: IntNumberStatic<UInt16> {
+    companion object: UnsignedFixedSizeIntNumberT<UInt16> {
 
         override val BITS: Int = 16
         override val BYTES: Int = 2
@@ -22,7 +22,7 @@ class UInt16(override val value: UShort) : IntNumber<UInt16>, UnsignedExtension 
         fun fromUInt8(byte1: UInt8, byte0: UInt8): UInt16 = (byte1.toUInt16() shl 8) or byte0.toUInt16()
 
         override fun to(number: IntNumber<*>): UInt16 = number.toUInt16()
-        override fun split(number: IntNumber<*>): List<UInt16> = number.uInt16s()
+        override fun split(number: FixedSizeIntNumber<*>): List<UInt16> = number.uInt16s()
         override fun parse(string: String, radix: Int): UInt16 = UInt16(string.toUShort(radix))
         override fun of(value: Int): UInt16 = UInt16(value.toUInt().toUShort())
 
@@ -38,7 +38,7 @@ class UInt16(override val value: UShort) : IntNumber<UInt16>, UnsignedExtension 
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<UInt16>
+    override val type: FixedSizeIntNumberT<UInt16>
         get() = UInt16
 
     override fun plus(other: UInt16): UInt16 = UInt16(value + other.value)
@@ -47,8 +47,6 @@ class UInt16(override val value: UShort) : IntNumber<UInt16>, UnsignedExtension 
     override fun div(other: UInt16): UInt16 = UInt16(value / other.value)
     override fun rem(other: UInt16): UInt16 = UInt16(value % other.value)
 
-    @Deprecated("Can't negotiate unsigned value!", ReplaceWith("toInt16().unaryMinus().toUInt16()"))
-    override fun unaryMinus(): UInt16 = throw Exception("Can't negotiate unsigned value!")
     override fun inc(): UInt16 = UInt16(value.inc())
     override fun dec(): UInt16 = UInt16(value.dec())
 
@@ -117,8 +115,7 @@ class UInt16(override val value: UShort) : IntNumber<UInt16>, UnsignedExtension 
     override fun toUInt64(): UInt64 = UInt64(value.toULong())
     override fun toUInt128(): UInt128 = UInt128(BigInteger.fromUShort(value))
 
-    @Deprecated("Unnecessary", ReplaceWith("this"))
-    override fun toUnsigned(): UInt16 = this
+    override fun toSigned(): Int16 = toInt16()
 
     override fun toString(radix: Int): String = value.toString(radix)
     override fun toString(): String = value.toString()
@@ -135,4 +132,5 @@ class UInt16(override val value: UShort) : IntNumber<UInt16>, UnsignedExtension 
     }
 
     override fun int8s() = (this shr bitWidth / 2).toUInt8().int8s() + this.toUInt8().int8s()
+    override fun uInt8s(): List<UInt8> = (this shr bitWidth / 2).toUInt8().uInt8s() + this.toUInt8().uInt8s()
 }

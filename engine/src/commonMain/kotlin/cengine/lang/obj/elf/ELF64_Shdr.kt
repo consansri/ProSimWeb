@@ -1,10 +1,11 @@
 package cengine.lang.obj.elf
 
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
+import cengine.util.buffer.Buffer8
 import cengine.util.integer.Int8
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt64
+import cengine.util.integer.UInt8
 
 data class ELF64_Shdr(
     override var sh_name: Elf_Word = UInt32.ZERO,
@@ -29,8 +30,8 @@ data class ELF64_Shdr(
         }
     }
 
-    override fun build(endianness: Endianness): Array<Int8> {
-        val b = Int8Buffer(endianness)
+    override fun build(endianness: Endianness): Array<UInt8> {
+        val b = Buffer8(endianness)
 
         b.put(sh_name)
         b.put(sh_type)

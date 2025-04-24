@@ -57,11 +57,11 @@ open class IntegerExpressionEvaluator<C>(
                     left % right
                 }
 
-                OpType.SHIFT_LEFT -> left shl right.toIntOrThrow(opToken, "Left shift amount")
-                OpType.SHIFT_RIGHT -> left shr right.toIntOrThrow(opToken, "Right shift amount")
-                OpType.BITWISE_AND -> left and right
-                OpType.BITWISE_OR -> left or right
-                OpType.BITWISE_XOR -> left xor right
+                OpType.SHIFT_LEFT -> BigInt(left.value shl right.toIntOrThrow(opToken, "Left shift amount"))
+                OpType.SHIFT_RIGHT -> BigInt(left.value shr right.toIntOrThrow(opToken, "Right shift amount"))
+                OpType.BITWISE_AND -> BigInt(left.value and right.value)
+                OpType.BITWISE_OR -> BigInt(left.value or right.value)
+                OpType.BITWISE_XOR -> BigInt(left.value xor right.value)
                 OpType.EQUAL -> if (left == right) BigInt.ONE else BigInt.ZERO
                 OpType.NOT_EQUAL -> if (left != right) BigInt.ONE else BigInt.ZERO
                 OpType.LESS_THAN -> if (left < right) BigInt.ONE else BigInt.ZERO
@@ -84,7 +84,7 @@ open class IntegerExpressionEvaluator<C>(
         return when (op) {
             OpType.UNARY_PLUS -> operand
             OpType.UNARY_MINUS -> -operand
-            OpType.BITWISE_NOT -> operand.inv()
+            OpType.BITWISE_NOT -> BigInt(operand.value.not())
             OpType.LOGICAL_NOT -> if (operand == BigInt.ZERO) BigInt.ONE else BigInt.ZERO // Logical NOT
             else -> throw EvaluationException("Unsupported prefix operator for Integer: '$op'", opToken)
         }

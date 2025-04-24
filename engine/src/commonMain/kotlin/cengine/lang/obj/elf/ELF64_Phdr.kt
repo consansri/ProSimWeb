@@ -1,9 +1,10 @@
 package cengine.lang.obj.elf
 
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
+import cengine.util.buffer.Buffer8
 import cengine.util.integer.Int8
 import cengine.util.integer.UInt64
+import cengine.util.integer.UInt8
 
 /**
  * ELF Program Header
@@ -54,8 +55,8 @@ data class ELF64_Phdr(
     var p_memsz: Elf_Xword = UInt64.ZERO,
     var p_align: Elf_Xword
 ) : Phdr() {
-    override fun build(endianness: Endianness): Array<Int8> {
-        val b = Int8Buffer(endianness)
+    override fun build(endianness: Endianness): Array<UInt8> {
+        val b = Buffer8(endianness)
 
         b.put(p_type)
         b.put(p_flags)

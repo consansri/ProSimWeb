@@ -3,13 +3,16 @@ package cengine.lang.asm.target.ikrmini
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.asm.target.ikrmini.IkrMiniDisassembler.InstrType.*
 import cengine.util.integer.BigInt
+import cengine.util.integer.FixedSizeIntNumber
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt16
 import cengine.util.integer.UInt16.Companion.toUInt16
+import cengine.util.integer.UInt32
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 
 object IkrMiniDisassembler : AsmDisassembler() {
 
-    override fun disassemble(startAddr: BigInt, buffer: List<IntNumber<*>>): List<Decoded> {
+    override fun disassemble(startAddr: UnsignedFixedSizeIntNumber<*>, buffer: List<FixedSizeIntNumber<*>>): List<Decoded> {
         var currIndex = 0
         var currInstr: IKRMiniInstrProvider
         val decoded = mutableListOf<Decoded>()
@@ -35,13 +38,13 @@ object IkrMiniDisassembler : AsmDisassembler() {
 
         val type: InstrType? = InstrType.entries.firstOrNull { it.opcode == first }
 
-        val data: BigInt = if (type?.length == 2) {
-            (first.toBigInt() shl 16) or second.toBigInt()
+        val data: UInt32 = if (type?.length == 2) {
+            (first.toUInt32() shl 16) or second.toUInt32()
         } else {
-            first.toBigInt()
+            first.toUInt32()
         }
 
-        override fun decode(segmentAddr: BigInt, offset: Int): Decoded {
+        override fun decode(segmentAddr: UnsignedFixedSizeIntNumber<*>, offset: Int): Decoded {
             return when (type) {
                 LOAD_IMM, AND_IMM, OR_IMM, XOR_IMM, ADD_IMM, ADDC_IMM, SUB_IMM, SUBC_IMM, RCL_IMM, RCR_IMM,
                     -> Decoded(offset, data, "${type.displayName} #${second.toShort()}")

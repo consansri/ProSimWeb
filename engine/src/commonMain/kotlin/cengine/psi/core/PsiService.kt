@@ -6,7 +6,7 @@ import cengine.psi.feature.Highlightable
 import cengine.psi.feature.PsiReference
 import cengine.psi.style.CodeStyle
 import cengine.psi.visitor.PsiElementVisitor
-import cengine.util.integer.IntNumber.Companion.overlaps
+import cengine.util.integer.IntNumberUtils.overlaps
 
 /**
  * Service for managing PSI-related operations

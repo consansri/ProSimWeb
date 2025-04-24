@@ -54,7 +54,7 @@ abstract class LanguageService {
             val psiSupport = psiSupport ?: return PsiFile(file, false)
 
             val lexer = PsiLexer(file.getAsUTF8String(), psiSupport.lexerSet)
-            val psiBuilder = PsiBuilder(lexer.tokenize(), ioContext)
+            val psiBuilder = PsiBuilder(lexer.tokenize(), psiSupport.psiFileType, ioContext)
             with(psiSupport.psiTreeParser) {
                 psiBuilder.parseFileContent()
             }

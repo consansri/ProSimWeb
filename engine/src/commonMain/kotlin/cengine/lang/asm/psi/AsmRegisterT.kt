@@ -7,7 +7,7 @@ import cengine.psi.lexer.PsiTokenType
 interface AsmRegisterT : PsiStatement.PsiStatementTypeDef {
     val displayName: String get() = recognizable.first()
     val recognizable: List<String>
-    val numericalValue: UInt
+    val address: UInt
 
     override val typeName: String
         get() = displayName

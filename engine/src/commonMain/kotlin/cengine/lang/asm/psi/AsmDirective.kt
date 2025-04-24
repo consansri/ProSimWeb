@@ -1,6 +1,6 @@
 package cengine.lang.asm.psi
 
-import cengine.lang.asm.AsmParser
+import cengine.lang.asm.AsmTreeParser
 import cengine.psi.core.NodeBuilderFn
 import cengine.psi.core.PsiElement
 import cengine.psi.elements.PsiFile
@@ -56,10 +56,10 @@ sealed class AsmDirective(
                 } else null
             }
 
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword already consumed by caller
                 skipWhitespaceAndComments()
-                val stringParsed = with(asmParser) { parseString() } // Pass builder explicitly
+                val stringParsed = with(asmTreeParser) { parseString() } // Pass builder explicitly
                 if (stringParsed == null) {
                     error("Expected string literal path after .include")
                     // Allow empty or error node creation
@@ -96,7 +96,7 @@ sealed class AsmDirective(
                 } else null
             }
 
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword consumed by caller
                 var firstArgument = true
                 while (true) {
@@ -116,8 +116,8 @@ sealed class AsmDirective(
                     firstArgument = false
 
                     val argParsed: PsiBuilder.Marker? = when (this@EmissiveT) {
-                        STRING, ASCII, ASCIZ -> with(asmParser) { parseString() }
-                        else -> with(asmParser) { parseExpression() } // Pass builder
+                        STRING, ASCII, ASCIZ -> with(asmTreeParser) { parseString() }
+                        else -> with(asmTreeParser) { parseExpression() } // Pass builder
                     }
 
                     if (argParsed == null) {
@@ -154,7 +154,7 @@ sealed class AsmDirective(
                 } else null
             }
 
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword consumed by caller
                 if (this@SectionControlT == SECTION) {
                     skipWhitespaceAndComments()
@@ -170,7 +170,7 @@ sealed class AsmDirective(
                         advance() // Consume ',' before flags
                         skipWhitespaceAndComments()
                         // Flags are typically a string literal
-                        val flagsParsed = with(asmParser) { parseString() }
+                        val flagsParsed = with(asmTreeParser) { parseString() }
                         if (flagsParsed == null) {
                             // Maybe wasn't a string, could be something else?
                             // Or just an error if flags were expected after comma
@@ -183,7 +183,7 @@ sealed class AsmDirective(
                             advance() // Consume ',' before type
                             skipWhitespaceAndComments()
                             // Type descriptor starts with '@'
-                            val typeParsed = with(asmParser) { parseTypeDescriptor() }
+                            val typeParsed = with(asmTreeParser) { parseTypeDescriptor() }
                             if (typeParsed == null) {
                                 error("Expected section type descriptor (e.g., '@progbits') after ','")
                             }
@@ -195,7 +195,7 @@ sealed class AsmDirective(
                     // .text, .data, .rodata, .bss : Optional subsection (expression)
                     skipWhitespaceAndComments()
                     if (!isAtEnd() && !currentIs(PsiTokenType.LINEBREAK)) {
-                        with(asmParser) { parseExpression() }
+                        with(asmTreeParser) { parseExpression() }
                         // No error if expression not found, it's optional
                     }
                 }
@@ -221,7 +221,7 @@ sealed class AsmDirective(
                 } else null
             }
 
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword consumed by caller
                 when (this@SymbolManagementT) {
                     GLOBL, LOCAL, WEAK -> {
@@ -248,13 +248,13 @@ sealed class AsmDirective(
                         if (!expect(",")) { error("Expected ',' after symbol name in $keyWord"); marker.done(this@SymbolManagementT); return true }
                         skipWhitespaceAndComments()
                         // Parse expression for size
-                        if (with(asmParser) { parseExpression() } == null) { error("Expected size expression for $keyWord"); marker.done(this@SymbolManagementT); return true }
+                        if (with(asmTreeParser) { parseExpression() } == null) { error("Expected size expression for $keyWord"); marker.done(this@SymbolManagementT); return true }
                         // Optional align (expression)
                         skipWhitespaceAndComments()
                         if (currentIs(",")) {
                             advance()
                             skipWhitespaceAndComments()
-                            if (with(asmParser) { parseExpression() } == null) { error("Expected alignment expression after ',' for $keyWord") }
+                            if (with(asmTreeParser) { parseExpression() } == null) { error("Expected alignment expression after ',' for $keyWord") }
                         }
                     }
                     TYPE -> {
@@ -265,7 +265,7 @@ sealed class AsmDirective(
                         if (!expect(",")) { error("Expected ',' after symbol name in $keyWord"); marker.done(this@SymbolManagementT); return true }
                         skipWhitespaceAndComments()
                         // Parse type descriptor
-                        if (with(asmParser) { parseTypeDescriptor() } == null) {
+                        if (with(asmTreeParser) { parseTypeDescriptor() } == null) {
                             error("Expected type descriptor (e.g., '@function') for $keyWord")
                         }
                     }
@@ -277,7 +277,7 @@ sealed class AsmDirective(
                         if (!expect(",")) { error("Expected ',' after symbol name in $keyWord"); marker.done(this@SymbolManagementT); return true }
                         skipWhitespaceAndComments()
                         // Parse expression for size
-                        if (with(asmParser) { parseExpression() } == null) { error("Expected size expression for $keyWord") }
+                        if (with(asmTreeParser) { parseExpression() } == null) { error("Expected size expression for $keyWord") }
                     }
                 }
                 marker.done(this@SymbolManagementT)
@@ -300,10 +300,10 @@ sealed class AsmDirective(
                 } else null
             }
 
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword consumed by caller
                 skipWhitespaceAndComments()
-                if (with(asmParser) { parseExpression() } == null) {
+                if (with(asmTreeParser) { parseExpression() } == null) {
                     // Only .zero requires an argument unconditionally based on common usage.
                     if (this@AlignmentT == ZERO) error("Expected size argument for $keyWord")
                     // Others might technically allow zero args, but often expect at least one.
@@ -315,7 +315,7 @@ sealed class AsmDirective(
                     while (currentIs(",")) {
                         advance()
                         skipWhitespaceAndComments()
-                        if (with(asmParser) { parseExpression() } == null) {
+                        if (with(asmTreeParser) { parseExpression() } == null) {
                             error("Expected expression after ',' for $keyWord argument ${argIndex + 1}")
                             break
                         }
@@ -348,7 +348,7 @@ sealed class AsmDirective(
                 } else null
             }
 
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword consumed by caller
                 when (this@AssemblyControlT) {
                     EQU, EQUIV, SET -> {
@@ -359,7 +359,7 @@ sealed class AsmDirective(
                         if (!expect(",")) { error("Expected ',' after symbol name in $keyWord"); marker.done(this@AssemblyControlT); return true }
                         skipWhitespaceAndComments()
                         // Parse expression
-                        if (with(asmParser) { parseExpression() } == null) { error("Expected expression for $keyWord") }
+                        if (with(asmTreeParser) { parseExpression() } == null) { error("Expected expression for $keyWord") }
                     }
                     INTEL_SYNTAX, ATT_SYNTAX -> {
                         skipWhitespaceAndComments()
@@ -396,7 +396,7 @@ sealed class AsmDirective(
                 } else null
             }
 
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword consumed by caller
                 if (this@MacroDefinitionT == MACRO) {
                     skipWhitespaceAndComments()
@@ -458,12 +458,12 @@ sealed class AsmDirective(
                 } else null
             }
 
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword consumed by caller
                 when (this@ConditionalAssemblyT) {
                     IF, ELSEIF -> {
                         skipWhitespaceAndComments()
-                        if (with(asmParser) { parseExpression() } == null) {
+                        if (with(asmTreeParser) { parseExpression() } == null) {
                             error("Expected expression after $keyWord")
                         }
                     }
@@ -520,7 +520,7 @@ sealed class AsmDirective(
             }
 
             // NOTE: CFI parsing can be quite complex. This is a simplified version.
-            override fun PsiBuilder.parse(asmParser: AsmParser, marker: PsiBuilder.Marker): Boolean {
+            override fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean {
                 // Keyword consumed by caller
                 skipWhitespaceAndComments()
 
@@ -532,11 +532,11 @@ sealed class AsmDirective(
                         var fileIndexParsed: PsiBuilder.Marker? = null
                         val currentTokenType = getTokenType()
                         if (currentTokenType is PsiTokenType.LITERAL.INTEGER) {
-                            fileIndexParsed = with(asmParser) { parseIntegerLiteral() } // Assuming helper
+                            fileIndexParsed = with(asmTreeParser) { parseIntegerLiteral() } // Assuming helper
                             skipWhitespaceAndComments()
                         }
                         // Now expect filename
-                        if (with(asmParser) { parseString() } == null) {
+                        if (with(asmTreeParser) { parseString() } == null) {
                             error("Expected filename (string literal) for .file")
                             // Handle case where index might have been mistaken for filename if no string found?
                             // If fileIndexParsed != null && string fails, maybe rollback index parse? Complex recovery.
@@ -544,20 +544,20 @@ sealed class AsmDirective(
                     }
                     LOC -> {
                         // fileno (int), lineno (int), optional col (int), optional keywords
-                        if (with(asmParser) { parseIntegerLiteral() } == null) { error("Expected file number for .loc"); marker.done(this@DebuggingT); return true }
+                        if (with(asmTreeParser) { parseIntegerLiteral() } == null) { error("Expected file number for .loc"); marker.done(this@DebuggingT); return true }
                         skipWhitespaceAndComments()
-                        if (with(asmParser) { parseIntegerLiteral() } == null) { error("Expected line number for .loc"); marker.done(this@DebuggingT); return true }
+                        if (with(asmTreeParser) { parseIntegerLiteral() } == null) { error("Expected line number for .loc"); marker.done(this@DebuggingT); return true }
                         skipWhitespaceAndComments()
                         // Optional column
                         if (getTokenType() is PsiTokenType.LITERAL.INTEGER) {
-                            with(asmParser) { parseIntegerLiteral() }
+                            with(asmTreeParser) { parseIntegerLiteral() }
                             skipWhitespaceAndComments()
                         }
                         // Optional keywords (parse as identifiers)
                         while (!isAtEnd() && !currentIs(PsiTokenType.LINEBREAK)) {
                             // Check for known keywords or just parse identifiers
                             if (getTokenType() == PsiTokenType.IDENTIFIER || getTokenType() == PsiTokenType.KEYWORD) {
-                                with(asmParser) { parseIdentifier() } // Treat options as identifiers
+                                with(asmTreeParser) { parseIdentifier() } // Treat options as identifiers
                                 skipWhitespaceAndComments()
                                 // Could check if identifier is one of the known options:
                                 // basic_block, prologue_end, epilogue_begin, is_stmt
@@ -572,7 +572,7 @@ sealed class AsmDirective(
                     CFI_STARTPROC -> {
                         // Optional 'simple' keyword/identifier
                         if (currentIs("simple")) {
-                            with(asmParser) { parseIdentifier() }
+                            with(asmTreeParser) { parseIdentifier() }
                         }
                     }
                     CFI_ENDPROC, CFI_REMEMBER_STATE, CFI_RESTORE_STATE -> {
@@ -590,7 +590,7 @@ sealed class AsmDirective(
                            expect(PsiTokenType.IDENTIFIER, "Expected second register name (identifier token) for $keyWord")
                         } else {
                             // Expect expression for offset
-                            if (with(asmParser) { parseExpression() } == null) { error("Expected offset expression for $keyWord") }
+                            if (with(asmTreeParser) { parseExpression() } == null) { error("Expected offset expression for $keyWord") }
                         }
                     }
                     CFI_DEF_CFA_REGISTER, CFI_RESTORE, CFI_UNDEFINED, CFI_SAME_VALUE -> {
@@ -599,7 +599,7 @@ sealed class AsmDirective(
                     }
                     CFI_DEF_CFA_OFFSET, CFI_ADJUST_CFA_OFFSET -> {
                         // Single offset (expression) argument
-                        if (with(asmParser) { parseExpression() } == null) { error("Expected offset expression for $keyWord") }
+                        if (with(asmTreeParser) { parseExpression() } == null) { error("Expected offset expression for $keyWord") }
                     }
                     // Handle other CFI directives similarly based on their expected arguments
                     /*else -> {

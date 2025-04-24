@@ -1,8 +1,9 @@
 package cengine.lang.obj.elf
 
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
+import cengine.util.buffer.Buffer8
 import cengine.util.integer.Int8
+import cengine.util.integer.UInt8
 import cengine.util.integer.hexDump
 
 
@@ -66,8 +67,8 @@ data class ELF32_Ehdr(
 
     override fun byteSize(): Int = e_ident.byteSize() + 36
 
-    override fun build(endianness: Endianness): Array<Int8> {
-        val buffer = Int8Buffer(endianness)
+    override fun build(endianness: Endianness): Array<UInt8> {
+        val buffer = Buffer8(endianness)
 
         buffer.putAll(e_ident.build(endianness))
         buffer.put(e_type)

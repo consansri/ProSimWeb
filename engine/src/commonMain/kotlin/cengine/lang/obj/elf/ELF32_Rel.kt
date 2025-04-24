@@ -3,8 +3,9 @@ package cengine.lang.obj.elf
 import cengine.lang.obj.elf.ELF32_Rel.Companion.R_SYM
 import cengine.lang.obj.elf.ELF32_Rel.Companion.R_TYPE
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
+import cengine.util.buffer.Buffer8
 import cengine.util.integer.Int8
+import cengine.util.integer.UInt8
 
 /**
  * ELF Relocation Entry
@@ -47,8 +48,8 @@ data class ELF32_Rel(
         fun R_INFO(s: Elf_Word, t: Elf_Word) = s.shl(8) + t
     }
 
-    override fun build(endianness: Endianness): Array<Int8> {
-        val b = Int8Buffer(endianness)
+    override fun build(endianness: Endianness): Array<UInt8> {
+        val b = Buffer8(endianness)
 
         b.put(r_offset)
         b.put(r_info)

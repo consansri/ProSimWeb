@@ -2,17 +2,19 @@ package cengine.lang.obj
 
 import cengine.lang.asm.AsmDisassembler
 import cengine.util.integer.BigInt
-import cengine.util.integer.IntNumber
+import cengine.util.integer.IntNumberT
+import cengine.util.integer.UInt32
+import cengine.util.integer.UnsignedFixedSizeIntNumber
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import cengine.vfs.VirtualFile
-import emulator.kit.memory.Memory
 
 class InvalObjFile(file: VirtualFile) : ObjPsiFile(file, false) {
+    override val addrType: UnsignedFixedSizeIntNumberT<UInt32> = UInt32
+    override val wordType: UnsignedFixedSizeIntNumberT<UInt32> = UInt32
 
-    override fun initialize(memory: Memory<*, *>) {}
+    override fun entry(): UInt32 = UInt32.ZERO
 
-    override fun entry(): IntNumber<*> = BigInt.ZERO
-
-    override fun contents(): Map<BigInt, Pair<List<IntNumber<*>>, List<AsmDisassembler.Label>>> {
+    override fun contents(): Map<UnsignedFixedSizeIntNumber<*>, Pair<List<UInt32>, List<AsmDisassembler.Label>>> {
         return emptyMap()
     }
 }

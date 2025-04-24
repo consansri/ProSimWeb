@@ -1,20 +1,22 @@
 package cengine.lang.mif
 
+import cengine.console.SysOut
 import cengine.lang.obj.elf.*
 import cengine.util.integer.*
 import cengine.util.integer.BigInt.Companion.toBigInt
 import cengine.util.integer.Int8.Companion.toInt8
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import emulator.kit.memory.Memory
 import kotlin.math.log2
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-class MifBuilder(private val depth: Double, private val wordSize: IntNumberStatic<*>) {
+class MifBuilder(private val depth: Double, private val wordSize: UnsignedFixedSizeIntNumberT<*>) {
 
-    constructor(wordSize: IntNumberStatic<*>, addrSize: IntNumberStatic<*>, id: String) : this(2.0.pow(addrSize.BITS), wordSize)
+    constructor(wordSize: UnsignedFixedSizeIntNumberT<*>, addrSize: UnsignedFixedSizeIntNumberT<*>, id: String) : this(2.0.pow(addrSize.BITS), wordSize)
 
-    private val addrSize: IntNumberStatic<*> = IntNumber.nearestUType(log2(depth).roundToInt() / 8)
+    private val addrSize: UnsignedFixedSizeIntNumberT<*> = IntNumberUtils.nearestUType(log2(depth).roundToInt() / 8)
     private var addrRDX: MifRadix = MifRadix.HEX
     private var dataRDX: MifRadix = MifRadix.HEX
 
@@ -24,10 +26,11 @@ class MifBuilder(private val depth: Double, private val wordSize: IntNumberStati
     init {
         // Initially, all addresses are filled with 0
         ranges.add(Range(0.toBigInt(), BigInt(BigInteger.parseString("1".repeat(addrSize.BITS), 2)), listOf(BigInt.ZERO)))
+        SysOut.log("MifBuidler: addrwidth=${addrSize.BITS}, dataWidth=${wordSize.BITS}")
     }
 
-    fun build(): String = buildString{
-        appendLine("DEPTH = ${depth.toString().takeWhile { it != '.' }}; -- The size of memory in words")
+    fun build(): String = buildString {
+        appendLine("DEPTH = ${2.0.pow(addrSize.BITS).toBigInt()}; -- The size of memory in words")
         appendLine("WIDTH = ${wordSize.BITS}; -- The size of data in bits")
         appendLine("ADDRESS_RADIX = ${addrRDX.name}; -- The radix for address values")
         appendLine("DATA_RADIX = ${dataRDX.name}; -- The radix for data values")
@@ -41,7 +44,7 @@ class MifBuilder(private val depth: Double, private val wordSize: IntNumberStati
     }
 
     fun addContent(startAddr: String, endAddr: String, data: List<String>): MifBuilder {
-        return addContent(BigInt.parse(startAddr, addrRDX.radix), BigInt.parse(endAddr, addrRDX.radix), data.map { BigInt.parse(it, dataRDX.radix) })
+        return addContent(BigInt.parse(startAddr, addrRDX.base), BigInt.parse(endAddr, addrRDX.base), data.map { BigInt.parse(it, dataRDX.base) })
     }
 
     fun addContent(startAddr: BigInt, endAddr: BigInt, data: List<BigInt>): MifBuilder {
@@ -82,11 +85,11 @@ class MifBuilder(private val depth: Double, private val wordSize: IntNumberStati
     }
 
     fun addContent(startAddr: String, data: List<String>): MifBuilder {
-        val start = BigInt.parse(startAddr, addrRDX.radix)
+        val start = BigInt.parse(startAddr, addrRDX.base)
         val end = start + data.size.toBigInt()
 
         return addContent(start, end, data.map {
-            BigInt.parse(it, dataRDX.radix)
+            BigInt.parse(it, dataRDX.base)
         })
     }
 
@@ -114,7 +117,7 @@ class MifBuilder(private val depth: Double, private val wordSize: IntNumberStati
                     }
 
                     // The new content replaces this part of the range
-                    modifiedRanges.add(Range(startAddr, newEnd, data))
+                    modifiedRanges.add(Range(startAddr, newEnd, data.map { it.toBigInt() }))
 
                     // Part after the new content
                     if (range.end > newEnd) {
@@ -139,7 +142,7 @@ class MifBuilder(private val depth: Double, private val wordSize: IntNumberStati
         return this
     }
 
-    inner class Range(val start: BigInt, val end: BigInt, val data: List<IntNumber<*>>) {
+    inner class Range(val start: BigInt, val end: BigInt, val data: List<BigInt>) {
         // Helper function to check if a range contains a specific address
         fun contains(addr: BigInt): Boolean = addr in start..end
 
@@ -175,19 +178,19 @@ class MifBuilder(private val depth: Double, private val wordSize: IntNumberStati
         }
 
         fun init(memory: Memory<*, *>) {
-            if (data.all { it.toULong() == 0UL }) return
+            if (data.all { it == BigInt.ZERO }) return
 
             if (start == end) {
-                memory.storeArray(start, data)
+                memory.storeValues(start, data.map { wordSize.to(it) })
             } else if (data.size == 1) {
                 var currAddr = start
                 while (true) {
-                    memory.storeEndianAware(currAddr, data.first())
+                    memory.storeEndianAwareValue(currAddr, wordSize.to(data.first()))
                     if (currAddr == end) break
                     currAddr += 1
                 }
             } else {
-                memory.storeArray(start, data)
+                memory.storeValues(start, data.map { wordSize.to(it) })
             }
         }
 
@@ -197,8 +200,8 @@ class MifBuilder(private val depth: Double, private val wordSize: IntNumberStati
 
     // Word Radix Format
 
-    private fun BigInt.addrRDX(): String = this.toUnsigned().toString(addrRDX.radix)
-    private fun IntNumber<*>.dataRDX(): String = this.toUnsigned().toString(dataRDX.radix)
+    private fun BigInt.addrRDX(): String = addrSize.to(this).toString(addrRDX.base)
+    private fun BigInt.dataRDX(): String = wordSize.to(this).toString(dataRDX.base)
 
     override fun toString(): String {
         return build()

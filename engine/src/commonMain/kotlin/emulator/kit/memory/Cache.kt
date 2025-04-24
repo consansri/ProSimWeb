@@ -5,6 +5,8 @@ import cengine.console.SysOut
 import cengine.util.Endianness
 import cengine.util.integer.Int32.Companion.toInt32
 import cengine.util.integer.IntNumber
+import cengine.util.integer.IntNumberUtils
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 import debug.DebugTools
 import emulator.kit.common.IConsole
 import kotlin.math.pow
@@ -25,7 +27,7 @@ import kotlin.math.roundToInt
  *
  * The Cache class defines CacheRowState enum to represent the state of a cache row, and AccessResult data class to encapsulate the result of cache access.
  */
-sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
+sealed class Cache<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(
     protected val backingMemory: Memory<ADDR, INSTANCE>,
     val rowIndexBits: Int,
     val blockCount: Int,
@@ -47,7 +49,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
 
     private val addrBits: Int = addrType.BITS
 
-    override fun globalEndianess(): Endianness = backingMemory.globalEndianess()
+    override fun globalEndianness(): Endianness = backingMemory.globalEndianness()
     override fun clear() {
         model.clear()
     }
@@ -63,7 +65,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
         return buildAddr(addrTag, rowIndex.addr(), offset.toInt32().addr())
     }
 
-    private fun ADDR.offset(): ADDR = this.and(IntNumber.bitMask(offsetBits)).addr()
+    private fun ADDR.offset(): ADDR = this and addrType.createBitMask(offsetBits)
 
     override fun loadInstance(address: ADDR, tracker: AccessTracker): INSTANCE {
         val offsetIndex = address.offset()
@@ -141,9 +143,9 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
             }
         }
 
-        private fun ADDR.tag(): ADDR = (shr(rowIndexBits + offsetBits) and IntNumber.bitMask(tagBits)).addr()
+        private fun ADDR.tag(): ADDR = shr(rowIndexBits + offsetBits) and addrType.createBitMask(tagBits)
 
-        private fun ADDR.rowIndex(): ADDR = (shr(offsetBits) and IntNumber.bitMask(rowIndexBits)).addr()
+        private fun ADDR.rowIndex(): ADDR = shr(offsetBits) and addrType.createBitMask(rowIndexBits)
 
         fun search(address: ADDR): Pair<CacheRow, Int>? {
             val tag = address.tag()
@@ -241,7 +243,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
                 val blockIndex = decider.indexToReplace()
                 val rowAddr = buildAddr(tag, rowIndex, 0.toInt32().addr())
                 val neededWriteBack = blocks[blockIndex].writeBackIfDirty(rowIndex)
-                val values = backingMemory.loadArray(rowAddr, offsetCount)
+                val values = backingMemory.loadInstances(rowAddr, offsetCount)
                 blocks[blockIndex] = CacheBlock(values.toMutableList(), tag)
                 decider.fetch(blockIndex)
                 return blockIndex to neededWriteBack
@@ -285,7 +287,7 @@ sealed class Cache<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(
                 val tag = tag
                 if (!dirty || tag == null) return false
                 val rowAddr = buildAddr(tag, rowIndex, 0.toInt32().addr())
-                backingMemory.storeInstanceArray(rowAddr, data)
+                backingMemory.storeInstances(rowAddr, data)
                 dirty = false
                 return true
             }

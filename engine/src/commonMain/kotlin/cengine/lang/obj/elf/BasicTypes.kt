@@ -37,9 +37,9 @@ fun ByteArray.loadInt8(index: Int): Int8 = this[index].toInt8()
 fun ByteArray.loadUInt16(endianness: Endianness, index: Int): UInt16{
     val bytes = this.copyOfRange(index, index + UInt16.BYTES)
     val result = if (endianness == Endianness.BIG) {
-        bytes.joinToString("") { it.toInt8().toUInt8().zeroPaddedHex() }.toUShort(16)
+        bytes.joinToString("") { it.toInt8().toUInt8().uPaddedHex() }.toUShort(16)
     } else {
-        bytes.reversed().joinToString("") { it.toInt8().toUInt8().zeroPaddedHex() }.toUShort(16)
+        bytes.reversed().joinToString("") { it.toInt8().toUInt8().uPaddedHex() }.toUShort(16)
     }
     return result.toUInt16()
 }
@@ -51,9 +51,9 @@ fun ByteArray.loadInt16(e_ident: E_IDENT, index: Int): Int16 = loadUInt16(e_iden
 fun ByteArray.loadUInt32(endianness: Endianness, index: Int): UInt32 {
     val bytes = this.copyOfRange(index, index + UInt.SIZE_BYTES)
     val result = if (endianness == Endianness.BIG) {
-        bytes.joinToString("") { it.toInt8().toUInt8().zeroPaddedHex() }.toUInt(16)
+        bytes.joinToString("") { it.toInt8().toUInt8().uPaddedHex() }.toUInt(16)
     } else {
-        bytes.reversed().joinToString("") { it.toInt8().toUInt8().zeroPaddedHex() }.toUInt(16)
+        bytes.reversed().joinToString("") { it.toInt8().toUInt8().uPaddedHex() }.toUInt(16)
     }
     return result.toUInt32()
 }
@@ -65,9 +65,9 @@ fun ByteArray.loadInt32(e_ident: E_IDENT, index: Int): Int32 = this.loadUInt32(e
 fun ByteArray.loadUInt64(endianness: Endianness, index: Int): UInt64 {
     val bytes = this.copyOfRange(index, index + UInt64.BYTES)
     val result = if (endianness == Endianness.BIG) {
-        bytes.joinToString("") { it.toInt8().toUInt8().zeroPaddedHex() }.toULong(16)
+        bytes.joinToString("") { it.toInt8().toUInt8().uPaddedHex() }.toULong(16)
     } else {
-        bytes.reversed().joinToString("") { it.toInt8().toUInt8().zeroPaddedHex() }.toULong(16)
+        bytes.reversed().joinToString("") { it.toInt8().toUInt8().uPaddedHex() }.toULong(16)
     }
     return result.toUInt64()
 }

@@ -2,11 +2,11 @@ package cengine.util.integer
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
-class Int32(override val value: Int) : IntNumber<Int32> {
+class Int32(override val value: Int) : SignedFixedSizeIntNumber<Int32> {
 
     constructor(value: Long): this(value.toInt())
 
-    companion object: IntNumberStatic<Int32> {
+    companion object: SignedFixedSizeIntNumberT<Int32> {
 
         override val BITS: Int = 32
         override val BYTES: Int = 4
@@ -17,7 +17,7 @@ class Int32(override val value: Int) : IntNumber<Int32> {
         fun fromUInt16(value1: UInt16, value0: UInt16): Int32  = (value1.toInt32() shl 16) or value0.toInt32()
 
         override fun to(number: IntNumber<*>): Int32 = number.toInt32()
-        override fun split(number: IntNumber<*>): List<Int32> = number.int32s()
+        override fun split(number: FixedSizeIntNumber<*>): List<Int32> = number.int32s()
         override fun of(value: Int): Int32 = Int32(value)
         override fun parse(string: String,radix: Int): Int32 = Int32(string.toInt(radix))
 
@@ -33,7 +33,7 @@ class Int32(override val value: Int) : IntNumber<Int32> {
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<Int32>
+    override val type: FixedSizeIntNumberT<Int32>
         get() = Int32
 
     override fun plus(other: Int32): Int32 = Int32(value + other.value)
@@ -123,6 +123,7 @@ class Int32(override val value: Int) : IntNumber<Int32> {
     }
 
     override fun int8s() = (this shr bitWidth / 2).toInt16().int8s() + this.toInt16().int8s()
+    override fun uInt8s(): List<UInt8> = int8s().map { it.toUInt8() }
 
 
 }

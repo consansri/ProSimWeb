@@ -3,7 +3,9 @@ package cengine.lang.asm
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import cengine.util.integer.BigInt
+import cengine.util.integer.FixedSizeIntNumber
 import cengine.util.integer.IntNumber
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 
 abstract class AsmDisassembler {
 
@@ -24,15 +26,15 @@ abstract class AsmDisassembler {
         return mapped
     }
 
-    abstract fun disassemble(startAddr: BigInt, buffer: List<IntNumber<*>>): List<Decoded>
+    abstract fun disassemble(startAddr: UnsignedFixedSizeIntNumber<*>, buffer: List<FixedSizeIntNumber<*>>): List<Decoded>
 
     interface InstrProvider {
 
-        fun decode(segmentAddr: BigInt, offset: Int): Decoded
+        fun decode(segmentAddr: UnsignedFixedSizeIntNumber<*>, offset: Int): Decoded
     }
 
     data class DecodedSegment(
-        val addr: BigInt,
+        val addr: UnsignedFixedSizeIntNumber<*>,
         val labels: List<Label>,
         val decodedContent: List<Decoded>,
     )
@@ -50,8 +52,8 @@ abstract class AsmDisassembler {
      */
     data class Decoded(
         val offset: Int,
-        val data: IntNumber<*>,
+        val data: FixedSizeIntNumber<*>,
         val disassembled: String,
-        val target: BigInt? = null,
+        val target: UnsignedFixedSizeIntNumber<*>? = null,
     )
 }

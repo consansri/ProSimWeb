@@ -3,16 +3,17 @@ package cengine.lang.asm.target.riscv
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.asm.target.riscv.RvDisassembler.InstrType.*
 import cengine.util.integer.BigInt
-import cengine.util.integer.IntNumber
+import cengine.util.integer.FixedSizeIntNumber
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 
-class RvDisassembler(private val addrConstrained: BigInt.() -> BigInt) : AsmDisassembler() {
-    override fun disassemble(startAddr: BigInt, buffer: List<IntNumber<*>>): List<Decoded> {
+class RvDisassembler(private val addrConstrained: UnsignedFixedSizeIntNumber<*>.() -> UnsignedFixedSizeIntNumber<*>) : AsmDisassembler() {
+    override fun disassemble(startAddr: UnsignedFixedSizeIntNumber<*>, buffer: List<FixedSizeIntNumber<*>>): List<Decoded> {
         var currIndex = 0
         var currInstr: RVInstrInfoProvider
         val decoded = mutableListOf<Decoded>()
-        val words = buffer.chunked(4) { bytes -> bytes.reversed().joinToString("") { it.zeroPaddedHex() }.toUInt(16).toUInt32() }
+        val words = buffer.chunked(4) { bytes -> bytes.reversed().joinToString("") { it.uPaddedHex() }.toUInt(16).toUInt32() }
 
         while ((currIndex / 4) < words.size) {
             currInstr = try {
@@ -32,7 +33,7 @@ class RvDisassembler(private val addrConstrained: BigInt.() -> BigInt) : AsmDisa
         return decoded
     }
 
-    class RVInstrInfoProvider(val binary: UInt32, private val addrConstrained: BigInt.() -> BigInt) : InstrProvider {
+    class RVInstrInfoProvider(val binary: UInt32, private val addrConstrained: UnsignedFixedSizeIntNumber<*>.() -> UnsignedFixedSizeIntNumber<*>) : InstrProvider {
 
         private val opcode = binary lowest 7
         private val funct3 = (binary shr 12) lowest 3
@@ -223,7 +224,7 @@ class RvDisassembler(private val addrConstrained: BigInt.() -> BigInt) : AsmDisa
             else -> null
         }
 
-        override fun decode(segmentAddr: BigInt, offset: Int): Decoded {
+        override fun decode(segmentAddr: UnsignedFixedSizeIntNumber<*>, offset: Int): Decoded {
             return when (type) {
                 LUI -> Decoded(offset, binary, "lui    ${rdName()}, 0x${imm20uType.toString(16)}")
                 AUIPC -> Decoded(offset, binary, "auipc  ${rdName()}, 0x${imm20uType.toString(16)}")
@@ -268,7 +269,7 @@ class RvDisassembler(private val addrConstrained: BigInt.() -> BigInt) : AsmDisa
             }
         }
 
-        private fun csrName(): String = RvRegT.RvCsrT.rv32CsrRegs.firstOrNull { it.numericalValue.toUInt32() == imm12iType }?.recognizable?.first() ?: "0x${imm12iType.toString(16)}"
+        private fun csrName(): String = RvRegT.RvCsrT.rv32CsrRegs.firstOrNull { it.address.toUInt32() == imm12iType }?.recognizable?.first() ?: "0x${imm12iType.toString(16)}"
         private fun rdName(): String = RvRegT.IntT.entries.getOrNull(rd.toInt())?.recognizable?.first() ?: "[invalid reg]"
         private fun rs1Name(): String = RvRegT.IntT.entries.getOrNull(rs1.toInt())?.recognizable?.first() ?: "[invalid reg]"
         private fun rs2Name(): String = RvRegT.IntT.entries.getOrNull(rs2.toInt())?.recognizable?.first() ?: "[invalid reg]"

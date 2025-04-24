@@ -2,8 +2,9 @@ package cengine.lang.obj.elf
 
 import cengine.lang.obj.elf.Ehdr.Companion.EV_CURRENT
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
+import cengine.util.buffer.Buffer8
 import cengine.util.integer.Int8
+import cengine.util.integer.UInt8
 import cengine.util.integer.UInt8.Companion.toUInt8
 
 /**
@@ -172,8 +173,8 @@ data class E_IDENT(
 
     }
 
-    override fun build(endianness: Endianness): Array<Int8> {
-        val b = Int8Buffer(endianness)
+    override fun build(endianness: Endianness): Array<UInt8> {
+        val b = Buffer8(endianness)
 
         b.put(ei_mag0)
         b.put(ei_mag1)

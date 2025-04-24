@@ -1,8 +1,13 @@
 package cengine.lang.obj.elf
 
+import cengine.util.integer.IntNumberT
+import cengine.util.integer.UInt64
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import cengine.vfs.VirtualFile
 
 class ELF64File(file: VirtualFile) : ELFFile(file) {
+
+    override val addrType: UnsignedFixedSizeIntNumberT<UInt64> = UInt64
 
     init {
         if (ehdr !is ELF64_Ehdr) throw InvalidElfComponent(this, ehdr)

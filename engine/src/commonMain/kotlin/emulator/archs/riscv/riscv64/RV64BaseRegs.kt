@@ -3,12 +3,17 @@ package emulator.archs.riscv.riscv64
 import androidx.compose.runtime.mutableStateListOf
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt64
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import emulator.archs.riscv.RV
 import emulator.kit.register.FieldProvider
 import emulator.kit.register.RegFile
 
 class RV64BaseRegs : RegFile<UInt64> {
     override val name: String = "base"
+
+    override val type: UnsignedFixedSizeIntNumberT<UInt64>
+        get() = UInt64
+
     override val indentificators: List<FieldProvider> = listOf(
         RV.BaseNameProvider
     )
@@ -22,10 +27,10 @@ class RV64BaseRegs : RegFile<UInt64> {
         UInt64.ZERO
     })
 
-    override fun set(index: Int, value: IntNumber<*>) {
+    override fun set(index: Int, value: UInt64) {
         when (index) {
             0 -> return
-            else -> regValues[index] = value.toUInt64()
+            else -> regValues[index] = value
         }
     }
 

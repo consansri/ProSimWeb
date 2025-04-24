@@ -738,7 +738,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
         val args = directive.arguments
         try {
             // Use BigInt for offsets/addresses until final buffer write
-            val currentOffsetBigInt = buffer.size.toBigInt()
+            val currentOffsetBigInt = buffer.size
             // Address calculation depends on Phase 4 having run, BUT this handler runs in Phase 3.
             // Alignment should ideally happen relative to section start (offset).
             // Absolute address alignment needs deferral or careful handling.
@@ -757,21 +757,21 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
 
                     // Evaluate using a temporary resolver/evaluator context (offset only)
                     // Evaluate alignment relative to offset 0 within the section for Phase 3 prediction
-                    val alignment = integerEvaluator.evaluate(alignExpr, createPass1Context())
-                    val boundary = if (type == AsmDirective.Alignment.AlignmentT.ALIGN) alignment else (BigInt.ONE shl alignment.toInt())
+                    val alignment = integerEvaluator.evaluate(alignExpr, createPass1Context()).toInt()
+                    val boundary = if (type == AsmDirective.Alignment.AlignmentT.ALIGN) alignment else (1 shl alignment.toInt())
 
-                    if (boundary <= BigInt.ZERO) { /* Error */ return false
+                    if (boundary <= 0) { /* Error */ return false
                     }
 
                     val context = createPass1Context()
                     val type = context.section.content.type
 
                     val fillValue = type.to(fillExpr?.let { integerEvaluator.evaluate(it, context) } ?: type.ZERO) // Default fill 0
-                    val maxSkip = maxSkipExpr?.let { integerEvaluator.evaluate(it, context) }
+                    val maxSkip = maxSkipExpr?.let { integerEvaluator.evaluate(it, context).toInt() }
 
                     // Calculate padding based on current buffer size (offset)
                     val misalignment = currentOffsetBigInt % boundary
-                    if (misalignment != BigInt.ZERO) {
+                    if (misalignment != 0) {
                         val paddingNeeded = boundary - misalignment
                         if (maxSkip != null && paddingNeeded > maxSkip) {
                             io.log("Skipping alignment for '.$type': padding needed ($paddingNeeded) exceeds max skip ($maxSkip)")
@@ -779,7 +779,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                             io.log("Aligning section '${section.name}' from offset $currentOffsetBigInt by $paddingNeeded bytes (boundary $boundary) using fill $fillValue")
                             // Use the buffer's methods directly
                             try {
-                                val paddingInt = paddingNeeded.toInt() // Convert to Int for repeat/pad
+                                val paddingInt = paddingNeeded // Convert to Int for repeat/pad
                                 if (fillValue == type.ZERO) {
                                     buffer.pad(paddingInt) // Efficiently add zeros
                                 } else {

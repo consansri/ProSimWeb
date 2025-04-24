@@ -2,9 +2,9 @@ package cengine.util.integer
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
-class Int64(override val value: Long) : IntNumber<Int64> {
+class Int64(override val value: Long) : SignedFixedSizeIntNumber<Int64> {
 
-    companion object: IntNumberStatic<Int64> {
+    companion object: SignedFixedSizeIntNumberT<Int64> {
 
         override val BITS: Int = 64
         override val BYTES: Int = 8
@@ -15,7 +15,7 @@ class Int64(override val value: Long) : IntNumber<Int64> {
         fun fromUInt32(value1: UInt32, value0: UInt32): Int64 = (value1.toInt64() shl 32) or value0.toInt64()
 
         override fun to(number: IntNumber<*>): Int64 = number.toInt64()
-        override fun split(number: IntNumber<*>): List<Int64> = number.int64s()
+        override fun split(number: FixedSizeIntNumber<*>): List<Int64> = number.int64s()
         override fun of(value: Int): Int64 = Int64(value.toLong())
         override fun parse(string: String,radix: Int): Int64 = Int64(string.toLong(radix))
 
@@ -31,7 +31,7 @@ class Int64(override val value: Long) : IntNumber<Int64> {
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<Int64>
+    override val type: FixedSizeIntNumberT<Int64>
         get() = Int64
 
     override fun plus(other: Int64): Int64 = Int64(value + other.value)
@@ -120,5 +120,6 @@ class Int64(override val value: Long) : IntNumber<Int64> {
     override fun hashCode(): Int = value.hashCode()
 
     override fun int8s() = (this shr bitWidth / 2).toInt32().int8s() + this.toInt32().int8s()
+    override fun uInt8s(): List<UInt8> = int8s().map { it.toUInt8() }
 
 }

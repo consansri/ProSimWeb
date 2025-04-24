@@ -1,6 +1,6 @@
 package cengine.lang.asm.target.riscv
 
-import cengine.lang.asm.AsmParser
+import cengine.lang.asm.AsmTreeParser
 import cengine.lang.asm.target.riscv.RvRegT.FloatT.Companion.parseRvFloatReg
 import cengine.lang.asm.target.riscv.RvRegT.IntT.Companion.parseRvIntReg
 import cengine.lang.asm.target.riscv.RvRegT.RvCsrT.Companion.parseRvCsrReg
@@ -128,9 +128,9 @@ enum class RvParamT(val exampleString: String) {
     PS_OFFSET_RS1("offset(rs1)"),  // call offset(reg), tail offset(reg)
     PS_NONE("");                   // ret, nop
 
-    fun PsiBuilder.parse(asmParser: AsmParser): Boolean {
+    fun PsiBuilder.parse(asmTreeParser: AsmTreeParser): Boolean {
 
-        with(asmParser) {
+        with(asmTreeParser) {
 
 
             when (this@RvParamT) {

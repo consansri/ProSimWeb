@@ -1,6 +1,6 @@
 package cengine.lang.asm.target.ikrrisc2
 
-import cengine.lang.asm.AsmParser
+import cengine.lang.asm.AsmTreeParser
 import cengine.lang.asm.target.ikrrisc2.IkrR2BaseRegs.Companion.parseIkrR2BaseReg
 import cengine.psi.parser.PsiBuilder
 
@@ -17,7 +17,7 @@ enum class IkrR2ParamType(val exampleString: String) {
     B_REG_TYPE("rb");
 
 
-    fun PsiBuilder.parse(asmParser: AsmParser): Boolean {
+    fun PsiBuilder.parse(asmTreeParser: AsmTreeParser): Boolean {
 
         skipWhitespaceAndComments()
 
@@ -26,7 +26,7 @@ enum class IkrR2ParamType(val exampleString: String) {
             return false
         }
 
-        with(asmParser) {
+        with(asmTreeParser) {
 
             when (this@IkrR2ParamType) {
                 I_TYPE -> {

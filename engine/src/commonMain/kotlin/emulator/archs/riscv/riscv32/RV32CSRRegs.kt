@@ -4,12 +4,16 @@ package emulator.archs.riscv.riscv32
 import androidx.compose.runtime.mutableStateListOf
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt32
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import emulator.archs.riscv.RV
 import emulator.kit.register.FieldProvider
 import emulator.kit.register.RegFile
 
 class RV32CSRRegs : RegFile<UInt32> {
     override val name: String = "csr"
+
+    override val type: UnsignedFixedSizeIntNumberT<UInt32>
+        get() = UInt32
 
     override val indentificators: List<FieldProvider> = listOf(
         RV.CSRNameProvider(true)
@@ -21,8 +25,8 @@ class RV32CSRRegs : RegFile<UInt32> {
 
     override val regValues = mutableStateListOf(*Array(4096) { UInt32.ZERO })
 
-    override fun set(index: Int, value: IntNumber<*>) {
-        regValues[index] = value.toUInt32()
+    override fun set(index: Int, value: UInt32) {
+        regValues[index] = value
     }
 
     override fun isVisible(index: Int): Boolean = when (index) {

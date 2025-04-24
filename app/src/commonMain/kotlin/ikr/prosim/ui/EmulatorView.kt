@@ -73,18 +73,19 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
         when (lang) {
             MifLang -> {
                 manager.queueUpdate(file) {
-                    onFinish(it as MifPsiFile)
+                    if (it.valid) onFinish(it as MifPsiFile)
                 }
             }
 
             ObjLang -> {
                 manager.queueUpdate(file) {
-                    onFinish(it as ObjPsiFile)
+                    if (it.valid) onFinish(it as ObjPsiFile)
                 }
             }
 
-            else -> onFinish(null)
+            else -> {}
         }
+        onFinish(null)
     }
 
     var initializer: AsmBinaryProvider? by remember { mutableStateOf<AsmBinaryProvider?>(null) }
@@ -145,7 +146,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
         Modifier.fillMaxSize().background(theme.COLOR_BG_0),
         top = {
             TopBar(project, viewType, onClose = { close() }) {
-                Text("PC: ${architecture?.pcState?.value?.zeroPaddedHex() ?: "N/A"}", fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = theme.COLOR_FG_0)
+                Text("PC: ${architecture?.pcState?.value?.uPaddedHex() ?: "N/A"}", fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = theme.COLOR_FG_0)
                 //CLabel(text = "PC: ${pcState.value?.toHex() ?: "N/A"}", fontType = FontType.CODE) // ISSUE: PC doesn't seem to automatically update its value!
             }
         },

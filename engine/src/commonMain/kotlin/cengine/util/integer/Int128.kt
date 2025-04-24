@@ -4,11 +4,11 @@ import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.Sign
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 
-class Int128(value: BigInteger) : IntNumber<Int128> {
+class Int128(value: BigInteger) : SignedFixedSizeIntNumber<Int128> {
 
     override val value: BigInteger = value.truncateTo128Bits()
 
-    companion object: IntNumberStatic<Int128> {
+    companion object: SignedFixedSizeIntNumberT<Int128> {
 
         override val BITS: Int = 128
         override val BYTES: Int = 16
@@ -21,7 +21,7 @@ class Int128(value: BigInteger) : IntNumber<Int128> {
         fun fromUInt64(value1: UInt64, value0: UInt64): Int128 = (value1.toInt128() shl 64) or value0.toInt128()
 
         override fun to(number: IntNumber<*>): Int128 = number.toInt128()
-        override fun split(number: IntNumber<*>): List<Int128> = number.int128s()
+        override fun split(number: FixedSizeIntNumber<*>): List<Int128> = number.int128s()
         override fun of(value: Int): Int128 = Int128(value.toBigInteger())
         override fun parse(string: String, radix: Int): Int128 = Int128(BigInteger.parseString(string, radix))
 
@@ -37,7 +37,7 @@ class Int128(value: BigInteger) : IntNumber<Int128> {
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<Int128>
+    override val type: FixedSizeIntNumberT<Int128>
         get() = Int128
 
     override fun plus(other: Int128): Int128 = Int128(value + other.value)
@@ -132,5 +132,6 @@ class Int128(value: BigInteger) : IntNumber<Int128> {
     override fun hashCode(): Int = value.hashCode()
 
     override fun int8s() = (this shr bitWidth / 2).toInt64().int8s() + this.toInt64().int8s()
+    override fun uInt8s(): List<UInt8> = int8s().map { it.toUInt8() }
 
 }

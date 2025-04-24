@@ -5,5 +5,5 @@ package cengine.util.integer
 /**
  * This function generates a space-separated string of zero-padded hexadecimal values from an array of [IntNumber] objects.
  */
-inline fun <reified T : IntNumber<*>> Array<T>.hexDump(): String = joinToString(" ") { it.toUnsigned().zeroPaddedHex() }
+inline fun <reified T : UnsignedFixedSizeIntNumber<*>> Array<T>.hexDump(): String = joinToString(" ") { it.uPaddedHex() }
 

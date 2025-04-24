@@ -9,6 +9,7 @@ import cengine.lang.asm.target.riscv.RvDisassembler
 import cengine.lang.asm.target.riscv.RvDisassembler.InstrType.JAL
 import cengine.lang.asm.target.riscv.RvDisassembler.InstrType.JALR
 import cengine.util.Endianness
+import cengine.util.integer.BigInt
 import cengine.util.integer.BigInt.Companion.toBigInt
 import cengine.util.integer.Int64.Companion.toInt64
 import cengine.util.integer.UInt16
@@ -72,12 +73,12 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
         val instrBin = instrMemory.loadWord(pc, tracker)
 
         // DC
-        val decoded = RvDisassembler.RVInstrInfoProvider(instrBin) { toUInt64().toBigInt() }
+        val decoded = RvDisassembler.RVInstrInfoProvider(instrBin) { toUInt64() }
 
         // EX
         when (decoded.type) {
             RvDisassembler.InstrType.LUI -> {
-                baseRegs[decoded.rd] = (decoded.imm20uType.toLong() shl 12).toInt64()
+                baseRegs[decoded.rd] = (decoded.imm20uType.toLong() shl 12).toInt64().toUInt64()
                 pc += 4
             }
 
@@ -155,19 +156,19 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
 
             RvDisassembler.InstrType.LB -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm
-                baseRegs[decoded.rd] = dataMemory.loadInstance(address, tracker = tracker).toInt8().toInt64()
+                baseRegs[decoded.rd] = dataMemory.loadInstance(address, tracker = tracker).toInt8().toInt64().toUInt64()
                 pc += 4
             }
 
             RvDisassembler.InstrType.LH -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm
-                baseRegs[decoded.rd] = dataMemory.loadHalf(address, tracker = tracker).toInt16().toInt64()
+                baseRegs[decoded.rd] = dataMemory.loadHalf(address, tracker = tracker).toInt16().toInt64().toUInt64()
                 pc += 4
             }
 
             RvDisassembler.InstrType.LW -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm
-                baseRegs[decoded.rd] = dataMemory.loadWord(address, tracker = tracker).toInt32().toInt64()
+                baseRegs[decoded.rd] = dataMemory.loadWord(address, tracker = tracker).toInt32().toInt64().toUInt64()
                 pc += 4
             }
 
@@ -197,25 +198,25 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
 
             RvDisassembler.InstrType.SB -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm
-                dataMemory.storeEndianAware(address, baseRegs[decoded.rs2].toUInt8(), tracker = tracker)
+                dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2].toUInt8(), tracker = tracker)
                 pc += 4
             }
 
             RvDisassembler.InstrType.SH -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm
-                dataMemory.storeEndianAware(address, baseRegs[decoded.rs2].toUInt16(), tracker = tracker)
+                dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2].toUInt16(), tracker = tracker)
                 pc += 4
             }
 
             RvDisassembler.InstrType.SW -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm
-                dataMemory.storeEndianAware(address, baseRegs[decoded.rs2].toUInt32(), tracker = tracker)
+                dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2].toUInt32(), tracker = tracker)
                 pc += 4
             }
 
             RvDisassembler.InstrType.SD -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm
-                dataMemory.storeEndianAware(address, baseRegs[decoded.rs2], tracker = tracker)
+                dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2], tracker = tracker)
                 pc += 4
             }
 
@@ -226,7 +227,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
 
             RvDisassembler.InstrType.ADDIW -> {
                 val result = baseRegs[decoded.rs1].toInt32() + decoded.iTypeImm.toInt64().toInt32()
-                baseRegs[decoded.rd] = result.toInt64()
+                baseRegs[decoded.rd] = result.toInt64().toUInt64()
                 pc += 4
             }
 
@@ -269,7 +270,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
             }
 
             RvDisassembler.InstrType.SLLIW -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toUInt32() shl decoded.shamt.toInt()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toUInt32() shl decoded.shamt.toInt()).toUInt64()
                 pc += 4
             }
 
@@ -279,17 +280,17 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
             }
 
             RvDisassembler.InstrType.SRLIW -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toUInt32() shr decoded.shamt.toInt()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toUInt32() shr decoded.shamt.toInt()).toUInt64()
                 pc += 4
             }
 
             RvDisassembler.InstrType.SRAI -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toInt64() shr decoded.shamt.toInt()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toInt64() shr decoded.shamt.toInt()).toUInt64()
                 pc += 4
             }
 
             RvDisassembler.InstrType.SRAIW -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toInt32() shr decoded.shamt.toInt()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toInt32() shr decoded.shamt.toInt()).toUInt64()
                 pc += 4
             }
 
@@ -299,7 +300,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
             }
 
             RvDisassembler.InstrType.ADDW -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toInt32() + baseRegs[decoded.rs2].toInt32()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toInt32() + baseRegs[decoded.rs2].toInt32()).toUInt64()
                 pc += 4
             }
 
@@ -309,7 +310,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
             }
 
             RvDisassembler.InstrType.SUBW -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toInt32() - baseRegs[decoded.rs2].toInt32()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toInt32() - baseRegs[decoded.rs2].toInt32()).toUInt64()
                 pc += 4
             }
 
@@ -319,7 +320,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
             }
 
             RvDisassembler.InstrType.SLLW -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toInt32() shl baseRegs[decoded.rs2].toInt32()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toInt32() shl baseRegs[decoded.rs2].toInt32()).toUInt64()
                 pc += 4
             }
 
@@ -352,17 +353,17 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
             }
 
             RvDisassembler.InstrType.SRLW -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toUInt32() shr baseRegs[decoded.rs2].toInt()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toUInt32() shr baseRegs[decoded.rs2].toInt()).toUInt64()
                 pc += 4
             }
 
             RvDisassembler.InstrType.SRA -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toInt64() shr baseRegs[decoded.rs2].toInt()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toInt64() shr baseRegs[decoded.rs2].toInt()).toUInt64()
                 pc += 4
             }
 
             RvDisassembler.InstrType.SRAW -> {
-                baseRegs[decoded.rd] = baseRegs[decoded.rs1].toInt32() shr baseRegs[decoded.rs2].toULong().toInt()
+                baseRegs[decoded.rd] = (baseRegs[decoded.rs1].toInt32() shr baseRegs[decoded.rs2].toULong().toInt()).toUInt64()
                 pc += 4
             }
 
@@ -410,7 +411,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
 
             RvDisassembler.InstrType.CSRRWI -> {
                 val t = csrRegs[decoded.imm12iType]
-                csrRegs[decoded.imm12iType] = decoded.rs1
+                csrRegs[decoded.imm12iType] = decoded.rs1.toUInt64()
                 baseRegs[decoded.rd] = t
 
                 pc += 4
@@ -441,7 +442,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toLong().toBigInt()
                 val b = baseRegs[decoded.rs2].toLong().toBigInt()
 
-                baseRegs[decoded.rd] = ((a * b) shr 64).toUInt64()
+                baseRegs[decoded.rd] = BigInt((a * b).value shr 64).toUInt64()
                 pc += 4
             }
 
@@ -449,7 +450,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toLong().toBigInt()
                 val b = baseRegs[decoded.rs2].toBigInt()
 
-                baseRegs[decoded.rd] = ((a * b) shr 64).toUInt64()
+                baseRegs[decoded.rd] = BigInt((a * b).value shr 64).toUInt64()
                 pc += 4
             }
 
@@ -457,7 +458,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toBigInt()
                 val b = baseRegs[decoded.rs2].toBigInt()
 
-                baseRegs[decoded.rd] = ((a * b) shr 64).toUInt64()
+                baseRegs[decoded.rd] = BigInt((a * b).value shr 64).toUInt64()
                 pc += 4
             }
 
@@ -465,7 +466,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toInt64()
                 val b = baseRegs[decoded.rs2].toInt64()
 
-                baseRegs[decoded.rd] = a / b
+                baseRegs[decoded.rd] = (a / b).toUInt64()
                 pc += 4
             }
 
@@ -481,7 +482,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toInt64()
                 val b = baseRegs[decoded.rs2].toInt64()
 
-                baseRegs[decoded.rd] = a % b
+                baseRegs[decoded.rd] = (a % b).toUInt64()
                 pc += 4
             }
 
@@ -497,7 +498,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toInt32()
                 val b = baseRegs[decoded.rs2].toInt32()
 
-                baseRegs[decoded.rd] = (a * b).toInt64()
+                baseRegs[decoded.rd] = (a * b).toInt64().toUnsigned()
                 pc += 4
             }
 
@@ -505,7 +506,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toInt32()
                 val b = baseRegs[decoded.rs2].toInt32()
 
-                baseRegs[decoded.rd] = (a / b).toInt64()
+                baseRegs[decoded.rd] = (a / b).toInt64().toUnsigned()
                 pc += 4
             }
 
@@ -513,7 +514,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toUInt32()
                 val b = baseRegs[decoded.rs2].toUInt32()
 
-                baseRegs[decoded.rd] = a / b
+                baseRegs[decoded.rd] = (a / b).toUInt64()
                 pc += 4
             }
 
@@ -521,7 +522,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toInt32()
                 val b = baseRegs[decoded.rs2].toInt32()
 
-                baseRegs[decoded.rd] = (a % b).toInt64()
+                baseRegs[decoded.rd] = (a % b).toInt64().toUnsigned()
                 pc += 4
             }
 
@@ -529,7 +530,7 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 val a = baseRegs[decoded.rs1].toUInt32()
                 val b = baseRegs[decoded.rs2].toUInt32()
 
-                baseRegs[decoded.rd] = a % b
+                baseRegs[decoded.rd] = (a % b).toUInt64()
                 pc += 4
             }
 
@@ -595,6 +596,6 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 }
             }
         )
-        override val DISASSEMBLER: AsmDisassembler = RvDisassembler { toUInt64().toBigInt() }
+        override val DISASSEMBLER: AsmDisassembler = RvDisassembler { toUInt64() }
     }
 }

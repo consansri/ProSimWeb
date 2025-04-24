@@ -5,7 +5,8 @@ import cengine.console.SysOut
 import cengine.lang.asm.AsmBinaryProvider
 import cengine.util.integer.BigInt
 import cengine.util.integer.IntNumber
-import cengine.util.integer.IntNumberStatic
+import cengine.util.integer.IntNumberT
+import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.common.IConsole
 import emulator.kit.memory.MainMemory
 
@@ -33,11 +34,9 @@ import emulator.kit.memory.MainMemory
  *  @property features Holds specific Assembler features.
  *  @property settings Holds specific Architecture Setup settings.
  *
- *  Possible Features
- *  @property cache Not Essential: Possibly given by Config
  *
  */
-abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(val addrType: IntNumberStatic<ADDR>, val instanceType: IntNumberStatic<INSTANCE>) {
+abstract class Architecture<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(val addrType: IntNumberT<ADDR>, val instanceType: IntNumberT<INSTANCE>) {
 
     abstract val config: ArchConfig
 
@@ -115,7 +114,7 @@ abstract class Architecture<ADDR : IntNumber<*>, INSTANCE : IntNumber<*>>(val ad
             it.clear()
         }
         resetPC()
-        initializer?.initialize(memory)
+        initializer?.let { memory.initialize(it)}
         pcState.value = addrType.to(initializer?.entry() ?: BigInt.ZERO)
         SysOut.debug { "${this::class.simpleName} resetting!" }
         console.exeInfo("resetting")

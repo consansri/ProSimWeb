@@ -1,7 +1,7 @@
 package cengine.lang.obj.elf
 
 import cengine.util.Endianness
-import cengine.util.buffer.Int8Buffer
+import cengine.util.buffer.Buffer8
 import cengine.util.integer.Int8
 import cengine.util.integer.UInt64
 import cengine.util.integer.UInt8
@@ -43,8 +43,8 @@ data class ELF64_Sym(
     var st_value: Elf_Xword = UInt64.ZERO,
     var st_size: Elf_Xword = UInt64.ZERO,
 ): Sym() {
-    override fun build(endianness: Endianness): Array<Int8> {
-        val b = Int8Buffer(endianness)
+    override fun build(endianness: Endianness): Array<UInt8> {
+        val b = Buffer8(endianness)
 
         b.put(st_name)
         b.put(st_info)

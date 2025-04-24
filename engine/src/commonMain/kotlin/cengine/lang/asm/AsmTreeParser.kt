@@ -8,7 +8,7 @@ import cengine.psi.parser.PsiTreeParser
 import cengine.psi.parser.StringExprParser
 import cengine.psi.parser.pratt.ConfigurableExpressionParser
 
-open class AsmParser(
+open class AsmTreeParser(
     /** InstructionTypes which should get parsed */
     val instructionTypes: List<AsmInstructionT>,
     /** DirectiveTypes which should get parsed */
@@ -161,7 +161,7 @@ open class AsmParser(
                         // It returns true on success AND completes trialMarker.
                         // It returns false on failure AND should rollback internal state/not complete marker.
                         parseResult = with(candidate) {
-                            parse(this@AsmParser, trialMarker)
+                            parse(this@AsmTreeParser, trialMarker)
                         }
                     } catch (e: Exception) {
                         // Catch internal errors during parsing attempt
@@ -212,7 +212,7 @@ open class AsmParser(
 
                 with(directiveType) {
                     // Assume directiveType.parse is responsible for completing/dropping the marker
-                    parse(this@AsmParser, directiveMarker)
+                    parse(this@AsmTreeParser, directiveMarker)
                 }
                 overallSuccess = true
             }

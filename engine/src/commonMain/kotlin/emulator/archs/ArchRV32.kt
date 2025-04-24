@@ -65,7 +65,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
         val instrBin = instrMemory.loadWord(pc, tracker)
 
         // DC
-        val decoded = RvDisassembler.RVInstrInfoProvider(instrBin) { toUInt32().toBigInt() }
+        val decoded = RvDisassembler.RVInstrInfoProvider(instrBin) { toUInt32() }
 
         // EX
         when (decoded.type) {
@@ -148,13 +148,13 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
 
             RvDisassembler.InstrType.LB -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
-                baseRegs[decoded.rd] = dataMemory.loadInstance(address, tracker = tracker).toInt8().toInt32()
+                baseRegs[decoded.rd] = dataMemory.loadInstance(address, tracker = tracker).toInt8().toInt32().toUnsigned()
                 incPCBy4()
             }
 
             RvDisassembler.InstrType.LH -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
-                baseRegs[decoded.rd] = dataMemory.loadHalf(address, tracker = tracker).toInt16().toInt32()
+                baseRegs[decoded.rd] = dataMemory.loadHalf(address, tracker = tracker).toInt16().toInt32().toUnsigned()
                 incPCBy4()
             }
 
@@ -166,31 +166,31 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
 
             RvDisassembler.InstrType.LBU -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
-                baseRegs[decoded.rd] = dataMemory.loadInstance(address, tracker = tracker)
+                baseRegs[decoded.rd] = dataMemory.loadInstance(address, tracker = tracker).toUInt32()
                 incPCBy4()
             }
 
             RvDisassembler.InstrType.LHU -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
-                baseRegs[decoded.rd] = dataMemory.loadHalf(address, tracker = tracker)
+                baseRegs[decoded.rd] = dataMemory.loadHalf(address, tracker = tracker).toUInt32()
                 incPCBy4()
             }
 
             RvDisassembler.InstrType.SB -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm.toInt()
-                dataMemory.storeEndianAware(address, baseRegs[decoded.rs2].toUInt8(), tracker = tracker)
+                dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2].toUInt8(), tracker = tracker)
                 incPCBy4()
             }
 
             RvDisassembler.InstrType.SH -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm.toInt()
-                dataMemory.storeEndianAware(address, baseRegs[decoded.rs2].toUInt16(), tracker = tracker)
+                dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2].toUInt16(), tracker = tracker)
                 incPCBy4()
             }
 
             RvDisassembler.InstrType.SW -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm.toInt()
-                dataMemory.storeEndianAware(address, baseRegs[decoded.rs2], tracker = tracker)
+                dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2], tracker = tracker)
                 incPCBy4()
             }
 
@@ -250,7 +250,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
 
             RvDisassembler.InstrType.SRAI -> {
                 val result = baseRegs[decoded.rs1].toInt32() shr decoded.shamt.toInt()
-                baseRegs[decoded.rd] = result
+                baseRegs[decoded.rd] = result.toUInt32()
                 incPCBy4()
             }
 
@@ -303,8 +303,8 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
             }
 
             RvDisassembler.InstrType.SRA -> {
-                val result = baseRegs[decoded.rs1].toInt() shr baseRegs[decoded.rs2].toInt()
-                baseRegs[decoded.rd.toInt()] = result.toInt32()
+                val result = baseRegs[decoded.rs1].toInt32() shr baseRegs[decoded.rs2].toInt()
+                baseRegs[decoded.rd.toInt()] = result.toUnsigned()
                 incPCBy4()
             }
 
@@ -378,16 +378,16 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
 
             RvDisassembler.InstrType.MUL -> {
                 val result = (baseRegs[decoded.rs1].toInt32() * baseRegs[decoded.rs2].toInt32())
-                baseRegs[decoded.rd.toInt()] = result
+                baseRegs[decoded.rd.toInt()] = result.toUnsigned()
                 incPCBy4()
             }
 
             RvDisassembler.InstrType.MULH -> {
                 val a = baseRegs[decoded.rs1].toLong()
                 val b = baseRegs[decoded.rs2].toLong()
-                val result = (a * b).shr(32).toInt()
+                val result = (a * b).shr(32)
 
-                baseRegs[decoded.rd.toInt()] = result.toInt32()
+                baseRegs[decoded.rd.toInt()] = result.toInt().toUInt32()
                 incPCBy4()
             }
 
@@ -396,7 +396,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 val b = baseRegs[decoded.rs2].toUInt().toLong()
                 val result = (a * b).shr(32).toInt()
 
-                baseRegs[decoded.rd.toInt()] = result.toInt32()
+                baseRegs[decoded.rd.toInt()] = result.toUInt32()
                 incPCBy4()
             }
 
@@ -414,7 +414,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 val b = baseRegs[decoded.rs2].toInt()
                 val result = a / b
 
-                baseRegs[decoded.rd.toInt()] = result.toInt32()
+                baseRegs[decoded.rd.toInt()] = result.toUInt32()
                 incPCBy4()
             }
 
@@ -432,7 +432,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 val b = baseRegs[decoded.rs2].toInt()
                 val result = a % b
 
-                baseRegs[decoded.rd.toInt()] = result.toInt32()
+                baseRegs[decoded.rd.toInt()] = result.toUInt32()
                 incPCBy4()
             }
 
@@ -517,7 +517,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 }
             }
         )
-        override val DISASSEMBLER: AsmDisassembler = RvDisassembler { toUInt32().toBigInt() }
+        override val DISASSEMBLER: AsmDisassembler = RvDisassembler { toUInt32() }
 
     }
 

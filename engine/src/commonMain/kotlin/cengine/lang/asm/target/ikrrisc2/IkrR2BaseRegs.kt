@@ -1,7 +1,6 @@
 package cengine.lang.asm.target.ikrrisc2
 
 import cengine.lang.asm.psi.AsmRegisterT
-import cengine.lang.asm.target.riscv.RvRegT.IntT
 import cengine.psi.parser.PsiBuilder
 import kotlin.collections.get
 
@@ -41,7 +40,7 @@ enum class IkrR2BaseRegs: AsmRegisterT {
 
     override val displayName = name.lowercase()
     override val recognizable: List<String> = listOf(name.lowercase(), "x$ordinal")
-    override val numericalValue: UInt = ordinal.toUInt()
+    override val address: UInt = ordinal.toUInt()
 
 
 

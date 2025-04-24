@@ -4,7 +4,7 @@ import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.Sign
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 
-class UInt128(value: BigInteger) : IntNumber<UInt128> {
+class UInt128(value: BigInteger) : UnsignedFixedSizeIntNumber<UInt128> {
 
     override val value: BigInteger
 
@@ -14,7 +14,7 @@ class UInt128(value: BigInteger) : IntNumber<UInt128> {
         this.value = value.truncateTo128Bits()
     }
 
-    companion object: IntNumberStatic<UInt128> {
+    companion object : UnsignedFixedSizeIntNumberT<UInt128> {
 
         override val BITS: Int = 128
         override val BYTES: Int = 16
@@ -27,7 +27,7 @@ class UInt128(value: BigInteger) : IntNumber<UInt128> {
         fun fromUInt64(value1: UInt64, value0: UInt64): Int128 = (value1.toInt128() shl 64) or value0.toInt128()
 
         override fun to(number: IntNumber<*>): UInt128 = number.toUInt128()
-        override fun split(number: IntNumber<*>): List<UInt128> = number.uInt128s()
+        override fun split(number: FixedSizeIntNumber<*>): List<UInt128> = number.uInt128s()
         override fun of(value: Int): UInt128 = UInt128(value.toUInt().toBigInteger())
         override fun parse(string: String, radix: Int): UInt128 = UInt128(BigInteger.parseString(string, radix))
 
@@ -43,7 +43,7 @@ class UInt128(value: BigInteger) : IntNumber<UInt128> {
     override val byteCount: Int
         get() = BYTES
 
-    override val type: IntNumberStatic<UInt128>
+    override val type: FixedSizeIntNumberT<UInt128>
         get() = UInt128
 
     override fun plus(other: UInt128): UInt128 = UInt128(value + other.value)
@@ -51,9 +51,9 @@ class UInt128(value: BigInteger) : IntNumber<UInt128> {
     override fun times(other: UInt128): UInt128 = UInt128(value * other.value)
     override fun div(other: UInt128): UInt128 = UInt128(value / other.value)
     override fun rem(other: UInt128): UInt128 = UInt128(value % other.value)
+    override fun compareTo(other: UInt): Int = value.compareTo(other.toBigInteger())
+    override fun compareTo(other: ULong): Int = value.compareTo(other.toBigInteger())
 
-    @Deprecated("Can't negotiate unsigned value!", ReplaceWith("toInt128().unaryMinus().toUInt128()"))
-    override fun unaryMinus(): UInt128 = throw Exception("Can't negotiate unsigned value!")
     override fun inc(): UInt128 = UInt128(value.inc())
     override fun dec(): UInt128 = UInt128(value.dec())
 
@@ -125,8 +125,7 @@ class UInt128(value: BigInteger) : IntNumber<UInt128> {
 
     override fun toString(radix: Int): String = value.toString(radix)
 
-    @Deprecated("Unnecessary", ReplaceWith("this"))
-    override fun toUnsigned(): UInt128 = this
+    override fun toSigned(): Int128 = toInt128()
 
     override fun toString(): String = value.toString()
     override fun fitsInSigned(bitWidth: Int): Boolean = toInt128().fitsInSigned(bitWidth)
@@ -140,4 +139,5 @@ class UInt128(value: BigInteger) : IntNumber<UInt128> {
     override fun hashCode(): Int = value.hashCode()
 
     override fun int8s() = (this shr bitWidth / 2).toInt64().int8s() + this.toInt64().int8s()
+    override fun uInt8s(): List<UInt8> = (this shr bitWidth / 2).toUInt64().uInt8s() + this.toUInt64().uInt8s()
 }

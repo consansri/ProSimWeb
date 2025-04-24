@@ -4,11 +4,16 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt8
+import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import emulator.kit.register.FieldProvider
 import emulator.kit.register.RegFile
 
 class T6502BaseRegs : RegFile<UInt8> {
     override val name: String = "base"
+
+    override val type: UnsignedFixedSizeIntNumberT<UInt8>
+        get() = UInt8
+
     override val indentificators: List<FieldProvider> = listOf(object : FieldProvider {
         override val name: String = "NAME"
 
@@ -43,8 +48,8 @@ class T6502BaseRegs : RegFile<UInt8> {
         UInt8(0b11111111U),
     )
 
-    override fun set(index: Int, value: IntNumber<*>) {
-        regValues[index] = value.toUInt8()
+    override fun set(index: Int, value: UInt8) {
+        regValues[index] = value
     }
 
     override fun isVisible(index: Int): Boolean = true
