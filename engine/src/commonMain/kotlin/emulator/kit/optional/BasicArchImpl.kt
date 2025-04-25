@@ -9,7 +9,7 @@ import emulator.kit.memory.Memory
 
 import kotlin.time.measureTime
 
-abstract class BasicArchImpl<ADDR: UnsignedFixedSizeIntNumber<ADDR>, INSTANCE: UnsignedFixedSizeIntNumber<INSTANCE>>(addrType: IntNumberT<ADDR>, instanceType: IntNumberT<INSTANCE>) : emulator.kit.Architecture<ADDR, INSTANCE>(addrType, instanceType) {
+abstract class BasicArchImpl<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(addrType: IntNumberT<ADDR>, instanceType: IntNumberT<INSTANCE>) : emulator.kit.Architecture<ADDR, INSTANCE>(addrType, instanceType) {
     override fun exeContinuous() {
         var instrCount = 0L
         val tracker = Memory.AccessTracker()
@@ -135,7 +135,12 @@ abstract class BasicArchImpl<ADDR: UnsignedFixedSizeIntNumber<ADDR>, INSTANCE: U
     abstract fun executeNext(tracker: Memory.AccessTracker): ExecutionResult
 
 
-    data class ExecutionResult(val valid: Boolean, val typeIsReturnFromSubroutine: Boolean = false, val typeIsBranchToSubroutine: Boolean = false)
+    data class ExecutionResult(
+        val valid: Boolean,
+        val typeIsReturnFromSubroutine: Boolean = false,
+        val typeIsBranchToSubroutine: Boolean = false,
+        val typeIsException: Boolean = false
+    )
 
 
 }

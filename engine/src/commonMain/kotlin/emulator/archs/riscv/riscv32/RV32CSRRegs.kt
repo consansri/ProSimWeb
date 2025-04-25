@@ -2,7 +2,10 @@ package emulator.archs.riscv.riscv32
 
 
 import androidx.compose.runtime.mutableStateListOf
+import cengine.lang.asm.target.riscv.RvRegT
 import cengine.util.integer.UInt32
+import cengine.util.integer.UInt32.Companion.toUInt32
+import cengine.util.integer.UInt64
 import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import emulator.archs.riscv.RV
 import emulator.kit.register.FieldProvider
@@ -27,6 +30,12 @@ class RV32CSRRegs : RegFile<UInt32> {
     override fun set(index: Int, value: UInt32) {
         regValues[index] = value
     }
+
+    operator fun set(reg: RvRegT.RvCsrT, value: UInt32) {
+        this[reg.address.toUInt32()] = value
+    }
+
+    operator fun get(reg: RvRegT.RvCsrT): UInt32 = this[reg.address.toUInt32()]
 
     override fun isVisible(index: Int): Boolean = when (index) {
         // User

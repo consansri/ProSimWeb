@@ -81,7 +81,6 @@ data object RvConst {
     val FUNCT7_WFI = UInt32(0b0001000U) // rs2=0b00101
     val FUNCT7_MRET = UInt32(0b0011000U) // rs2=0b00010
     val FUNCT7_SRET = UInt32(0b0001000U) // rs2=0b00010
-    val FUNCT7_URET = UInt32(0b0000000U) // rs2=0b00010
 
     val FUNCT3_M_MUL = UInt32(0b000U)
     val FUNCT3_M_MULH = UInt32(0b001U)
@@ -91,7 +90,6 @@ data object RvConst {
     val FUNCT3_M_DIVU = UInt32(0b101U)
     val FUNCT3_M_REM = UInt32(0b110U)
     val FUNCT3_M_REMU = UInt32(0b111U)
-
 
 
     /**
@@ -167,7 +165,7 @@ data object RvConst {
 
 
     // Helper for Immediate Packing
-    fun packImmI(imm: UInt32): UInt32 = (imm and 0xFFFu.toUInt32()) shl 20
+    fun packImmI12(imm: UInt32): UInt32 = (imm and 0xFFFu.toUInt32()) shl 20
     fun packImmS(imm: UInt32): UInt32 = (((imm shr 5) and 0x7Fu.toUInt32()) shl 25) or ((imm and 0x1Fu.toUInt32()) shl 7)
     fun packImmB(imm: UInt32): UInt32 = (((imm shr 12) and 0x1u.toUInt32()) shl 31) or // imm[12]
             (((imm shr 5) and 0x3Fu.toUInt32()) shl 25) or // imm[10:5]

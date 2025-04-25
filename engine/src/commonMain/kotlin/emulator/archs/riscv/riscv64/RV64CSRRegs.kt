@@ -1,9 +1,15 @@
 package emulator.archs.riscv.riscv64
 
 import androidx.compose.runtime.mutableStateListOf
+import cengine.lang.asm.target.riscv.RvRegT
+import cengine.util.integer.UInt32.Companion.toUInt32
 import cengine.util.integer.UInt64
+import cengine.util.integer.UInt64.Companion.toUInt64
 import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import emulator.archs.riscv.RV
+import emulator.archs.riscv.csr.CsrAddr
+import emulator.archs.riscv.csr.PriviledgeLevels.PRIV_MACHINE
+import emulator.archs.riscv.csr.StatusBits
 import emulator.kit.register.FieldProvider
 import emulator.kit.register.RegFile
 
@@ -27,6 +33,12 @@ class RV64CSRRegs : RegFile<UInt64> {
         regValues[index] = value
     }
 
+    operator fun set(reg: RvRegT.RvCsrT, value: UInt64) {
+        this[reg.address.toUInt32()] = value
+    }
+
+    operator fun get(reg: RvRegT.RvCsrT): UInt64 = this[reg.address.toUInt32()]
+    
     override fun isVisible(index: Int): Boolean = when (index) {
         // User
         in 0..0xFF -> when (index) {

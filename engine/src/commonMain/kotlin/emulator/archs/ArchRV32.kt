@@ -7,10 +7,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.asm.target.riscv.RvDisassembler
+import cengine.lang.asm.target.riscv.RvDisassembler.InstrType.*
+import cengine.lang.asm.target.riscv.RvRegT
 import cengine.util.Endianness
 import cengine.util.integer.UInt16
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
+import cengine.util.integer.UInt64.Companion.toUInt64
 import cengine.util.integer.UInt8
 import emulator.archs.riscv.riscv32.RV32BaseRegs
 import emulator.archs.riscv.riscv32.RV32CSRRegs
@@ -68,36 +71,49 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
 
         // EX
         when (decoded.type) {
-            RvDisassembler.InstrType.LUI -> {
+            LUI -> {
                 baseRegs[decoded.rd.toInt()] = (decoded.imm20uType shl 12)
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.AUIPC -> {
+            AUIPC -> {
                 val result = pc + (decoded.imm20uType shl 12).toInt()
                 baseRegs[decoded.rd.toInt()] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.JAL -> {
+            JAL -> {
                 baseRegs[decoded.rd] = pc + 4
                 pc += decoded.jTypeOffset.toInt()
             }
 
-            RvDisassembler.InstrType.JALR -> {
+            JALR -> {
                 baseRegs[decoded.rd] = pc + 4
-                pc = baseRegs[decoded.rs1] + decoded.imm12iType.signExtend(12) and (-1 shl 1)
+                pc = baseRegs[decoded.rs1] + decoded.iTypeImm.toUInt32() and (-1 shl 1)
             }
 
-            RvDisassembler.InstrType.ECALL -> {
-
+            ECALL -> {
+                // Environment call - Triggers a synchronous trap
+                console.log("ECALL triggered at 0x${pc.toString(16)}")
+                // Basic Machine Mode Trap Handling:
+                csrRegs[RvRegT.RvCsrT.MachineT.X341] = pc                 // Save PC of ECALL instruction
+                csrRegs[RvRegT.RvCsrT.MachineT.X342] = 11u.toUInt32()                  // Cause: Environment call from M-mode (assuming M-mode)
+                // TODO: Implement privilege level detection and use corresponding cause codes (8=U, 9=S)
+                // TODO: Update MSTATUS (e.g., save MIE to MPIE, clear MIE)
+                pc = csrRegs[RvRegT.RvCsrT.MachineT.X305] // Jump to Machine Trap Vector Handler
             }
 
-            RvDisassembler.InstrType.EBREAK -> {
-
+            EBREAK -> {
+                // Environment breakpoint - Triggers a synchronous trap
+                console.log("EBREAK triggered at 0x${pc.toString(16)}")
+                // Basic Machine Mode Trap Handling:
+                csrRegs[RvRegT.RvCsrT.MachineT.X341] = pc                 // Save PC of EBREAK instruction
+                csrRegs[RvRegT.RvCsrT.MachineT.X342] = 3u.toUInt32()                   // Cause: Breakpoint
+                // TODO: Update MSTATUS
+                pc = csrRegs[RvRegT.RvCsrT.MachineT.X305] // Jump to Machine Trap Vector Handler
             }
 
-            RvDisassembler.InstrType.BEQ -> {
+            BEQ -> {
                 if (baseRegs[decoded.rs1] == baseRegs[decoded.rs2]) {
                     pc += decoded.bTypeOffset.toInt()
                 } else {
@@ -105,7 +121,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 }
             }
 
-            RvDisassembler.InstrType.BNE -> {
+            BNE -> {
                 if (baseRegs[decoded.rs1] != baseRegs[decoded.rs2]) {
                     pc += decoded.bTypeOffset.toInt()
                 } else {
@@ -113,7 +129,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 }
             }
 
-            RvDisassembler.InstrType.BLT -> {
+            BLT -> {
                 if (baseRegs[decoded.rs1].toInt() < baseRegs[decoded.rs2].toInt()) {
                     pc += decoded.bTypeOffset.toInt()
                 } else {
@@ -121,7 +137,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 }
             }
 
-            RvDisassembler.InstrType.BGE -> {
+            BGE -> {
                 if (baseRegs[decoded.rs1].toInt() >= baseRegs[decoded.rs2].toInt()) {
                     pc += decoded.bTypeOffset.toInt()
                 } else {
@@ -129,7 +145,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 }
             }
 
-            RvDisassembler.InstrType.BLTU -> {
+            BLTU -> {
                 if (baseRegs[decoded.rs1].toUInt() < baseRegs[decoded.rs2].toUInt()) {
                     pc += decoded.bTypeOffset.toInt()
                 } else {
@@ -137,7 +153,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 }
             }
 
-            RvDisassembler.InstrType.BGEU -> {
+            BGEU -> {
                 if (baseRegs[decoded.rs1].toUInt() >= baseRegs[decoded.rs2].toUInt()) {
                     pc += decoded.bTypeOffset.toInt()
                 } else {
@@ -145,61 +161,61 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 }
             }
 
-            RvDisassembler.InstrType.LB -> {
+            LB -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = dataMemory.loadInstance(address, tracker = tracker).toInt8().toInt32().toUnsigned()
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.LH -> {
+            LH -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = dataMemory.loadHalf(address, tracker = tracker).toInt16().toInt32().toUnsigned()
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.LW -> {
+            LW -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = dataMemory.loadWord(address, tracker = tracker)
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.LBU -> {
+            LBU -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = dataMemory.loadInstance(address, tracker = tracker).toUInt32()
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.LHU -> {
+            LHU -> {
                 val address = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = dataMemory.loadHalf(address, tracker = tracker).toUInt32()
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SB -> {
+            SB -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm.toInt()
                 dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2].toUInt8(), tracker = tracker)
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SH -> {
+            SH -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm.toInt()
                 dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2].toUInt16(), tracker = tracker)
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SW -> {
+            SW -> {
                 val address = baseRegs[decoded.rs1] + decoded.sTypeImm.toInt()
                 dataMemory.storeEndianAwareValue(address, baseRegs[decoded.rs2], tracker = tracker)
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.ADDI -> {
+            ADDI -> {
                 val result = baseRegs[decoded.rs1] + decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SLTI -> {
+            SLTI -> {
                 if (baseRegs[decoded.rs1].toInt() < decoded.iTypeImm.toInt()) {
                     baseRegs[decoded.rd] = UInt32.ONE
                 } else {
@@ -208,8 +224,8 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SLTIU -> {
-                baseRegs[decoded.rd] = if (baseRegs[decoded.rs1] < decoded.imm12iType) {
+            SLTIU -> {
+                baseRegs[decoded.rd] = if (baseRegs[decoded.rs1] < decoded.iTypeImm.toUInt32()) {
                     UInt32.ONE
                 } else {
                     UInt32.ZERO
@@ -217,61 +233,61 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.XORI -> {
+            XORI -> {
                 val result = baseRegs[decoded.rs1] xor decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.ORI -> {
+            ORI -> {
                 val result = baseRegs[decoded.rs1] or decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.ANDI -> {
+            ANDI -> {
                 val result = baseRegs[decoded.rs1] and decoded.iTypeImm.toInt()
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SLLI -> {
-                val result = baseRegs[decoded.rs1] shl decoded.shamt.toInt()
+            SLLI -> {
+                val result = baseRegs[decoded.rs1] shl decoded.shamtRV32
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SRLI -> {
-                val result = baseRegs[decoded.rs1] shr decoded.shamt.toInt()
+            SRLI -> {
+                val result = baseRegs[decoded.rs1] shr decoded.shamtRV32
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SRAI -> {
-                val result = baseRegs[decoded.rs1].toInt32() shr decoded.shamt.toInt()
+            SRAI -> {
+                val result = baseRegs[decoded.rs1].toInt32() shr decoded.shamtRV32.toInt()
                 baseRegs[decoded.rd] = result.toUInt32()
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.ADD -> {
+            ADD -> {
                 val result = baseRegs[decoded.rs1] + baseRegs[decoded.rs2]
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SUB -> {
+            SUB -> {
                 val result = baseRegs[decoded.rs1] - baseRegs[decoded.rs2]
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SLL -> {
+            SLL -> {
                 val result = (baseRegs[decoded.rs1] shl baseRegs[decoded.rs2])
                 baseRegs[decoded.rd] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SLT -> {
+            SLT -> {
                 baseRegs[decoded.rd] = if (baseRegs[decoded.rs1].toInt() < baseRegs[decoded.rs2].toInt()) {
                     UInt32.ONE
                 } else {
@@ -280,7 +296,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SLTU -> {
+            SLTU -> {
                 baseRegs[decoded.rd] = if (baseRegs[decoded.rs1].toUInt() < baseRegs[decoded.rs2].toUInt()) {
                     UInt32.ONE
                 } else {
@@ -289,99 +305,99 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.XOR -> {
+            XOR -> {
                 val result = baseRegs[decoded.rs1] xor baseRegs[decoded.rs2]
                 baseRegs[decoded.rd.toInt()] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SRL -> {
+            SRL -> {
                 val result = baseRegs[decoded.rs1] shr baseRegs[decoded.rs2]
                 baseRegs[decoded.rd.toInt()] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.SRA -> {
+            SRA -> {
                 val result = baseRegs[decoded.rs1].toInt32() shr baseRegs[decoded.rs2].toInt()
                 baseRegs[decoded.rd.toInt()] = result.toUnsigned()
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.OR -> {
+            OR -> {
                 val result = baseRegs[decoded.rs1] or baseRegs[decoded.rs2]
                 baseRegs[decoded.rd.toInt()] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.AND -> {
+            AND -> {
                 val result = baseRegs[decoded.rs1] and baseRegs[decoded.rs2]
                 baseRegs[decoded.rd.toInt()] = result
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.FENCE -> {
+            FENCE -> {
 
             }
 
-            RvDisassembler.InstrType.FENCEI -> {
+            FENCEI -> {
 
             }
 
-            RvDisassembler.InstrType.CSRRW -> {
-                val t = csrRegs[decoded.imm12iType]
-                csrRegs[decoded.imm12iType] = baseRegs[decoded.rs1]
+            CSRRW -> {
+                val t = csrRegs[decoded.iTypeImm.toUInt32()]
+                csrRegs[decoded.iTypeImm.toUInt32()] = baseRegs[decoded.rs1]
                 baseRegs[decoded.rd] = t
 
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.CSRRS -> {
-                val t = csrRegs[decoded.imm12iType]
-                csrRegs[decoded.imm12iType] = baseRegs[decoded.rs1] or csrRegs[decoded.imm12iType]
+            CSRRS -> {
+                val t = csrRegs[decoded.iTypeImm.toUInt32()]
+                csrRegs[decoded.iTypeImm.toUInt32()] = baseRegs[decoded.rs1] or csrRegs[decoded.iTypeImm.toUInt32()]
                 baseRegs[decoded.rd] = t
 
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.CSRRC -> {
-                val t = csrRegs[decoded.imm12iType]
-                csrRegs[decoded.imm12iType] = baseRegs[decoded.rs1] and csrRegs[decoded.imm12iType]
+            CSRRC -> {
+                val t = csrRegs[decoded.iTypeImm.toUInt32()]
+                csrRegs[decoded.iTypeImm.toUInt32()] = baseRegs[decoded.rs1] and csrRegs[decoded.iTypeImm.toUInt32()]
                 baseRegs[decoded.rd] = t
 
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.CSRRWI -> {
-                val t = csrRegs[decoded.imm12iType]
-                csrRegs[decoded.imm12iType] = decoded.rs1
+            CSRRWI -> {
+                val t = csrRegs[decoded.iTypeImm.toUInt32()]
+                csrRegs[decoded.iTypeImm.toUInt32()] = decoded.rs1
                 baseRegs[decoded.rd] = t
 
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.CSRRSI -> {
-                val t = csrRegs[decoded.imm12iType]
-                csrRegs[decoded.imm12iType] = t or decoded.rs1.toInt()
+            CSRRSI -> {
+                val t = csrRegs[decoded.iTypeImm.toUInt32()]
+                csrRegs[decoded.iTypeImm.toUInt32()] = t or decoded.rs1.toInt()
                 baseRegs[decoded.rd] = t
 
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.CSRRCI -> {
-                val t = csrRegs[decoded.imm12iType]
-                csrRegs[decoded.imm12iType] = t and decoded.rs1.inv().toInt()
+            CSRRCI -> {
+                val t = csrRegs[decoded.iTypeImm.toUInt32()]
+                csrRegs[decoded.iTypeImm.toUInt32()] = t and decoded.rs1.inv().toInt()
                 baseRegs[decoded.rd] = t
 
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.MUL -> {
+            MUL -> {
                 val result = (baseRegs[decoded.rs1].toInt32() * baseRegs[decoded.rs2].toInt32())
                 baseRegs[decoded.rd.toInt()] = result.toUnsigned()
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.MULH -> {
+            MULH -> {
                 val a = baseRegs[decoded.rs1].toLong()
                 val b = baseRegs[decoded.rs2].toLong()
                 val result = (a * b).shr(32)
@@ -390,7 +406,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.MULHSU -> {
+            MULHSU -> {
                 val a = baseRegs[decoded.rs1].toInt().toLong()
                 val b = baseRegs[decoded.rs2].toUInt().toLong()
                 val result = (a * b).shr(32).toInt()
@@ -399,7 +415,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.MULHU -> {
+            MULHU -> {
                 val a = baseRegs[decoded.rs1].toUInt().toULong()
                 val b = baseRegs[decoded.rs2].toUInt().toULong()
                 val result = (a * b).shr(32).toUInt()
@@ -408,7 +424,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.DIV -> {
+            DIV -> {
                 val a = baseRegs[decoded.rs1].toInt()
                 val b = baseRegs[decoded.rs2].toInt()
                 val result = a / b
@@ -417,7 +433,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.DIVU -> {
+            DIVU -> {
                 val a = baseRegs[decoded.rs1].toUInt()
                 val b = baseRegs[decoded.rs2].toUInt()
                 val result = a / b
@@ -426,7 +442,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.REM -> {
+            REM -> {
                 val a = baseRegs[decoded.rs1].toInt()
                 val b = baseRegs[decoded.rs2].toInt()
                 val result = a % b
@@ -435,7 +451,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            RvDisassembler.InstrType.REMU -> {
+            REMU -> {
                 val a = baseRegs[decoded.rs1].toUInt()
                 val b = baseRegs[decoded.rs2].toUInt()
                 val result = a % b
@@ -444,27 +460,66 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                 incPCBy4()
             }
 
-            null -> {
-                console.error("Invalid Instruction!")
-                return ExecutionResult(false)
+            // --- System Return/Fence/Wait ---
+            SRET -> {
+                // Return from Supervisor Mode Trap
+                // Simplified: Set PC from SEPC. Full impl needs SSTATUS/privilege handling.
+                pc = csrRegs[RvRegT.RvCsrT.SupervisorT.X141]
+                // TODO: Restore privilege level from SSTATUS.SPP
+                // TODO: Restore SSTATUS.SIE from SSTATUS.SPIE, set SSTATUS.SPIE = 1
+                console.log("SRET executed (simplified: pc <- sepc)")
+            }
+
+            MRET -> {
+                // Return from Machine Mode Trap
+                // Simplified: Set PC from MEPC. Full impl needs MSTATUS/privilege handling.
+                pc = csrRegs[RvRegT.RvCsrT.MachineT.X341]
+                // TODO: Restore privilege level from MSTATUS.MPP
+                // TODO: Restore MSTATUS.MIE from MSTATUS.MPIE, set MSTATUS.MPIE = 1
+                console.log("MRET executed (simplified: pc <- mepc)")
+            }
+
+            WFI -> {
+                // Wait For Interrupt - Hint, often treated as NOP in simple emulators
+                // TODO: Implement interrupt checking logic if needed. If interrupt pending, WFI does nothing. If not, halt until interrupt.
+                console.log("WFI executed (treated as NOP)")
+                pc += 4
+            }
+
+            SFENCE_VMA -> {
+                // Supervisor Memory Management Fence - NOP in models without TLB/VM
+                // TODO: Implement TLB flush/sync logic if VM is modeled.
+                // Operands decoded.rs1 (ASID) and decoded.rs2 (vaddr) can be used.
+                console.log("SFENCE.VMA executed (treated as NOP)")
+                pc += 4
             }
 
             else -> {
-                console.error("${decoded.type} is not a ${description.name} instruction!")
-                return ExecutionResult(false)
+                console.error("Invalid or unknown instruction binary: 0x${instrBin.toString(16)} at PC=0x${pc.toString(16)}")
+                // Trigger Illegal Instruction Trap
+                csrRegs[RvRegT.RvCsrT.MachineT.X341] = pc
+                csrRegs[RvRegT.RvCsrT.MachineT.X342] = 2u.toUInt32() // Cause: Illegal instruction
+                csrRegs[RvRegT.RvCsrT.MachineT.X343] = instrBin // Store offending instruction
+                pc = csrRegs[RvRegT.RvCsrT.MachineT.X305]
             }
         }
 
         val isReturnFromSubroutine = when (decoded.type) {
-            RvDisassembler.InstrType.JALR -> true
+            JALR -> true
             else -> false
         }
         val isBranchToSubroutine = when (decoded.type) {
-            RvDisassembler.InstrType.JAL -> true
+            JAL -> true
             else -> false
         }
 
-        return ExecutionResult(true, typeIsReturnFromSubroutine = isReturnFromSubroutine, typeIsBranchToSubroutine = isBranchToSubroutine)
+        val isException = when (decoded.type) {
+            ECALL, EBREAK, null -> true
+            LWU, LD, SD, ADDIW, SLLIW, SRLIW, SRAIW, ADDW, SUBW, SLLW, SRLW, SRAW, MULW, DIVW, DIVUW, REMW, REMUW -> true
+            else -> false
+        }
+
+        return ExecutionResult(true, typeIsReturnFromSubroutine = isReturnFromSubroutine, typeIsBranchToSubroutine = isBranchToSubroutine, typeIsException = isException)
     }
 
 

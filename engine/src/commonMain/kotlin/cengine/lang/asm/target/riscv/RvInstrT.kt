@@ -1,5 +1,6 @@
 package cengine.lang.asm.target.riscv
 
+import cengine.console.SysOut
 import cengine.lang.asm.AsmTreeParser
 import cengine.lang.asm.gas.AsmBackend
 import cengine.lang.asm.gas.AsmCodeGenerator
@@ -105,7 +106,6 @@ sealed interface RvInstrT : AsmInstructionT {
         // System Instructions (Environment)
         ECALL("ecall", NONE),
         EBREAK("ebreak", NONE),
-        URET("uret", NONE),
         SRET("sret", NONE),
         MRET("mret", NONE),
         WFI("wfi", NONE),
@@ -176,7 +176,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         ANDI -> RvConst.FUNCT3_ANDI_AND
                         else -> throw Exception("Internal error: Unexpected I-type instruction")
                     }
-                    RvConst.packImmI(imm) or (rs1 shl 15) or (funct3 shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
+                    RvConst.packImmI12(imm) or (rs1 shl 15) or (funct3 shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
                 }
 
                 // I-Type (Shifts) - Assuming RV32 shamt (5 bits)
@@ -219,7 +219,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         LHU -> RvConst.FUNCT3_LOAD_HU
                         else -> throw Exception("Internal error: Unexpected Load instruction")
                     }
-                    RvConst.packImmI(imm) or (rs1 shl 15) or (funct3 shl 12) or (rd shl 7) or RvConst.OPC_LOAD
+                    RvConst.packImmI12(imm) or (rs1 shl 15) or (funct3 shl 12) or (rd shl 7) or RvConst.OPC_LOAD
                 }
 
                 // I-Type (Jump and Link Register)
@@ -231,7 +231,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         throw Exception("Immediate offset $immVal does not fit in 12 signed bits for $keyWord")
                     }
                     val imm = immVal.toInt32().toUInt32()
-                    RvConst.packImmI(imm) or (rs1 shl 15) or (rd shl 7) or RvConst.OPC_JALR
+                    RvConst.packImmI12(imm) or (rs1 shl 15) or (rd shl 7) or RvConst.OPC_JALR
                 }
 
                 // R-Type (Register-Register Arithmetic/Logic)
@@ -332,7 +332,6 @@ sealed interface RvInstrT : AsmInstructionT {
                 // System Instructions (Environment)
                 ECALL -> (RvConst.IMM12_ECALL shl 20) or (UInt32.ZERO shl 15) or (RvConst.FUNCT3_ECALL_EBREAK_MRET_etc shl 12) or (UInt32.ZERO shl 7) or RvConst.OPC_SYSTEM
                 EBREAK -> (RvConst.IMM12_EBREAK shl 20) or (UInt32.ZERO shl 15) or (RvConst.FUNCT3_ECALL_EBREAK_MRET_etc shl 12) or (UInt32.ZERO shl 7) or RvConst.OPC_SYSTEM
-                URET -> (RvConst.FUNCT7_URET shl 25) or (0b00010.toUInt32() shl 20) or (UInt32.ZERO shl 15) or (RvConst.FUNCT3_ECALL_EBREAK_MRET_etc shl 12) or (UInt32.ZERO shl 7) or RvConst.OPC_SYSTEM
                 SRET -> (RvConst.FUNCT7_SRET shl 25) or (0b00010.toUInt32() shl 20) or (UInt32.ZERO shl 15) or (RvConst.FUNCT3_ECALL_EBREAK_MRET_etc shl 12) or (UInt32.ZERO shl 7) or RvConst.OPC_SYSTEM
                 MRET -> (RvConst.FUNCT7_MRET shl 25) or (0b00010.toUInt32() shl 20) or (UInt32.ZERO shl 15) or (RvConst.FUNCT3_ECALL_EBREAK_MRET_etc shl 12) or (UInt32.ZERO shl 7) or RvConst.OPC_SYSTEM
                 WFI -> (RvConst.FUNCT7_WFI shl 25) or (0b00101.toUInt32() shl 20) or (UInt32.ZERO shl 15) or (RvConst.FUNCT3_ECALL_EBREAK_MRET_etc shl 12) or (UInt32.ZERO shl 7) or RvConst.OPC_SYSTEM
@@ -445,7 +444,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             throw Exception("Immediate offset $immVal does not fit in 12 signed bits for JALR")
                         }
                         val imm = immVal.toInt32().toUInt32()
-                        RvConst.packImmI(imm) or (rs1 shl 15) or (rd shl 7) or RvConst.OPC_JALR
+                        RvConst.packImmI12(imm) or (rs1 shl 15) or (rd shl 7) or RvConst.OPC_JALR
                     }
 
                     // Others should have been handled in Pass 1
@@ -498,7 +497,9 @@ sealed interface RvInstrT : AsmInstructionT {
                         if (!immVal.fitsInSigned(12)) instr.addError("Immediate $immVal out of 12-bit signed range for $keyWord")
                         val imm = immVal.toInt32().toUInt32()
                         // ADDIW: funct3=000, opcode=OPC_ARITH_IMM_WORD
-                        RvConst.packImmI(imm) or (rs1 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM_WORD
+                        val binary = RvConst.packImmI12(imm) or (rs1 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM_WORD
+                        SysOut.log( "ADDIW: " + binary.toString(2))
+                        binary
                     }
 
                     SLLIW, SRLIW, SRAIW -> {
@@ -550,7 +551,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             LD -> RvConst.FUNCT3_LOAD_D
                             else -> UInt32.ZERO
                         }
-                        RvConst.packImmI(imm) or (rs1 shl 15) or (funct3 shl 12) or (rd shl 7) or RvConst.OPC_LOAD
+                        RvConst.packImmI12(imm) or (rs1 shl 15) or (funct3 shl 12) or (rd shl 7) or RvConst.OPC_LOAD
                     }
 
                     SD -> { // Store Doubleword
@@ -671,7 +672,7 @@ sealed interface RvInstrT : AsmInstructionT {
         fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateAddi(rd: UInt32, rs1: UInt32, imm: UInt32, instr: AsmInstruction? = null): UInt32 {
             // Basic range check (can be more sophisticated if needed)
             if (!imm.fitsInSignedOrUnsigned(12)) instr?.addError("Internal Error: ADDI immediate ($imm) out of range during pseudo-op expansion")
-            return RvConst.packImmI(imm) or (rs1 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
+            return RvConst.packImmI12(imm) or (rs1 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
         }
 
         // Helper to generate LUI
@@ -683,7 +684,9 @@ sealed interface RvInstrT : AsmInstructionT {
         // Helper to generate ADDIW (RV64)
         fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateAddiw(rd: UInt32, rs1: UInt32, imm: UInt32, instr: AsmInstruction? = null): UInt32 {
             if (!imm.fitsInSignedOrUnsigned(12)) instr?.addError("Internal Error: ADDIW immediate ($imm) out of range during pseudo-op expansion")
-            return RvConst.packImmI(imm) or (rs1 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM_WORD
+            val binary = RvConst.packImmI12(imm) or (rs1 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM_WORD
+            SysOut.log("Li addiw: ${binary.toString(2)}")
+            return binary
         }
 
         // Helper to generate SLLI
@@ -709,7 +712,7 @@ sealed interface RvInstrT : AsmInstructionT {
         // Helper to generate JALR
         fun <T : AsmCodeGenerator.Section> AsmBackend<T>.generateJalr(rd: UInt32, rs1: UInt32, imm: UInt32, instr: AsmInstruction? = null): UInt32 {
             if (!imm.fitsInSignedOrUnsigned(12)) instr?.addError("Internal Error: JALR immediate ($imm) out of range during pseudo-op expansion")
-            return RvConst.packImmI(imm) or (rs1 shl 15) or (rd shl 7) or RvConst.OPC_JALR
+            return RvConst.packImmI12(imm) or (rs1 shl 15) or (rd shl 7) or RvConst.OPC_JALR
         }
 
         // Helper to generate AUIPC
@@ -818,7 +821,7 @@ sealed interface RvInstrT : AsmInstructionT {
                             val rd = regs[0]
                             val rs1 = regs[1]
                             val imm = (-1).toUInt32() // Gets sign extended by packImmI
-                            val binary = RvConst.packImmI(imm) or (rs1 shl 15) or (RvConst.FUNCT3_XORI_XOR shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
+                            val binary = RvConst.packImmI12(imm) or (rs1 shl 15) or (RvConst.FUNCT3_XORI_XOR shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
                             context.section.content.put(binary)
                         }
 
@@ -840,7 +843,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         SEQZ -> { // sltiu rd, rs, 1
                             val rd = regs[0]
                             val rs1 = regs[1]
-                            val binary = RvConst.packImmI(1.toUInt32()) or (rs1 shl 15) or (RvConst.FUNCT3_SLTIU_SLTU shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
+                            val binary = RvConst.packImmI12(1.toUInt32()) or (rs1 shl 15) or (RvConst.FUNCT3_SLTIU_SLTU shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
                             context.section.content.put(binary)
                         }
 
