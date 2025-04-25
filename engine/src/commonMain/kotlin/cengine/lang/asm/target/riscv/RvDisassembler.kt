@@ -409,7 +409,7 @@ class RvDisassembler(private val addrConstrained: UnsignedFixedSizeIntNumber<*>.
                 FENCEI -> Decoded(offset, binary, "fence.i")
 
                 // --- Unknown / Invalid ---
-                null -> Decoded(offset, binary, "[invalid opcode: 0x${opcode.toString(16)} or encoding]")
+                null -> Decoded(offset, binary, "[invalid]")
             }
         }
 

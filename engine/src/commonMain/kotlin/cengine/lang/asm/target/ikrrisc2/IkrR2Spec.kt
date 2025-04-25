@@ -28,7 +28,7 @@ data object IkrR2Spec : AsmSpec<MifGenerator<Buffer32>> {
         get() = """
             ; $name example
             
-            .equ    LIST, 0x1000
+            .equ    LIST, $1000
             .equ    N, 8
 
             main:   addli r30 := r0, #${'$'}FFFF
