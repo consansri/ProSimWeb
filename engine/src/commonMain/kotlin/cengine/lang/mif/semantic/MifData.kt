@@ -1,5 +1,6 @@
 package cengine.lang.mif.semantic
 
+import cengine.console.SysOut
 import cengine.lang.mif.MifRadix
 import cengine.lang.mif.psi.MifAddressSpec
 import cengine.lang.mif.psi.MifContentBlock
@@ -56,13 +57,13 @@ data class MifData(
                     when (directive) {
                         is MifDirective.Width -> {
                             if (widthBI != null) throw MifSemanticException("Duplicate WIDTH directive found.", directive)
-                            widthBI = parsePsiNumericValue(directive.value, MifRadix.DEC, "WIDTH directive") // Width/Depth always base 10
+                            widthBI = parsePsiNumericValue(directive.value, MifRadix.DEC) // Width/Depth always base 10
                             if (widthBI <= BigInt.ZERO) throw MifSemanticException("WIDTH must be positive.", directive)
                         }
 
                         is MifDirective.Depth -> {
                             if (depthBI != null) throw MifSemanticException("Duplicate DEPTH directive found.", directive)
-                            depthBI = parsePsiNumericValue(directive.value, MifRadix.DEC, "DEPTH directive")
+                            depthBI = parsePsiNumericValue(directive.value, MifRadix.DEC)
                             if (depthBI <= BigInt.ZERO) throw MifSemanticException("DEPTH must be positive.", directive)
                         }
 
@@ -100,7 +101,9 @@ data class MifData(
 
             val finalWordType: FixedSizeIntNumberT<*> = try {
                 // Convert width to Int, handling potential overflow if BigInt is truly huge
-                val widthInt = try { finalWidthBI.toInt() } catch(e: Exception) {
+                val widthInt = try {
+                    finalWidthBI.toInt()
+                } catch (e: Exception) {
                     throw MifSemanticException("WIDTH value ($finalWidthBI) is too large.", directives.firstOrNull { it is MifDirective.Width }, e)
                 }
                 determineWordType(widthInt, finalDataRadixEnum)
@@ -109,17 +112,18 @@ data class MifData(
                 throw MifSemanticException(e.message ?: "Failed to determine word type from width/radix", widthDirective, e)
             }
 
-
             // 4. Process Content Block
-            val tempMemory = mutableMapOf<BigInt, BigInt>() // Store BigInt -> BigInt temporarily
+            val tempMemory = mutableMapOf<UnsignedFixedSizeIntNumber<*>, FixedSizeIntNumber<*>>() // Store BigInt -> BigInt temporarily
             if (content != null) {
-                content.entries.forEach { entry ->
+                content.entries.forEach loop@{ entry ->
                     val addressSpec = entry.addressSpec
                     if (entry.dataValues.isEmpty()) throw MifSemanticException("Content entry missing data value(s).", entry)
 
                     try {
                         // Parse data values first
-                        val dataValuesBI = entry.dataValues.map { parsePsiNumericValue(it, finalDataRadixEnum, "content entry data") }
+                        val dataValuesBI = entry.dataValues.map { parsePsiNumericValue(it, finalDataRadixEnum) }
+
+                        if (dataValuesBI.all { it == BigInt.ZERO }) return@loop
 
                         // Resolve addresses based on spec type
                         val addressesBI: List<BigInt> = when (addressSpec) {
@@ -143,7 +147,7 @@ data class MifData(
                             val dataIndex = sequenceIndex % dataValuesBI.size
                             val valueToAssign = dataValuesBI[dataIndex]
 
-                            tempMemory[addr] = valueToAssign
+                            tempMemory[finalAddrType.to(addr)] = finalWordType.to(valueToAssign)
                         }
                     } catch (e: MifSemanticException) {
                         throw e // Re-throw specific semantic errors
@@ -153,28 +157,15 @@ data class MifData(
                 }
             } // End if content != null
 
-            // 5. Convert tempMemory keys (addresses) and values (words) to their target types
-            val typedTempMemory: Map<UnsignedFixedSizeIntNumber<*>, FixedSizeIntNumber<*>> = try {
-                tempMemory.mapKeys { (addrBI, _) ->
-                    finalAddrType.to(addrBI) // Convert address BigInt -> ADDR
-                }.mapValues { (_, valueBI) ->
-                    finalWordType.to(valueBI) // Convert data BigInt -> WORD
-                }
-            } catch (e: Exception) {
-                // Catch potential conversion errors (value doesn't fit width/depth implies type mismatch)
-                // Try to find the entry causing the issue - harder without tracking original node
-                throw MifSemanticException("Error converting parsed value to target type: ${e.message}. Ensure values fit within specified WIDTH and addresses within DEPTH.", content, e)
-            }
-
-            // 6. Consolidate Memory Sections using typed addresses and words
+            // 5. Consolidate Memory Sections using typed addresses and words
             // Casts are needed here because the exact ADDR/WORD types are only known at runtime within this function.
             val finalMemory: Map<UnsignedFixedSizeIntNumber<*>, List<FixedSizeIntNumber<*>>> = consolidateMemorySectionsTyped(
-                typedTempMemory, // Cast Map<IntNumber<*>, IntNumber<*>>
+                tempMemory, // Cast Map<IntNumber<*>, IntNumber<*>>
                 finalAddrType // Pass address type info
             )
 
 
-            // 7. Construct and Return MifData
+            // 6. Construct and Return MifData
             // Necessary casts due to runtime type determination for generics
             return MifData(
                 addrWidth = finalAddrType, // Cast ADDR type
@@ -234,7 +225,7 @@ data class MifData(
         /** Consolidates memory sections, now working with typed addresses and words */
         private fun consolidateMemorySectionsTyped(
             individualEntries: Map<UnsignedFixedSizeIntNumber<*>, FixedSizeIntNumber<*>>,
-            addrType: UnsignedFixedSizeIntNumberT<*> // Pass type info for calculations
+            addrType: UnsignedFixedSizeIntNumberT<*>, // Pass type info for calculations
         ): Map<UnsignedFixedSizeIntNumber<*>, List<FixedSizeIntNumber<*>>> {
             if (individualEntries.isEmpty()) {
                 return emptyMap()
@@ -288,13 +279,13 @@ data class MifData(
 
         // --- PSI Node Parsing Helpers (mostly unchanged, ensure correct value access) ---
 
-        private fun parsePsiNumericValue(node: MifNumericValue, radix: MifRadix, context: String): BigInt {
+        private fun parsePsiNumericValue(node: MifNumericValue, radix: MifRadix): BigInt {
             // Access the token's string value
             val text = node.valueToken.value.trim()
             try {
                 return BigInt.parse(text, radix.base)
             } catch (e: NumberFormatException) {
-                throw MifSemanticException("Invalid number format for ${radix.name} value '$text' in $context.", node, e)
+                throw MifSemanticException("Invalid number format for ${radix.name} value '$text'.", node, e)
             }
         }
 
