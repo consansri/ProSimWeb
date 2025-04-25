@@ -147,6 +147,8 @@ object ObjRunner : Runner<ObjLang>("objc") {
             return false
         }
 
+        log("$name: ${objFile.file.name} is valid")
+
         if (target == null) {
             error("invalid target (targets: ${Target.entries})")
             usage("-t <target>")
@@ -160,9 +162,11 @@ object ObjRunner : Runner<ObjLang>("objc") {
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
 
+                log("$name: generate MIF ...")
+
                 val fileContent = objFile.toMif(this, addrWidth, dataWidth, chunkSize)
                 outputFile.setAsUTF8String(fileContent)
-                log("generated ${outputFile.path}")
+                log("$name: generated ${outputFile.path}")
             }
 
             Target.VHDL -> {
@@ -171,9 +175,12 @@ object ObjRunner : Runner<ObjLang>("objc") {
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
 
+                log("$name: generate VHDL ...")
+
                 val fileContent = objFile.toVHDL(this, filename, constname, dataWidth, chunkSize)
                 outputFile.setAsUTF8String(fileContent)
-                log("generated ${outputFile.path}")
+
+                log("$name: generated ${outputFile.path}")
             }
         }
 

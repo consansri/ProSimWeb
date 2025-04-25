@@ -1,6 +1,7 @@
 package cengine.lang.mif
 
 import cengine.console.ConsoleContext
+import cengine.console.SysOut
 import cengine.lang.Runner
 import cengine.lang.vhdl.toVHDL
 import cengine.project.Project
@@ -121,7 +122,7 @@ object MifRunner : Runner<MifLang>("mifc") {
         if (filename == null) filename = file.name.removeSuffix(lang.fileSuffix)
 
         val manager = project.getManager(file)
-        val psiFile = manager?.updatePsi(file)
+        val psiFile = manager?.updatePsi(file, this)
 
         if (manager == null) {
             error("unable to find manager: ${file.name}")
@@ -138,6 +139,8 @@ object MifRunner : Runner<MifLang>("mifc") {
             return false
         }
 
+        log("$name: ${psiFile.file.name} is valid")
+
         if (target == null) {
             error("invalid target (targets: ${Target.entries})")
             usage("-t <target>")
@@ -151,9 +154,12 @@ object MifRunner : Runner<MifLang>("mifc") {
                 project.fileSystem.deleteFile(outputPath)
                 val outputFile = project.fileSystem.createFile(outputPath)
 
+                log("$name: generate VHDL")
+
                 val fileContent = psiFile.toVHDL(this, filename, constname, dataWidth, chunkSize)
                 outputFile.setAsUTF8String(fileContent)
-                log("generated ${outputFile.path}")
+
+                log("$name: generated ${outputFile.path}")
             }
         }
 

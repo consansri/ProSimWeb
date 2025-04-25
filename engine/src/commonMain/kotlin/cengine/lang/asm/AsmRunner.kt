@@ -93,6 +93,7 @@ class AsmRunner(override val lang: AsmLang) : Runner<AsmLang>(getRunnerName(lang
     }
 
     private suspend fun ConsoleContext.executable(project: Project, manager: PsiManager<*>, file: VirtualFile) {
+        log("$name: ${file.name}")
         val asmFile = manager.updatePsi(file, this)
 
         if (!asmFile.valid) {
@@ -100,13 +101,9 @@ class AsmRunner(override val lang: AsmLang) : Runner<AsmLang>(getRunnerName(lang
             return
         }
 
+        log("$name: ${file.name} frontend is valid")
         val generator = lang.spec.createGenerator()
         val backend = AsmBackend(project, asmFile, generator, this)
-
-        val outputPath = directory.path + FPath(file.name.removeSuffix(lang.fileSuffix) + generator.outputFileSuffix)
-
-        project.fileSystem.deleteFile(outputPath)
-        val outputFile = project.fileSystem.createFile(outputPath)
 
         val content = backend.assemble() ?: run {
             error("Unable to assemble file")
@@ -125,10 +122,25 @@ class AsmRunner(override val lang: AsmLang) : Runner<AsmLang>(getRunnerName(lang
         }
 
         if (collector.annotations.none { it.severity == Severity.ERROR }) {
-            outputFile.setContent(content)
-        }
+            log("$name: ${file.name} backend is valid")
+            val outputPath = directory.path + FPath(file.name.removeSuffix(lang.fileSuffix) + generator.outputFileSuffix)
 
-        log("generated ${outputFile.path}")
+            project.fileSystem.deleteFile(outputPath)
+            val outputFile = project.fileSystem.createFile(outputPath)
+
+            outputFile.setContent(content)
+
+            log("$name: generated ${outputFile.path}")
+        } else {
+            collector.annotations.forEach {
+                when(it.severity){
+                    Severity.INFO -> info(it.createConsoleMessage(asmFile))
+                    Severity.WARNING -> warn(it.createConsoleMessage(asmFile))
+                    Severity.ERROR -> error(it.createConsoleMessage(asmFile))
+                }
+            }
+            error("${file.name} has errors!")
+        }
     }
 
     enum class Target {
