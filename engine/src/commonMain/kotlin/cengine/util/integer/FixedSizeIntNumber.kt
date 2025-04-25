@@ -50,21 +50,21 @@ sealed interface FixedSizeIntNumber<T : FixedSizeIntNumber<T>>: IntNumber<T> {
     // Rotate Left
     infix fun rol(bits: T): T {
         val shift = bits.toInt() % bitWidth // Ensure the shift is within bounds
-        if (shift == 0) return this as T
+        if (shift == 0) return type.to(this)
         return (this shl shift) or (this shr (bitWidth - shift))
     }
 
     // Rotate Right
     infix fun ror(bits: T): T {
         val shift = bits.toInt() % bitWidth // Ensure the shift is within bounds
-        if (shift == 0) return this as T
+        if (shift == 0) return type.to(this)
         return (this shr shift) or (this shl (bitWidth - shift))
     }
 
     // Rotate Left (Int parameter)
     infix fun rol(bits: Int): T {
         val shift = bits % bitWidth // Ensure the shift is within bounds
-        if (shift == 0) return this as T
+        if (shift == 0) return type.to(this)
         if (shift < 0) return ror(-shift) // Handle negative rotation
         return (this shl shift) or (this shr (bitWidth - shift))
     }
@@ -72,7 +72,7 @@ sealed interface FixedSizeIntNumber<T : FixedSizeIntNumber<T>>: IntNumber<T> {
     // Rotate Right (Int parameter)
     infix fun ror(bits: Int): T {
         val shift = bits % bitWidth // Ensure the shift is within bounds
-        if (shift == 0) return this as T
+        if (shift == 0) return type.to(this)
         if (shift < 0) return rol(-shift) // Handle negative rotation
         return (this shr shift) or (this shl (bitWidth - shift))
     }
@@ -88,7 +88,7 @@ sealed interface FixedSizeIntNumber<T : FixedSizeIntNumber<T>>: IntNumber<T> {
         require(subsetBitWidth in 1..bitWidth) {
             "subsetBitWidth ($subsetBitWidth) must be in the range 1 to bitWidth ($bitWidth)."
         }
-        if (subsetBitWidth == bitWidth) return this as T // No extension needed
+        if (subsetBitWidth == bitWidth) return type.to(this) // No extension needed
 
         val signBitMask = type.ONE shl (subsetBitWidth - 1)
         val isNegative = (this and signBitMask) != type.ZERO
