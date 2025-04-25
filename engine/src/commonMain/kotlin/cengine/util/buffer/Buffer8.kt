@@ -7,10 +7,10 @@ import cengine.util.integer.UInt8
 import cengine.util.integer.UInt8.Companion.toUInt8
 
 /**
- * A buffer for [Int8] values.
+ * A buffer for [UInt8] values.
  *
- * This class is used to create a buffer that can store [Int8] values. It is
- * backed by a [MutableList] of [Int8] values and provides methods to interact with
+ * This class is used to create a buffer that can store [UInt8] values. It is
+ * backed by a [MutableList] of [UInt8] values and provides methods to interact with
  * the buffer.
  */
 class Buffer8(endianness: Endianness) : Buffer<UInt8>(endianness, UInt8) {
