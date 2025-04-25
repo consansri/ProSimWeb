@@ -1,7 +1,6 @@
 package cengine.util.buffer
 
 import cengine.util.Endianness
-import cengine.util.integer.Int32
 import cengine.util.integer.UInt32
 
 /**

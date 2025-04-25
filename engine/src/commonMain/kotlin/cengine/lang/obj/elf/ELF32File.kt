@@ -1,6 +1,5 @@
 package cengine.lang.obj.elf
 
-import cengine.util.integer.IntNumberT
 import cengine.util.integer.UInt32
 import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import cengine.vfs.VirtualFile

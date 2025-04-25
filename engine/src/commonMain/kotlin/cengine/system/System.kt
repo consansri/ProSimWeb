@@ -1,5 +1,8 @@
 package cengine.system
 
+import Constants
+
+
 /**
  * Returns the current platform system line break.
  */

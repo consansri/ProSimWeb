@@ -8,7 +8,6 @@ import androidx.compose.runtime.setValue
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.asm.target.riscv.RvDisassembler
 import cengine.util.Endianness
-import cengine.util.integer.Int32.Companion.toInt32
 import cengine.util.integer.UInt16
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32

@@ -3,7 +3,6 @@ package cengine.lang.obj.elf
 import cengine.lang.obj.elf.Shdr.Companion.SHN_UNDEF
 import cengine.util.Endianness
 import cengine.util.buffer.Buffer8
-import cengine.util.integer.Int8
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt8
 

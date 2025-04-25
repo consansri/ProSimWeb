@@ -1,8 +1,6 @@
 package emulator.kit.memory
 
-import cengine.util.integer.IntNumber
 import cengine.util.integer.UnsignedFixedSizeIntNumber
-import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import kotlin.math.log
 import kotlin.math.roundToInt
 

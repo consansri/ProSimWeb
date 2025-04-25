@@ -2,7 +2,6 @@ package cengine.lang.obj.elf
 
 import cengine.util.Endianness
 import cengine.util.buffer.Buffer8
-import cengine.util.integer.Int8
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt64
 import cengine.util.integer.UInt8

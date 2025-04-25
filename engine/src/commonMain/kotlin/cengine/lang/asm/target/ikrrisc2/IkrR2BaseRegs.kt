@@ -2,7 +2,6 @@ package cengine.lang.asm.target.ikrrisc2
 
 import cengine.lang.asm.psi.AsmRegisterT
 import cengine.psi.parser.PsiBuilder
-import kotlin.collections.get
 
 enum class IkrR2BaseRegs: AsmRegisterT {
     R0,

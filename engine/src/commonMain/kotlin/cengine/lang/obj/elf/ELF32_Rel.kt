@@ -4,7 +4,6 @@ import cengine.lang.obj.elf.ELF32_Rel.Companion.R_SYM
 import cengine.lang.obj.elf.ELF32_Rel.Companion.R_TYPE
 import cengine.util.Endianness
 import cengine.util.buffer.Buffer8
-import cengine.util.integer.Int8
 import cengine.util.integer.UInt8
 
 /**

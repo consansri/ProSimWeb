@@ -3,8 +3,6 @@ package cengine.lang.obj.elf
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.obj.ObjPsiFile
 import cengine.util.integer.Int16.Companion.toInt16
-import cengine.util.integer.IntNumber
-import cengine.util.integer.IntNumberT
 import cengine.util.integer.UInt8
 import cengine.util.integer.UInt8.Companion.toUInt8
 import cengine.util.integer.UnsignedFixedSizeIntNumber

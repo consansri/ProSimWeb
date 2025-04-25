@@ -19,7 +19,6 @@ import androidx.compose.ui.text.TextStyle
 import cengine.editor.highlighting.HighlightProvider
 import cengine.editor.highlighting.HighlightProvider.Companion.spanStyles
 import cengine.lang.asm.AsmDisassembler
-import cengine.util.integer.BigInt
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.Architecture
 import ui.uilib.label.CLabel

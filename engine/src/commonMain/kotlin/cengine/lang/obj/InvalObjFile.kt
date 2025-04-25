@@ -1,8 +1,6 @@
 package cengine.lang.obj
 
 import cengine.lang.asm.AsmDisassembler
-import cengine.util.integer.BigInt
-import cengine.util.integer.IntNumberT
 import cengine.util.integer.UInt32
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 import cengine.util.integer.UnsignedFixedSizeIntNumberT

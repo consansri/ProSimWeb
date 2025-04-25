@@ -1,9 +1,7 @@
 package cengine.psi.core
 
-import cengine.psi.elements.PsiFile
 import cengine.psi.parser.CompletedMarkerInfo
 import cengine.psi.tree.PsiTreeBuilder
-import cengine.vfs.VirtualFile
 
 /**
  * Signature for functions responsible for building a specific PsiElement type.

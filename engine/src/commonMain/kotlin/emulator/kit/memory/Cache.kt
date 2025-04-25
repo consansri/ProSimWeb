@@ -5,7 +5,6 @@ import cengine.console.SysOut
 import cengine.util.Endianness
 import cengine.util.integer.Int32.Companion.toInt32
 import cengine.util.integer.IntNumber
-import cengine.util.integer.IntNumberUtils
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 import debug.DebugTools
 import emulator.kit.common.IConsole

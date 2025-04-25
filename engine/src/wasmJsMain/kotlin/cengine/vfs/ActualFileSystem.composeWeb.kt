@@ -1,5 +1,6 @@
 package cengine.vfs
 
+import Constants
 import Keys
 import kotlinx.browser.localStorage
 import org.w3c.dom.get

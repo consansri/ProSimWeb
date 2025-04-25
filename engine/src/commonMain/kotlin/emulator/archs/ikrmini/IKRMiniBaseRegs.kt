@@ -1,7 +1,6 @@
 package emulator.archs.ikrmini
 
 import androidx.compose.runtime.mutableStateListOf
-import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt16
 import cengine.util.integer.UInt16.Companion.toUInt16
 import cengine.util.integer.UnsignedFixedSizeIntNumberT

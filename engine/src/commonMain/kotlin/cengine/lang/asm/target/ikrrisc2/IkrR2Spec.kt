@@ -9,7 +9,6 @@ import cengine.lang.obj.elf.LinkerScript
 import cengine.util.Endianness
 import cengine.util.buffer.Buffer32
 import cengine.util.integer.BigInt
-import cengine.util.integer.Int32
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt64
 import cengine.util.integer.UInt64.Companion.toUInt64

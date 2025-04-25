@@ -6,15 +6,10 @@ import cengine.util.Endianness
 import cengine.util.buffer.Buffer8
 import cengine.util.buffer.Buffer8.Companion.toASCIIByteArray
 import cengine.util.buffer.Buffer8.Companion.toASCIIString
-import cengine.util.integer.BigInt
-import cengine.util.integer.Int8.Companion.toInt8
-import cengine.util.integer.UInt16
+import cengine.util.integer.*
 import cengine.util.integer.UInt16.Companion.toUInt16
-import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
-import cengine.util.integer.UInt64
 import cengine.util.integer.UInt64.Companion.toUInt64
-import cengine.util.integer.UInt8
 import com.ionspin.kotlin.bignum.integer.BigInteger
 
 abstract class ELFGenerator(

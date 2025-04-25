@@ -2,13 +2,7 @@ package emulator.kit.memory
 
 import cengine.lang.asm.AsmBinaryProvider
 import cengine.util.Endianness
-import cengine.util.integer.FixedSizeIntNumber
-import cengine.util.integer.FixedSizeIntNumberT
-import cengine.util.integer.IntNumber
-import cengine.util.integer.IntNumberT
-import cengine.util.integer.UInt8
-import cengine.util.integer.UnsignedFixedSizeIntNumber
-import cengine.util.integer.UnsignedFixedSizeIntNumberT
+import cengine.util.integer.*
 
 /**
  * Represents an abstract memory component within the processor emulator, such as main memory or a cache level.

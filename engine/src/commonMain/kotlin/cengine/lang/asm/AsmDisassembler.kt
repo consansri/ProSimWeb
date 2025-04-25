@@ -2,9 +2,7 @@ package cengine.lang.asm
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import cengine.util.integer.BigInt
 import cengine.util.integer.FixedSizeIntNumber
-import cengine.util.integer.IntNumber
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 
 abstract class AsmDisassembler {

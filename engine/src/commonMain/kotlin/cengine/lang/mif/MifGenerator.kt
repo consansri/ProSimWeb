@@ -6,7 +6,6 @@ import cengine.lang.obj.elf.Shdr
 import cengine.util.buffer.Buffer
 import cengine.util.integer.BigInt
 import cengine.util.integer.BigInt.Companion.toBigInt
-import cengine.util.integer.IntNumberT
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt64
 import cengine.util.integer.UnsignedFixedSizeIntNumberT

@@ -2,8 +2,6 @@ package emulator.kit.memory
 
 import androidx.compose.runtime.mutableStateMapOf
 import cengine.util.Endianness
-import cengine.util.integer.IntNumber
-import cengine.util.integer.IntNumberT
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 import cengine.util.integer.UnsignedFixedSizeIntNumberT
 

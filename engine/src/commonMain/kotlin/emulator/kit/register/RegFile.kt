@@ -1,7 +1,6 @@
 package emulator.kit.register
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import cengine.util.integer.FixedSizeIntNumber
 import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt32
 import cengine.util.integer.UnsignedFixedSizeIntNumber

@@ -1,5 +1,8 @@
 package cengine.system
 
+import JSTools
+
+
 actual fun getSystemLineBreak(): String = "\n"
 actual fun appTarget(): AppTarget = AppTarget.WEB
 actual fun downloadDesktopApp(type: DesktopDistribution) {

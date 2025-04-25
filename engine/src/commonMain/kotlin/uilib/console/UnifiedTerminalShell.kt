@@ -21,8 +21,8 @@ import cengine.util.string.commonPrefix
 import cengine.util.string.splitBySpaces
 import cengine.vfs.FPath.Companion.toFPath
 import kotlinx.coroutines.launch
-import uilib.text.KeywordHighlightTransformation
 import uilib.UIState
+import uilib.text.KeywordHighlightTransformation
 
 
 @Composable

@@ -4,7 +4,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import cengine.console.SysOut
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.asm.target.ikrrisc2.IkrR2Disassembler
 import cengine.lang.asm.target.ikrrisc2.IkrR2Disassembler.InstrType.*

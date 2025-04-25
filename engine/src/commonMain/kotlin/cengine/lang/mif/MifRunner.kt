@@ -1,7 +1,6 @@
 package cengine.lang.mif
 
 import cengine.console.ConsoleContext
-import cengine.console.SysOut
 import cengine.lang.Runner
 import cengine.lang.vhdl.toVHDL
 import cengine.project.Project

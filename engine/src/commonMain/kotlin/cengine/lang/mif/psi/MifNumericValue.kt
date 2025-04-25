@@ -5,7 +5,6 @@ import cengine.psi.core.PsiElement
 import cengine.psi.elements.PsiStatement
 import cengine.psi.feature.Highlightable
 import cengine.psi.lexer.PsiToken
-import cengine.psi.lexer.PsiTokenType
 import cengine.psi.style.CodeStyle
 
 /** Represents a numeric value (could be decimal literal or identifier token). */

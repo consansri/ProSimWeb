@@ -1,12 +1,7 @@
 package cengine.lang.mif.semantic
 
-import cengine.console.SysOut
 import cengine.lang.mif.MifRadix
-import cengine.lang.mif.psi.MifAddressSpec
-import cengine.lang.mif.psi.MifContentBlock
-import cengine.lang.mif.psi.MifDirective
-import cengine.lang.mif.psi.MifNumericValue
-import cengine.lang.mif.psi.MifRadixValue
+import cengine.lang.mif.psi.*
 import cengine.util.integer.*
 import cengine.util.integer.BigInt.Companion.toBigInt
 

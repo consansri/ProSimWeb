@@ -1,11 +1,6 @@
 package cengine.lang.mif
 
-import cengine.lang.mif.psi.MifAddressSpec
-import cengine.lang.mif.psi.MifContentBlock
-import cengine.lang.mif.psi.MifContentEntry
-import cengine.lang.mif.psi.MifDirective
-import cengine.lang.mif.psi.MifNumericValue
-import cengine.lang.mif.psi.MifRadixValue
+import cengine.lang.mif.psi.*
 import cengine.psi.lexer.PsiTokenType
 import cengine.psi.parser.PsiBuilder
 import cengine.psi.parser.PsiTreeParser

@@ -5,7 +5,6 @@ import cengine.lang.obj.elf.*
 import cengine.util.integer.*
 import cengine.util.integer.BigInt.Companion.toBigInt
 import cengine.util.integer.Int8.Companion.toInt8
-import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import emulator.kit.memory.Memory
 import kotlin.math.log2

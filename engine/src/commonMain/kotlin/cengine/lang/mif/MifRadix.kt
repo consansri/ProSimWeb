@@ -1,7 +1,5 @@
 package cengine.lang.mif
 
-import cengine.util.integer.IntNumber
-
 enum class MifRadix(val base: Int) {
     HEX(16),
     OCT(8),

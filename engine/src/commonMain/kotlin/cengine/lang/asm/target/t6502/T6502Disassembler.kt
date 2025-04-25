@@ -2,9 +2,7 @@ package cengine.lang.asm.target.t6502
 
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.asm.target.t6502.T6502Disassembler.InstrType.*
-import cengine.util.integer.BigInt
 import cengine.util.integer.FixedSizeIntNumber
-import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt8
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 

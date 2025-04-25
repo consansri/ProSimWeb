@@ -8,7 +8,6 @@ import cengine.lang.obj.elf.LinkerScript
 import cengine.util.Endianness
 import cengine.util.buffer.Buffer16
 import cengine.util.integer.BigInt
-import cengine.util.integer.Int16
 import cengine.util.integer.UInt16
 import cengine.util.integer.UInt64
 import cengine.util.integer.UInt64.Companion.toUInt64

@@ -9,14 +9,10 @@ import cengine.lang.asm.target.riscv.RvDisassembler
 import cengine.lang.asm.target.riscv.RvDisassembler.InstrType.JAL
 import cengine.lang.asm.target.riscv.RvDisassembler.InstrType.JALR
 import cengine.util.Endianness
-import cengine.util.integer.BigInt
+import cengine.util.integer.*
 import cengine.util.integer.BigInt.Companion.toBigInt
 import cengine.util.integer.Int64.Companion.toInt64
-import cengine.util.integer.UInt16
-import cengine.util.integer.UInt32
-import cengine.util.integer.UInt64
 import cengine.util.integer.UInt64.Companion.toUInt64
-import cengine.util.integer.UInt8
 import emulator.archs.riscv.riscv64.RV64BaseRegs
 import emulator.archs.riscv.riscv64.RV64CSRRegs
 import emulator.kit.ArchConfig

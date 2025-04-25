@@ -2,9 +2,7 @@ package cengine.lang.asm.target.ikrrisc2
 
 import cengine.lang.asm.AsmDisassembler
 import cengine.lang.asm.target.ikrrisc2.IkrR2Disassembler.InstrType.*
-import cengine.util.integer.BigInt
 import cengine.util.integer.FixedSizeIntNumber
-import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt32
 import cengine.util.integer.UInt32.Companion.toUInt32
 import cengine.util.integer.UnsignedFixedSizeIntNumber

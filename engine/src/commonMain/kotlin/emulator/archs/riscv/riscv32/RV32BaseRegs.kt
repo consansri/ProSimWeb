@@ -1,7 +1,6 @@
 package emulator.archs.riscv.riscv32
 
 import androidx.compose.runtime.mutableStateListOf
-import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt32
 import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import emulator.archs.riscv.RV

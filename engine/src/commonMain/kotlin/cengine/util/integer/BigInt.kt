@@ -1,9 +1,7 @@
 package cengine.util.integer
 
-import cengine.util.integer.Int8.Companion.toInt8
 import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import com.ionspin.kotlin.bignum.integer.BigInteger
-import com.ionspin.kotlin.bignum.integer.Sign
 import com.ionspin.kotlin.bignum.integer.toBigInteger
 
 data class BigInt(override val value: BigInteger) : UnlimitedSizeIntNumber<BigInt> {

@@ -2,7 +2,6 @@ package cengine.util.buffer
 
 import cengine.util.Endianness
 import cengine.util.integer.*
-import cengine.util.integer.BigInt.Companion.toBigInt
 
 /**
  * Base class for mutable buffers holding elements of type [T] (a subtype of [IntNumber]).

@@ -2,7 +2,6 @@ package emulator.archs.t6502
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import cengine.util.integer.IntNumber
 import cengine.util.integer.UInt8
 import cengine.util.integer.UnsignedFixedSizeIntNumberT
 import emulator.kit.register.FieldProvider

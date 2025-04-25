@@ -1,8 +1,6 @@
 package cengine.util.buffer
 
 import cengine.util.Endianness
-import cengine.util.integer.Int8
-import cengine.util.integer.Int8.Companion.toInt8
 import cengine.util.integer.UInt8
 import cengine.util.integer.UInt8.Companion.toUInt8
 
