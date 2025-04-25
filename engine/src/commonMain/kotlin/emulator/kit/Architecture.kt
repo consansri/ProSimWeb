@@ -15,10 +15,10 @@ import emulator.kit.memory.MainMemory
  *  Architecture Blueprint
  *
  *  Additional architectures need to build of this class.
- *  This Architecture gets a lot of it's logic through the constructor. To get the Processor in another State this architecture contains the main execution and syntax events.
+ *  This Architecture gets a lot of its logic through the constructor. To get the Processor in another State, this architecture contains the main execution and syntax events.
  *  While the compilation process is fully integrated if the Syntax Logic is given through an abstracted Grammar and Assembly Class. The Execution Process needs to be implemented in the events.
- *  To make Debugging simpler i would recommend to implement a binary mapper which maps a certain instruction with it's parameters to a binary representation and the other way around.
- *  I would recommend you to look at integration of RV32I Assembler, Grammar and Binary Mapper as an example.
+ *  To make Debugging simpler, I would recommend implementing a binary mapper which maps a certain instruction with it's parameters to a binary representation and the other way around.
+ *  I would recommend you look at the integration of RV32I Assembler, Grammar and Binary Mapper as an example.
  *
  *  @param config Specific config "file" which should be defined in an object which contains all configuration constants of the architecture.
  *  @param asmConfig Specific Grammar and Assembler class which is then given the Architecture through the asmConfig "file"
@@ -63,7 +63,7 @@ abstract class Architecture<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : 
     }
 
     /**
-     * Execution Event: single step
+     * Execution Event: a single step
      * should be implemented by specific archs
      */
     open fun exeSingleStep() {
@@ -71,7 +71,7 @@ abstract class Architecture<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : 
     }
 
     /**
-     * Execution Event: multi step
+     * Execution Event: multistep
      * should be implemented by specific archs
      */
     open fun exeMultiStep(steps: Long) {
@@ -79,16 +79,16 @@ abstract class Architecture<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : 
     }
 
     /**
-     * Execution Event: skip subroutine
-     * should be implemented by specific archs
+     * Execution Event: specific archs
+     * should implement skip subroutine
      */
     open fun exeSkipSubroutine() {
         console.clear()
     }
 
     /**
-     * Execution Event: return from subroutine
-     * should be implemented by specific archs
+     * Execution Event: specific archs
+     * should implement return from subroutine
      */
     open fun exeReturnFromSubroutine() {
         console.clear()

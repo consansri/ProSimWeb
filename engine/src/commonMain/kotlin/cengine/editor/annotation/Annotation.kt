@@ -47,7 +47,7 @@ open class Annotation(val element: PsiElement, val message: String, override val
          * @param element the interval of the info
          * @param message the info message
          * @param execute an optional action to be executed in the code editor
-         * @return an info annotation
+         * @return info annotation
          */
         fun info(element: PsiElement, message: String, execute: (CodeEditor) -> Unit = {}): Annotation = Annotation(element, message, Severity.INFO, execute)
     }

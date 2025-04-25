@@ -529,10 +529,9 @@ sealed class AsmDirective(
                     FILE -> {
                         // Optional index (integer literal), required filename (string literal)
                         // Ambiguity: Is the first token an index or filename? Assume index if integer.
-                        var fileIndexParsed: PsiBuilder.Marker? = null
                         val currentTokenType = getTokenType()
                         if (currentTokenType is PsiTokenType.LITERAL.INTEGER) {
-                            fileIndexParsed = with(asmTreeParser) { parseIntegerLiteral() } // Assuming helper
+                            with(asmTreeParser) { parseIntegerLiteral() } // Assuming helper
                             skipWhitespaceAndComments()
                         }
                         // Now expect filename

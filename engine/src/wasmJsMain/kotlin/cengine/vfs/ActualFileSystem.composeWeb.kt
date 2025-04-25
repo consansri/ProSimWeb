@@ -99,7 +99,7 @@ actual object ActualFileSystem {
         // Ensure parent exists (important!)
         val parent = path.withoutLast()
         if (parent.isNotEmpty() && !isDirectory(parent)) {
-            // If parent exists but isn't a directory OR parent doesn't exist at all
+            // If a parent exists but isn't a directory, OR parent doesn't exist at all
             if (exists(parent) || !createMissingParentDirectories(parent)) {
                 throw NoSuchFileException(parent) // Indicate parent issue
             }
