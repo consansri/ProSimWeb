@@ -276,67 +276,60 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
             }
 
             BEQ -> {
-                val disp = decoded.disp18.signExtend(18)
                 if (baseRegs[decoded.rc].equals(0)) {
-                    pc += disp
+                    pc += decoded.disp18
                 } else {
                     pc += 1
                 }
             }
 
             BNE -> {
-                val disp = decoded.disp18.signExtend(18)
                 if (!baseRegs[decoded.rc].equals(0)) {
-                    pc += disp
+                    pc += decoded.disp18
                 } else {
                     pc += 1
                 }
             }
 
             BLT -> {
-                val disp = decoded.disp18.signExtend(18)
                 if (baseRegs[decoded.rc].toInt32() < 0) {
-                    pc += disp
+                    pc += decoded.disp18
                 } else {
                     pc += 1
                 }
             }
 
             BGT -> {
-                val disp = decoded.disp18.signExtend(18)
                 if (baseRegs[decoded.rc].toInt32() > 0) {
-                    pc += disp
+                    pc += decoded.disp18
                 } else {
                     pc += 1
                 }
             }
 
             BLE -> {
-                val disp = decoded.disp18.signExtend(18)
                 if (baseRegs[decoded.rc].toInt32() <= 0) {
-                    pc += disp
+                    pc += decoded.disp18
                 } else {
                     pc += 1
                 }
             }
 
             BGE -> {
-                val disp = decoded.disp18.signExtend(18)
                 if (baseRegs[decoded.rc].toInt32() >= 0) {
-                    pc += disp
+                    pc += decoded.disp18
                 } else {
                     pc += 1
                 }
             }
 
             BRA -> {
-                pc += decoded.disp26.signExtend(26)
+                pc += decoded.disp26
             }
 
             BSR -> {
                 baseRegs[31] = pc + 1 // Save return address
-                SysOut.log("BSR: ${pc.toString(16)} + ${decoded.disp26.signExtend(26).toString(16)} -> ${(pc + decoded.disp26.signExtend(26)).toString(16)}")
-                pc += decoded.disp26.signExtend(26)
+                pc += decoded.disp26
             }
 
             JMP -> {
@@ -413,7 +406,7 @@ class ArchIKRRisc2 : BasicArchImpl<UInt32, UInt32>(UInt32, UInt32) {
             }
         )
         override val DISASSEMBLER: AsmDisassembler = IkrR2Disassembler
-        override val DESCR = ArchConfig.Description("IKR RISC-II", "IKR RISC-II")
+        override val DESCR = ArchConfig.Description("IKR-RISC2", "IKR RISC-II")
     }
 
 }

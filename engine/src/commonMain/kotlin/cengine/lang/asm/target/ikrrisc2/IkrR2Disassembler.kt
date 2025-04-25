@@ -38,9 +38,9 @@ object IkrR2Disassembler : AsmDisassembler() {
         val rbReg get() = IkrR2BaseRegs.entries[rb.toInt()].displayName
         val rcReg get() = IkrR2BaseRegs.entries[rc.toInt()].displayName
         val imm16 = binary lowest 16
-        val disp16 get() = imm16
-        val disp18 = binary lowest 18
-        val disp26 = binary lowest 26
+        val disp16 = imm16.signExtend(16)
+        val disp18 = (binary lowest 18).signExtend(18)
+        val disp26 = (binary lowest 26).signExtend(26)
         val bType = binary.shr(18) lowest 3
 
         val type: InstrType? = when (opcodeIType.value) {
@@ -108,25 +108,22 @@ object IkrR2Disassembler : AsmDisassembler() {
         }
 
         override fun decode(segmentAddr: UnsignedFixedSizeIntNumber<*>, offset: Int): Decoded {
-            val hexPrefix = IkrR2Spec.litIntHexPrefix
             return when (type) {
                 ADD, ADDX, SUB, SUBX, AND, OR, XOR, CMPU, CMPS -> Decoded(offset, binary, "${type.lc5Name} $rcReg := $rbReg, $raReg")
-                ADDI, ADDLI, ADDHI, CMPUI, CMPSI, AND0I, AND1I, ORI, XORI -> Decoded(offset, binary, "${type.lc5Name} $rcReg := $rbReg, #$hexPrefix${imm16.toString(16)}")
+                ADDI, ADDLI, ADDHI, CMPUI, CMPSI, AND0I, AND1I, ORI, XORI -> Decoded(offset, binary, "${type.lc5Name} $rcReg := $rbReg, #${imm16.toInt16()}")
                 LSL, LSR, ASL, ASR, ROL, ROR, SWAPH, SWAPB, EXTB, EXTH, NOT -> Decoded(offset, binary, "${type.lc5Name} $rcReg := $rbReg")
-                LDD -> Decoded(offset, binary, "${type.lc5Name} $rcReg := ($rbReg, $hexPrefix${disp16.toString(16)})")
+                LDD -> Decoded(offset, binary, "${type.lc5Name} $rcReg := ($rbReg, ${disp16.toInt32()})")
                 LDR -> Decoded(offset, binary, "${type.lc5Name} $rcReg := ($rbReg, $raReg)")
-                STD -> Decoded(offset, binary, "${type.lc5Name} ($rbReg, $hexPrefix${disp16.toString(16)}) := $rcReg")
+                STD -> Decoded(offset, binary, "${type.lc5Name} ($rbReg, ${disp16.toInt32()}) := $rcReg")
                 STR -> Decoded(offset, binary, "${type.lc5Name} ($rbReg, $raReg) := $rcReg")
                 BEQ, BNE, BLT, BGT, BLE, BGE -> {
-                    val offset18 = disp18.signExtend(18)
-                    val target = segmentAddr.toUInt32() + offset.toUInt32() + offset18
-                    Decoded(offset, binary, "${type.lc5Name} $rcReg, $hexPrefix${disp18.toString(16)}", target)
+                    val target = segmentAddr.toUInt32() + offset.toUInt32() + disp18
+                    Decoded(offset, binary, "${type.lc5Name} $rcReg, ${disp18.toInt32()}", target)
                 }
 
                 BRA, BSR -> {
-                    val offset26 = disp26.signExtend(26)
-                    val target = segmentAddr.toUInt32() + offset.toUInt32() + offset26
-                    Decoded(offset, binary, "${type.lc5Name} $hexPrefix${disp26.toString(16)}", target)
+                    val target = segmentAddr.toUInt32() + offset.toUInt32() + disp26
+                    Decoded(offset, binary, "${type.lc5Name} ${disp26.toInt32()}", target)
                 }
 
                 JMP, JSR -> Decoded(offset, binary, "${type.lc5Name} $rbReg")
