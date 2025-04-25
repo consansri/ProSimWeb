@@ -1,4 +1,4 @@
-package ui
+package ikr.prosim.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,13 +20,13 @@ import cengine.vfs.ActualFileSystem
 import cengine.vfs.FPath.Companion.toFPath
 import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.launch
-import ui.uilib.interactable.CButton
-import ui.uilib.interactable.Selector
-import ui.uilib.label.CLabel
-import ui.uilib.layout.BorderLayout
-import ui.uilib.scale.Scaling
-import ui.uilib.text.CTextField
-import ui.uilib.theme.Theme
+import uilib.interactable.CButton
+import uilib.interactable.Selector
+import uilib.label.CLabel
+import uilib.layout.BorderLayout
+import uilib.scale.Scaling
+import uilib.text.CTextField
+import uilib.theme.ThemeDef
 import uilib.UIState
 
 @Composable
@@ -47,7 +47,7 @@ fun CreateNewProjectScreen(onProjectCreated: (ProjectState) -> Unit, onCancel: (
             Spacer(Modifier.weight(2.0f))
             Scaling.Scaler()
             Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-            Theme.Switch()
+            ThemeDef.Switch()
         },
         center = {
             Box(

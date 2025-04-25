@@ -10,6 +10,4 @@ import cengine.util.integer.UInt64
  * backed by a [MutableList] of [UInt64] values and provides methods to interact with
  * the buffer.
  */
-class Buffer64(endianness: Endianness) : Buffer<UInt64>(endianness, UInt64){
-
-}
+class Buffer64(endianness: Endianness) : Buffer<UInt64>(endianness, UInt64)

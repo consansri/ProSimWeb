@@ -83,12 +83,12 @@ class ArchRV64 : BasicArchImpl<UInt64, UInt8>(UInt64, UInt8) {
                 pc += 4
             }
 
-            RvDisassembler.InstrType.JAL -> {
+            JAL -> {
                 baseRegs[decoded.rd] = pc + 4
                 pc += decoded.jTypeOffset
             }
 
-            RvDisassembler.InstrType.JALR -> {
+            JALR -> {
                 baseRegs[decoded.rd] = pc + 4
 
                 pc = baseRegs[decoded.rs1] + (decoded.iTypeImm and (-1L shl 1))

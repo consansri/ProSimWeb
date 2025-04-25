@@ -487,7 +487,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
     companion object : ArchConfig {
         override val DESCR: ArchConfig.Description = ArchConfig.Description("RV32I", "RISC-V 32Bit")
         override val SETTINGS: List<ArchConfig.Setting<*>> = listOf(
-            ArchConfig.Setting.Enumeration("Instruction Cache", Cache.Setting.entries, Setting.NONE) { arch, setting ->
+            ArchConfig.Setting.Enumeration("Instruction Cache", Setting.entries, Setting.NONE) { arch, setting ->
                 if (arch is ArchRV32) {
                     arch.instrMemory = when (setting.get()) {
                         Setting.NONE -> arch.memory
@@ -501,7 +501,7 @@ class ArchRV32 : BasicArchImpl<UInt32, UInt8>(UInt32, UInt8) {
                     }
                 }
             },
-            ArchConfig.Setting.Enumeration("Data Cache", Cache.Setting.entries, Setting.NONE) { arch, setting ->
+            ArchConfig.Setting.Enumeration("Data Cache", Setting.entries, Setting.NONE) { arch, setting ->
                 if (arch is ArchRV32) {
                     arch.dataMemory = when (setting.get()) {
                         Setting.NONE -> arch.memory

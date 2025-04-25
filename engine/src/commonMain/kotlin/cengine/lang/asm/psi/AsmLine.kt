@@ -14,7 +14,7 @@ class AsmLine(range: IntRange, vararg children: PsiElement) : PsiStatement(AsmLi
     val label: AsmLabelDecl? = children.firstInstance<AsmLabelDecl>()
     val instruction: AsmInstruction? = children.firstInstance<AsmInstruction>()
     val directive: AsmDirective? = children.firstInstance<AsmDirective>()
-    val expr: PsiStatement.Expr? = children.firstInstance<PsiStatement.Expr>()
+    val expr: Expr? = children.firstInstance<Expr>()
 
     // Comments might be attached directly or filtered from children
 

@@ -1,4 +1,4 @@
-package ui.emulator
+package ikr.prosim.ui.emulator
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -22,11 +22,11 @@ import emulator.kit.Architecture
 import emulator.kit.MicroSetup
 import emulator.kit.register.FieldProvider
 import emulator.kit.register.RegFile
-import ui.uilib.interactable.CButton
-import ui.uilib.interactable.CToggle
-import ui.uilib.layout.TabItem
-import ui.uilib.layout.TabbedPane
-import ui.uilib.params.IconType
+import uilib.interactable.CButton
+import uilib.interactable.CToggle
+import uilib.layout.TabItem
+import uilib.layout.TabbedPane
+import uilib.params.IconType
 import uilib.UIState
 
 @Composable
@@ -48,7 +48,7 @@ fun RegView(arch: Architecture<*, *>) {
 
 @Composable
 fun RegTable(regFile: RegFile<*>) {
-    val scale = UIState.Scale.value
+    UIState.Scale.value
     val theme = UIState.Theme.value
 
     var sortedBy: FieldProvider? by remember { mutableStateOf(null) }

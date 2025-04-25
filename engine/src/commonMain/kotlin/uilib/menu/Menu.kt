@@ -1,4 +1,4 @@
-package ui.uilib.menu
+package uilib.menu
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.round
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import cengine.util.string.splitBySpaces
-import ui.uilib.label.CLabel
-import ui.uilib.params.IconType
-import ui.uilib.text.CTextField
+import uilib.label.CLabel
+import uilib.params.IconType
+import uilib.text.CTextField
 import uilib.UIState
 
 @Composable

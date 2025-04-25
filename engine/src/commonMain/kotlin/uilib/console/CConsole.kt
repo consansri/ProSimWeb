@@ -1,4 +1,4 @@
-package ui.uilib.console
+package uilib.console
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,9 +7,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.style.TextAlign
-import ui.uilib.interactable.CButton
-import ui.uilib.label.CLabel
-import ui.uilib.text.CTextField
+import uilib.interactable.CButton
+import uilib.label.CLabel
+import uilib.text.CTextField
 import uilib.UIState
 
 @Composable

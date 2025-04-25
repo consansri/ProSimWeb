@@ -1,4 +1,4 @@
-package ui.uilib.label
+package uilib.label
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,7 +16,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import ui.uilib.params.IconType
+import uilib.params.IconType
 import uilib.UIState
 
 @Composable

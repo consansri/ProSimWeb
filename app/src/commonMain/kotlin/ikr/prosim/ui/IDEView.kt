@@ -1,4 +1,4 @@
-package ui
+package ikr.prosim.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -18,17 +18,22 @@ import cengine.psi.PsiManager
 import cengine.psi.core.PsiElement
 import cengine.vfs.VirtualFile
 import kotlinx.coroutines.launch
-import ui.ide.analyze.PsiAnalyzerView
-import ui.ide.editor.BinaryEditor
-import ui.ide.editor.CodeEditor
-import ui.ide.editor.TextEditor
-import ui.uilib.console.UnifiedTerminalShell
-import ui.uilib.filetree.FileTree
-import ui.uilib.interactable.CButton
-import ui.uilib.interactable.CToggle
-import ui.uilib.label.CLabel
-import ui.uilib.layout.*
+import ikr.prosim.ui.ide.analyze.PsiAnalyzerView
+import ikr.prosim.ui.ide.editor.BinaryEditor
+import ikr.prosim.ui.ide.editor.CodeEditor
+import ikr.prosim.ui.ide.editor.TextEditor
+import uilib.console.UnifiedTerminalShell
+import uilib.filetree.FileTree
+import uilib.interactable.CButton
+import uilib.interactable.CToggle
+import uilib.label.CLabel
 import uilib.UIState
+import uilib.layout.BorderLayout
+import uilib.layout.HorizontalToolBar
+import uilib.layout.ResizableBorderPanels
+import uilib.layout.TabItem
+import uilib.layout.TabbedPane
+import uilib.layout.VerticalToolBar
 import kotlin.time.Duration
 
 @Composable
@@ -61,7 +66,7 @@ fun IDEView(
     var fileEditorSelectedIndex by remember { mutableStateOf(0) }
 
     var fileAndPsiPath by remember { mutableStateOf<Pair<VirtualFile, List<PsiElement>>?>(null) }
-    var inputLag by remember { mutableStateOf<Duration>(Duration.ZERO) }
+    var inputLag by remember { mutableStateOf(Duration.ZERO) }
 
     var leftContentType by remember { mutableStateOf(ideState.leftContent) }
     var rightContentType by remember { mutableStateOf(ideState.rightContent) }
@@ -214,7 +219,7 @@ fun IDEView(
 
                             }, selectedTabIndex = fileEditorSelectedIndex, baseStyle = baseStyle) {
                                 fileEditors.remove(it)
-                                ideState.openFiles = fileEditors.map { it.value.path }
+                                ideState.openFiles = fileEditors.map { item -> item.value.path }
                             }
                         }
                     },

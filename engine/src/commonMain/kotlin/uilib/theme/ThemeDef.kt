@@ -1,4 +1,4 @@
-package ui.uilib.theme
+package uilib.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -6,11 +6,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import cengine.console.SysOut
 import cengine.psi.style.CodeStyle
 import org.jetbrains.compose.resources.FontResource
-import ui.uilib.interactable.CButton
+import uilib.interactable.CButton
 import uilib.UIState
 import kotlin.random.Random
 
-abstract class Theme {
+abstract class ThemeDef {
 
     companion object {
 

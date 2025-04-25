@@ -1,4 +1,4 @@
-package ui.uilib.interactable
+package uilib.interactable
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState

@@ -1,4 +1,4 @@
-package ui.uilib.layout
+package uilib.layout
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextAlign
-import ui.uilib.label.CLabel
-import ui.uilib.params.IconType
+import uilib.label.CLabel
+import uilib.params.IconType
 import uilib.UIState
 
 

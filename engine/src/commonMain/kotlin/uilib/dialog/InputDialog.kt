@@ -1,4 +1,4 @@
-package ui.uilib.dialog
+package uilib.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,10 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.Dialog
 import cengine.console.SysOut
-import ui.uilib.interactable.CButton
-import ui.uilib.layout.FormRect
-import ui.uilib.layout.FormRow
-import ui.uilib.text.CTextField
+import uilib.interactable.CButton
+import uilib.layout.FormRect
+import uilib.layout.FormRow
+import uilib.text.CTextField
 import uilib.UIState
 
 
@@ -25,8 +25,7 @@ fun InputDialog(title: String, init: String, onConfirm: (String) -> Unit, onDism
     }) {
 
         FormRect(
-            modifier = Modifier
-                .background(UIState.Theme.value.COLOR_BG_OVERLAY, RoundedCornerShape(UIState.Scale.value.SIZE_CORNER_RADIUS)),
+            modifier = Modifier.background(UIState.Theme.value.COLOR_BG_OVERLAY, RoundedCornerShape(UIState.Scale.value.SIZE_CORNER_RADIUS)),
             contentPadding = PaddingValues(UIState.Scale.value.SIZE_INSET_MEDIUM),
             rowSpacing = UIState.Scale.value.SIZE_INSET_MEDIUM
         ) {

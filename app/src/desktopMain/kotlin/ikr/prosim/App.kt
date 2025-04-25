@@ -4,7 +4,7 @@ import Constants
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.window.*
-import ui.AppLauncher
+import ikr.prosim.ui.AppLauncher
 import uilib.UIState
 
 fun main(){

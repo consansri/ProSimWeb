@@ -1,4 +1,4 @@
-package ui.uilib.layout
+package uilib.layout
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures

@@ -136,7 +136,7 @@ sealed class AsmDirective(
     class SectionControl(override val type: SectionControlT, range: IntRange, vararg children: PsiElement) : AsmDirective(type, range, *children) {
         val arguments = children.drop(1)
         val sectionName: PsiElement? = if (type == SectionControlT.SECTION) arguments.firstOrNull() else null
-        val sectionFlags: Expr.Literal.String? = if (type == SectionControlT.SECTION) arguments.getOrNull(1) as? PsiStatement.Expr.Literal.String else null // Adjust type
+        val sectionFlags: Expr.Literal.String? = if (type == SectionControlT.SECTION) arguments.getOrNull(1) as? Expr.Literal.String else null // Adjust type
         val sectionType: PsiElement? = if (type == SectionControlT.SECTION) arguments.getOrNull(2) else null // Type descriptor node
 
         enum class SectionControlT : AsmDirectiveT {
@@ -208,7 +208,7 @@ sealed class AsmDirective(
     // --- Symbol Management Directives ---
     class SymbolManagement(override val type: SymbolManagementT, range: IntRange, vararg children: PsiElement) : AsmDirective(type, range, *children) {
         val symbols: List<PsiToken> = children.filterIsInstance<PsiToken>().filter { it.type == PsiTokenType.IDENTIFIER }
-        val expressionArg: Expr? = children.firstInstance<PsiStatement.Expr>() // Find first actual expression node
+        val expressionArg: Expr? = children.firstInstance<Expr>() // Find first actual expression node
         val typeArg: AsmTypeDescriptor? = children.firstInstance<AsmTypeDescriptor>() // Example check
 
         enum class SymbolManagementT : AsmDirectiveT {
@@ -288,7 +288,7 @@ sealed class AsmDirective(
 
     // --- Alignment and Padding Directives ---
     class Alignment(override val type: AlignmentT, range: IntRange, vararg children: PsiElement) : AsmDirective(type, range, *children) {
-        val arguments = children.filterIsInstance<PsiStatement.Expr>() // Adjust type
+        val arguments = children.filterIsInstance<Expr>() // Adjust type
 
         enum class AlignmentT : AsmDirectiveT {
             ALIGN, P2ALIGN, FILL, SKIP, SPACE, ZERO;
@@ -445,7 +445,7 @@ sealed class AsmDirective(
     // --- Conditional Assembly Directives ---
     class ConditionalAssembly(override val type: ConditionalAssemblyT, range: IntRange, vararg children: PsiElement) : AsmDirective(type, range, *children) {
         // Condition is expression OR symbol (token)
-        val conditionExpression: PsiStatement.Expr? = children.firstInstance()
+        val conditionExpression: Expr? = children.firstInstance()
         val conditionSymbol: PsiToken? = children.firstInstance<PsiToken> { it.type == PsiTokenType.IDENTIFIER }
 
         enum class ConditionalAssemblyT : AsmDirectiveT {

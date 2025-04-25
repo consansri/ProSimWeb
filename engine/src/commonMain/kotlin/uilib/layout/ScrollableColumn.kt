@@ -1,4 +1,4 @@
-package ui.uilib.layout
+package uilib.layout
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight

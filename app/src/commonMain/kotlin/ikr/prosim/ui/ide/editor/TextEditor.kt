@@ -1,4 +1,4 @@
-package ui.ide.editor
+package ikr.prosim.ui.ide.editor
 
 
 import androidx.compose.foundation.background
@@ -26,9 +26,9 @@ import cengine.editor.completion.Completion
 import cengine.vfs.VirtualFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import ui.uilib.interactable.CHorizontalScrollBar
-import ui.uilib.interactable.CVerticalScrollBar
-import ui.uilib.layout.CornerLayout
+import uilib.interactable.CHorizontalScrollBar
+import uilib.interactable.CVerticalScrollBar
+import uilib.layout.CornerLayout
 import uilib.UIState
 import kotlin.math.roundToInt
 import kotlin.time.Duration
@@ -45,7 +45,7 @@ fun TextEditor(
 
     val theme = UIState.Theme.value
     val scale = UIState.Scale.value
-    val icon = UIState.Icon.value
+    UIState.Icon.value
 
     val textMeasurer = rememberTextMeasurer()
     val coroutineScope = rememberCoroutineScope()

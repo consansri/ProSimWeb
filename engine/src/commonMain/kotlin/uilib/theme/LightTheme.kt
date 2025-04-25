@@ -1,4 +1,4 @@
-package ui.uilib.theme
+package uilib.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -9,7 +9,7 @@ import prosim.engine.generated.resources.Poppins_Regular
 import prosim.engine.generated.resources.Res
 import uilib.UIState
 
-data object LightTheme : Theme() {
+data object LightTheme : ThemeDef() {
 
     override val name: String = "light"
     override val icon: ImageVector get() = UIState.Icon.value.lightmode

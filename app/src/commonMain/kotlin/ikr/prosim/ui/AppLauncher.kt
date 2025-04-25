@@ -1,4 +1,4 @@
-package ui
+package ikr.prosim.ui
 
 import androidx.compose.runtime.Composable
 import cengine.project.ProjectStateManager

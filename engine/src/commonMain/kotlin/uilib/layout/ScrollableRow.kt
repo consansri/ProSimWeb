@@ -1,4 +1,4 @@
-package ui.uilib.layout
+package uilib.layout
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row

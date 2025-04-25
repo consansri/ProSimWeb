@@ -1,9 +1,9 @@
 package cengine.project
 
 import kotlinx.serialization.Serializable
-import ui.uilib.scale.Scaling
-import ui.uilib.theme.LightTheme
-import ui.uilib.theme.Theme
+import uilib.scale.Scaling
+import uilib.theme.LightTheme
+import uilib.theme.ThemeDef
 
 @Serializable
 data class AppState(
@@ -18,7 +18,7 @@ data class AppState(
         val initial = AppState()
     }
 
-    fun getTheme(): Theme = Theme.all.firstOrNull { it.name == theme } ?: LightTheme
+    fun getTheme(): ThemeDef = ThemeDef.all.firstOrNull { it.name == theme } ?: LightTheme
 
     fun getScaling(): Scaling = Scaling(scale)
 

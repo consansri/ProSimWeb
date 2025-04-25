@@ -1,4 +1,4 @@
-package ui.uilib.layout
+package uilib.layout
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable

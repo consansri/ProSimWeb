@@ -1,4 +1,4 @@
-package ui
+package ikr.prosim.ui
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -8,10 +8,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import cengine.project.Project
 import cengine.project.ViewType
-import ui.uilib.interactable.CButton
-import ui.uilib.layout.AppBar
-import ui.uilib.scale.Scaling
-import ui.uilib.theme.Theme
+import uilib.interactable.CButton
+import uilib.layout.AppBar
+import uilib.scale.Scaling
+import uilib.theme.ThemeDef
 import uilib.UIState
 
 @Composable
@@ -22,7 +22,7 @@ fun TopBar(
     customContent: @Composable RowScope.() -> Unit = {},
 ) {
 
-    val theme = UIState.Theme.value
+    UIState.Theme.value
     val scale = UIState.Scale.value
     val icons = UIState.Icon.value
 
@@ -41,7 +41,7 @@ fun TopBar(
 
             Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
 
-            Theme.Switch()
+            ThemeDef.Switch()
 
             Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
 

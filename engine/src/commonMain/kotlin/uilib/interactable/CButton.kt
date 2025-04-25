@@ -1,4 +1,4 @@
-package ui.uilib.interactable
+package uilib.interactable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import ui.uilib.params.IconType
+import uilib.params.IconType
 import uilib.UIState
 
 @Composable

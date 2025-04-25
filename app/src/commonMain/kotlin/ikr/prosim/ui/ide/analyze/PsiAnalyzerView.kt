@@ -1,4 +1,4 @@
-package ui.ide.analyze
+package ikr.prosim.ui.ide.analyze
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,11 +11,11 @@ import cengine.editor.annotation.Severity.*
 import cengine.psi.PsiManager
 import cengine.psi.core.PsiService
 import cengine.psi.elements.PsiFile
-import ui.uilib.interactable.CButton
-import ui.uilib.label.CLabel
-import ui.uilib.layout.TabItem
-import ui.uilib.layout.TabbedPane
-import ui.uilib.layout.VerticalToolBar
+import uilib.interactable.CButton
+import uilib.label.CLabel
+import uilib.layout.TabItem
+import uilib.layout.TabbedPane
+import uilib.layout.VerticalToolBar
 import uilib.UIState
 
 @Composable
@@ -25,7 +25,7 @@ fun PsiAnalyzerView(
 ) {
 
     val theme = UIState.Theme.value
-    val scale = UIState.Scale.value
+    UIState.Scale.value
     val icons = UIState.Icon.value
 
     val tabs = psiManager.psiCache.map { TabItem(it, icons.file, it.key.toString()) }
@@ -33,7 +33,7 @@ fun PsiAnalyzerView(
     TabbedPane(tabs, modifier = Modifier.fillMaxSize(), content = { tabIndex ->
 
         key(tabs[tabIndex].value.value.annotations) {
-            val (path, psiFile) = tabs[tabIndex].value
+            val (_, psiFile) = tabs[tabIndex].value
             var annotations by remember {
                 mutableStateOf(PsiService.annotationsMapped(psiFile).toList().sortedBy { it.first.range.first }.flatMap {
                     val psiPath = PsiService.path(it.first).joinToString(" > ") { element -> element.type.typeName }

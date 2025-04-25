@@ -1,10 +1,9 @@
-package ui
+package ikr.prosim.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.runtime.*
@@ -14,12 +13,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cengine.project.ProjectState
 import cengine.project.ProjectStateManager
-import ui.uilib.interactable.CButton
-import ui.uilib.label.CLabel
-import ui.uilib.layout.BorderLayout
-import ui.uilib.params.IconType
-import ui.uilib.scale.Scaling
-import ui.uilib.theme.Theme
+import uilib.interactable.CButton
+import uilib.label.CLabel
+import uilib.layout.BorderLayout
+import uilib.params.IconType
+import uilib.scale.Scaling
+import uilib.theme.ThemeDef
 import uilib.UIState
 
 
@@ -42,7 +41,7 @@ fun ProjectSelectionScreen(onProjectSelected: (ProjectState) -> Unit, onCreateNe
             Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
             Scaling.Scaler()
             Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
-            Theme.Switch()
+            ThemeDef.Switch()
         },
         center = {
             Box(modifier = Modifier.align(Alignment.Center).width(500.dp)) {
@@ -56,7 +55,6 @@ fun ProjectSelectionScreen(onProjectSelected: (ProjectState) -> Unit, onCreateNe
 
                     currentProjects.forEach {
                         val interactionSource = remember { MutableInteractionSource() }
-                        val isHovered by interactionSource.collectIsHoveredAsState()
 
                         Row(
                             Modifier

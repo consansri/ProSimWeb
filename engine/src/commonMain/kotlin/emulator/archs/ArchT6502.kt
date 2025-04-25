@@ -42,7 +42,7 @@ class ArchT6502 : BasicArchImpl<UInt16, UInt8>(UInt16, UInt8) {
     private val baseRegs = T6502BaseRegs()
 
     override fun executeNext(tracker: Memory.AccessTracker): ExecutionResult {
-        val threeBytes = instrMemory.loadInstances(pc, 3, tracker)
+        instrMemory.loadInstances(pc, 3, tracker)
 
 
 

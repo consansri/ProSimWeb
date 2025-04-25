@@ -355,7 +355,7 @@ sealed interface RvInstrT : AsmInstructionT {
             // It retrieves regs and evaluates exprValues locally within pass 2 context
             var binary: UInt32 = UInt32.ZERO
             val instructionAddress = context.currentAddress // This is IntNumber<*> usually
-            val spec = context.spec as? RvSpec ?: throw Exception("Internal error: RISC-V backend requires RvSpec")
+            context.spec as? RvSpec ?: throw Exception("Internal error: RISC-V backend requires RvSpec")
 
             try {
                 val regs = instr.regs.map { it.type.address.toUInt32() }
@@ -394,7 +394,7 @@ sealed interface RvInstrT : AsmInstructionT {
                     // J-Type
                     JAL -> {
                         val rd = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 for $keyWord")
-                        val targetLabelExpr = instr.exprs.getOrNull(0) ?: throw Exception("Missing label expression for JAL") // Get original expr for range
+                        instr.exprs.getOrNull(0) ?: throw Exception("Missing label expression for JAL") // Get original expr for range
                         val targetAddr = exprs[0] // Already evaluated IntNumber
                         val relativeOffset = targetAddr - instructionAddress // IntNumber result
                         if (!relativeOffset.fitsInSigned(21)) {
@@ -412,7 +412,7 @@ sealed interface RvInstrT : AsmInstructionT {
                     BEQ, BNE, BLT, BGE, BLTU, BGEU -> {
                         val rs1 = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 (rs1) for $keyWord")
                         val rs2 = regs.getOrNull(1) ?: throw Exception("Missing required register operand 1 (rs2) for $keyWord")
-                        val targetLabelExpr = instr.exprs.getOrNull(0) ?: throw Exception("Missing label expression for $keyWord") // Get original expr for range
+                        instr.exprs.getOrNull(0) ?: throw Exception("Missing label expression for $keyWord") // Get original expr for range
                         val targetAddr = exprs[0] // Already evaluated IntNumber
                         val relativeOffset = targetAddr - instructionAddress // IntNumber result
                         if (!relativeOffset.fitsInSigned(13)) {
@@ -492,8 +492,8 @@ sealed interface RvInstrT : AsmInstructionT {
                 binary = when (this@I64T) {
                     // --- I-Type Word Immediate ---
                     ADDIW -> {
-                        val rd = regs[0];
-                        val rs1 = regs[1];
+                        val rd = regs[0]
+                        val rs1 = regs[1]
                         val immVal = exprs[0]
                         if (!immVal.fitsInSigned(12)) instr.addError("Immediate $immVal out of 12-bit signed range for $keyWord")
                         val imm = immVal.toInt32().toUInt32()
@@ -502,8 +502,8 @@ sealed interface RvInstrT : AsmInstructionT {
                     }
 
                     SLLIW, SRLIW, SRAIW -> {
-                        val rd = regs[0];
-                        val rs1 = regs[1];
+                        val rd = regs[0]
+                        val rs1 = regs[1]
                         val shamtVal = exprs[0]
                         // Word shifts only use lower 5 bits of shamt
                         if (!shamtVal.fitsInUnsigned(5)) instr.addError("Shift amount $shamtVal out of 5-bit unsigned range for $keyWord")
@@ -522,8 +522,8 @@ sealed interface RvInstrT : AsmInstructionT {
 
                     // --- R-Type Word ---
                     ADDW, SUBW, SLLW, SRLW, SRAW -> {
-                        val rd = regs[0];
-                        val rs1 = regs[1];
+                        val rd = regs[0]
+                        val rs1 = regs[1]
                         val rs2 = regs[2]
                         val funct3 = when (this@I64T) {
                             ADDW, SUBW -> RvConst.FUNCT3_ADDI_ADD_SUB
@@ -540,8 +540,8 @@ sealed interface RvInstrT : AsmInstructionT {
 
                     // --- Load/Store 64-bit ---
                     LWU, LD -> { // Load Word Unsigned, Load Doubleword
-                        val rd = regs[0];
-                        val immVal = exprs[0];
+                        val rd = regs[0]
+                        val immVal = exprs[0]
                         val rs1 = regs[1]
                         if (!immVal.fitsInSigned(12)) instr.addError("Immediate offset $immVal out of 12-bit signed range for $keyWord")
                         val imm = immVal.toInt32().toUInt32()
@@ -554,8 +554,8 @@ sealed interface RvInstrT : AsmInstructionT {
                     }
 
                     SD -> { // Store Doubleword
-                        val rs2 = regs[0];
-                        val immVal = exprs[0];
+                        val rs2 = regs[0]
+                        val immVal = exprs[0]
                         val rs1 = regs[1]
                         if (!immVal.fitsInSigned(12)) instr.addError("Immediate offset $immVal out of 12-bit signed range for $keyWord")
                         val imm = immVal.toInt32().toUInt32()
@@ -595,8 +595,8 @@ sealed interface RvInstrT : AsmInstructionT {
             val regs = instr.regs.map { it.type.address.toUInt32() }
             var binary: UInt32 = UInt32.ZERO
             try {
-                val rd = regs[0];
-                val rs1 = regs[1];
+                val rd = regs[0]
+                val rs1 = regs[1]
                 val rs2 = regs[2]
 
                 // All are R-Type, use OPC_ARITH, funct7 = 0000001 (M extension marker)
@@ -636,8 +636,8 @@ sealed interface RvInstrT : AsmInstructionT {
             var binary: UInt32 = UInt32.ZERO
             try {
 
-                val rd = regs[0];
-                val rs1 = regs[1];
+                val rd = regs[0]
+                val rs1 = regs[1]
                 val rs2 = regs[2]
 
                 // All are R-Type, use OPC_ARITH_WORD, funct7 = 0000001 (M extension marker)
@@ -754,9 +754,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
             // Pseudo Jumps/Calls/Returns
             J(LABEL),              // -> jal x0, label
-            JAL(LABEL) {
-
-            },            // -> jal x1, label (Syntactic sugar for common case)
+            JAL(LABEL),            // -> jal x1, label (Syntactic sugar for common case)
             JR(PS_RS1),            // -> jalr x0, 0(rs1)
             JALR(PS_RS1),          // -> jalr x1, 0(rs1) (Syntactic sugar for common case)
             RET(PS_NONE),          // -> jalr x0, 0(x1)
@@ -811,13 +809,13 @@ sealed interface RvInstrT : AsmInstructionT {
                     when (this@BaseT) {
                         NOP -> context.section.content.put(generateAddi(RvRegT.IntT.ZERO.uint32, RvRegT.IntT.ZERO.uint32, UInt32.ZERO)) // addi x0, x0, 0
                         MV -> { // addi rd, rs, 0
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val rs1 = regs[1]
                             context.section.content.put(generateAddi(rd, rs1, UInt32.ZERO))
                         }
 
                         NOT -> { // xori rd, rs, -1
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val rs1 = regs[1]
                             val imm = (-1).toUInt32() // Gets sign extended by packImmI
                             val binary = RvConst.packImmI(imm) or (rs1 shl 15) or (RvConst.FUNCT3_XORI_XOR shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
@@ -825,7 +823,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         NEG -> { // sub rd, x0, rs
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val rs1 = regs[1] // Note: rs1 is operand, becomes rs2 in SUB
                             val binary = (RvConst.FUNCT7_SUB_SRA shl 25) or (rs1 shl 20) or (RvRegT.IntT.ZERO.uint32 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH
                             context.section.content.put(binary)
@@ -833,35 +831,35 @@ sealed interface RvInstrT : AsmInstructionT {
 
                         NEGW -> { // subw rd, x0, rs (RV64 only)
                             if (spec.xlen != RvSpec.XLEN.X64) instr.addError("$keyWord requires RV64")
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val rs1 = regs[1]
                             val binary = (RvConst.FUNCT7_SUB_SRA shl 25) or (rs1 shl 20) or (RvRegT.IntT.ZERO.uint32 shl 15) or (RvConst.FUNCT3_ADDI_ADD_SUB shl 12) or (rd shl 7) or RvConst.OPC_ARITH_WORD
                             context.section.content.put(binary)
                         }
 
                         SEQZ -> { // sltiu rd, rs, 1
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val rs1 = regs[1]
                             val binary = RvConst.packImmI(1.toUInt32()) or (rs1 shl 15) or (RvConst.FUNCT3_SLTIU_SLTU shl 12) or (rd shl 7) or RvConst.OPC_ARITH_IMM
                             context.section.content.put(binary)
                         }
 
                         SNEZ -> { // sltu rd, x0, rs
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val rs1 = regs[1] // rs1 is operand, becomes rs2 in SLTU
                             val binary = (RvConst.FUNCT7_ADD_SLL_SLT_STLU_XOR_SRL_OR_AND shl 25) or (rs1 shl 20) or (RvRegT.IntT.ZERO.uint32 shl 15) or (RvConst.FUNCT3_SLTIU_SLTU shl 12) or (rd shl 7) or RvConst.OPC_ARITH
                             context.section.content.put(binary)
                         }
 
                         SLTZ -> { // slt rd, rs, x0
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val rs1 = regs[1]
                             val binary = (RvConst.FUNCT7_ADD_SLL_SLT_STLU_XOR_SRL_OR_AND shl 25) or (RvRegT.IntT.ZERO.uint32 shl 20) or (rs1 shl 15) or (RvConst.FUNCT3_SLTI_SLT shl 12) or (rd shl 7) or RvConst.OPC_ARITH
                             context.section.content.put(binary)
                         }
 
                         SGTZ -> { // slt rd, x0, rs
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val rs1 = regs[1] // rs1 is operand, becomes rs2 in SLT
                             val binary = (RvConst.FUNCT7_ADD_SLL_SLT_STLU_XOR_SRL_OR_AND shl 25) or (rs1 shl 20) or (RvRegT.IntT.ZERO.uint32 shl 15) or (RvConst.FUNCT3_SLTI_SLT shl 12) or (rd shl 7) or RvConst.OPC_ARITH
                             context.section.content.put(binary)
@@ -883,7 +881,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
                         // Pseudo CSR Access (expand to base CSR using x0)
                         CSRR -> { // csrrs rd, csr, x0
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val csrVal = exprs[0]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
@@ -892,7 +890,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         CSRW -> { // csrrw x0, csr, rs1
-                            val csrVal = exprs[0];
+                            val csrVal = exprs[0]
                             val rs1 = regs[0]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
@@ -901,7 +899,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         CSRS -> { // csrrs x0, csr, rs1
-                            val csrVal = exprs[0];
+                            val csrVal = exprs[0]
                             val rs1 = regs[0]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
@@ -910,7 +908,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         CSRC -> { // csrrc x0, csr, rs1
-                            val csrVal = exprs[0];
+                            val csrVal = exprs[0]
                             val rs1 = regs[0]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
@@ -919,7 +917,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
                         // Note: Parameter types changed to CSR_UIMM5 for these
                         CSRWI -> { // csrrwi x0, csr, uimm5
-                            val csrVal = exprs[0];
+                            val csrVal = exprs[0]
                             val uimmVal = exprs[1]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             if (!uimmVal.fitsInUnsigned(5)) instr.addError("Immediate $uimmVal out of 5-bit range")
@@ -930,7 +928,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         CSRSI -> { // csrrsi x0, csr, uimm5
-                            val csrVal = exprs[0];
+                            val csrVal = exprs[0]
                             val uimmVal = exprs[1]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             if (!uimmVal.fitsInUnsigned(5)) instr.addError("Immediate $uimmVal out of 5-bit range")
@@ -941,7 +939,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         CSRCI -> { // csrrci x0, csr, uimm5
-                            val csrVal = exprs[0];
+                            val csrVal = exprs[0]
                             val uimmVal = exprs[1]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             if (!uimmVal.fitsInUnsigned(5)) instr.addError("Immediate $uimmVal out of 5-bit range")
@@ -953,7 +951,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
                         // --- LI - Load Immediate ---
                         LI -> {
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val imm = exprs[0]
                             val writer: (UInt32) -> Unit = { context.section.content.put(it) }
 
@@ -1178,7 +1176,7 @@ sealed interface RvInstrT : AsmInstructionT {
                     when (this@BaseT) {
                         // --- Pseudo Branches (Zero Comparison) ---
                         BEQZ -> { // beq rs, x0, label
-                            val rs1 = regs[0];
+                            val rs1 = regs[0]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1187,7 +1185,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         BNEZ -> { // bne rs, x0, label
-                            val rs1 = regs[0];
+                            val rs1 = regs[0]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1196,7 +1194,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         BLEZ -> { // bge x0, rs, label
-                            val rs1 = regs[0];
+                            val rs1 = regs[0]
                             val targetAddr = exprs[0] // rs1 is operand, becomes rs2 in BGE
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1205,7 +1203,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         BGEZ -> { // bge rs, x0, label
-                            val rs1 = regs[0];
+                            val rs1 = regs[0]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1214,7 +1212,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         BLTZ -> { // blt rs, x0, label
-                            val rs1 = regs[0];
+                            val rs1 = regs[0]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1223,7 +1221,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         BGTZ -> { // blt x0, rs, label
-                            val rs1 = regs[0];
+                            val rs1 = regs[0]
                             val targetAddr = exprs[0] // rs1 is operand, becomes rs2 in BLT
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1233,8 +1231,8 @@ sealed interface RvInstrT : AsmInstructionT {
 
                         // --- Pseudo Branches (Reversed Compare) ---
                         BGT -> { // blt rs2, rs1, label
-                            val rs1 = regs[0];
-                            val rs2 = regs[1];
+                            val rs1 = regs[0]
+                            val rs2 = regs[1]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1243,8 +1241,8 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         BLE -> { // bge rs2, rs1, label
-                            val rs1 = regs[0];
-                            val rs2 = regs[1];
+                            val rs1 = regs[0]
+                            val rs2 = regs[1]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1253,8 +1251,8 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         BGTU -> { // bltu rs2, rs1, label
-                            val rs1 = regs[0];
-                            val rs2 = regs[1];
+                            val rs1 = regs[0]
+                            val rs2 = regs[1]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1263,8 +1261,8 @@ sealed interface RvInstrT : AsmInstructionT {
                         }
 
                         BLEU -> { // bgeu rs2, rs1, label
-                            val rs1 = regs[0];
-                            val rs2 = regs[1];
+                            val rs1 = regs[0]
+                            val rs2 = regs[1]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             if (!offset.fitsInSigned(13) || offset % 2 != BigInt.ZERO) instr.addError("Branch target out of range/misaligned")
@@ -1291,7 +1289,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
                         // --- PC-Relative Addressing / Calls ---
                         LA -> { // auipc rd, %pcrel_hi(lbl) + addi rd, rd, %pcrel_lo(lbl)
-                            val rd = regs[0];
+                            val rd = regs[0]
                             val targetAddr = exprs[0]
                             val offset = targetAddr - instructionAddress
                             val (imm_u, imm_i) = RvConst.calculateImmUPCRelAndImmI(offset) // Helper to get hi20(adj) and lo12

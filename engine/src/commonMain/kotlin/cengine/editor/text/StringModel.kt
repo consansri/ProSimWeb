@@ -1,6 +1,6 @@
 package cengine.editor.text
 
-class StringModel(private var text: String) : cengine.editor.text.TextModel {
+class StringModel(private var text: String) : TextModel {
     override val length: Int get() = text.length
     override val lines: Int get() = text.count { it == '\n' } + 1
     override val maxColumns: Int get() = calculateMaxColumns()

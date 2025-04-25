@@ -18,9 +18,7 @@ open class PsiStatement(type: PsiStatementTypeDef, override var range: IntRange,
 
     override val annotations: MutableList<Annotation> = mutableListOf()
 
-    interface PsiStatementTypeDef : PsiElementTypeDef {
-
-    }
+    interface PsiStatementTypeDef : PsiElementTypeDef
 
     open class Block(range: IntRange, vararg children: PsiElement) : PsiStatement(Block, range, *children) {
 
@@ -38,21 +36,15 @@ open class PsiStatement(type: PsiStatementTypeDef, override var range: IntRange,
         }
     }
 
-    class Catch(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children) {
-
-    }
+    class Catch(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children)
 
     class Import<T : PsiElement>(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children), PsiReference<T> {
         override var reference: T? = null
     }
 
-    class Flow(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children) {
+    class Flow(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children)
 
-    }
-
-    class Decl(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children) {
-
-    }
+    class Decl(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children)
 
     sealed class Expr(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children) {
 
@@ -336,9 +328,7 @@ open class PsiStatement(type: PsiStatementTypeDef, override var range: IntRange,
             }
         }
 
-        class FunctionCall(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : Expr(type, range, *children) {
-
-        }
+        class FunctionCall(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : Expr(type, range, *children)
     }
 
     sealed class PsiStringElement(type: PsiStatementTypeDef, range: IntRange, vararg children: PsiElement) : PsiStatement(type, range, *children) {

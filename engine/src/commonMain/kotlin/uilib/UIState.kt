@@ -6,14 +6,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
 import cengine.project.ProjectStateManager
-import ui.uilib.params.FontType
-import ui.uilib.resource.Icons
-import ui.uilib.scale.Scaling
+import uilib.params.FontType
+import uilib.resource.Icons
+import uilib.scale.Scaling
 import uilib.resource.BenIcons
+import uilib.theme.ThemeDef
 
 object UIState {
 
-    val Theme = mutableStateOf(ui.uilib.theme.Theme.all.first())
+    val Theme = mutableStateOf(ThemeDef.all.first())
     val Icon = mutableStateOf<Icons>(BenIcons)
     val Scale = mutableStateOf(Scaling())
 

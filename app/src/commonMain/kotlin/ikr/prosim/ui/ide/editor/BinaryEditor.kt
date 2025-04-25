@@ -1,4 +1,4 @@
-package ui.ide.editor
+package ikr.prosim.ui.ide.editor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,7 +17,7 @@ import cengine.lang.obj.elf.*
 import cengine.psi.PsiManager
 import cengine.vfs.ActualFileSystem
 import cengine.vfs.VirtualFile
-import ui.uilib.interactable.CToggle
+import uilib.interactable.CToggle
 import uilib.UIState
 
 @Composable
@@ -37,7 +37,7 @@ fun BinaryEditor(
     val scale = UIState.Scale.value
 
     val scrollVertical = rememberScrollState()
-    val scrollHorizontal = rememberScrollState()
+    rememberScrollState()
 
     val objFile = manager.psiCache[file.path]
 

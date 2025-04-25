@@ -1,4 +1,4 @@
-package ui.uilib.resource
+package uilib.resource
 
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope

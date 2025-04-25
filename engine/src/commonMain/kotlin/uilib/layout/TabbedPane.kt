@@ -1,4 +1,4 @@
-package ui.uilib.layout
+package uilib.layout
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,8 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
-import ui.uilib.interactable.CButton
-import ui.uilib.label.CLabel
+import uilib.interactable.CButton
+import uilib.label.CLabel
 import uilib.UIState
 
 data class TabItem<T : Any>(

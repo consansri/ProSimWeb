@@ -1,4 +1,4 @@
-package ui.uilib.filetree
+package uilib.filetree
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -8,9 +8,9 @@ import cengine.project.Project
 import cengine.vfs.VirtualFile
 import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.launch
-import ui.uilib.menu.Menu
-import ui.uilib.menu.MenuItem
-import ui.uilib.menu.MenuItemWithAttrs
+import uilib.menu.Menu
+import uilib.menu.MenuItem
+import uilib.menu.MenuItemWithAttrs
 import uilib.UIState
 
 @Composable

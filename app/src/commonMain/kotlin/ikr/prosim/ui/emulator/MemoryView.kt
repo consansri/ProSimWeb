@@ -1,4 +1,4 @@
-package ui.emulator
+package ikr.prosim.ui.emulator
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,8 +14,8 @@ import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.Architecture
 import emulator.kit.MicroSetup
 import emulator.kit.memory.*
-import ui.uilib.layout.TabItem
-import ui.uilib.layout.TabbedPane
+import uilib.layout.TabItem
+import uilib.layout.TabbedPane
 import uilib.UIState
 import kotlin.math.log2
 import kotlin.math.roundToInt
@@ -53,7 +53,7 @@ fun MemoryView(memory: Memory<*, *>, pc: UnsignedFixedSizeIntNumber<*>) {
 fun MainMemoryView(memory: MainMemory<*, *>, pc: UnsignedFixedSizeIntNumber<*>) {
 
     val theme = UIState.Theme.value
-    val scale = UIState.Scale.value
+    UIState.Scale.value
     val baseStyle = UIState.BaseStyle.current
     val codeStyle = UIState.CodeStyle.current
 
@@ -166,8 +166,8 @@ fun MainMemoryView(memory: MainMemory<*, *>, pc: UnsignedFixedSizeIntNumber<*>) 
 @Composable
 fun CacheHeader(offsetCount: Int) {
     val theme = UIState.Theme.value
-    val scale = UIState.Scale.value
-    val pcColor = theme.COLOR_GREEN
+    UIState.Scale.value
+    theme.COLOR_GREEN
     val baseStyle = UIState.BaseStyle.current
 
     Row(
@@ -227,7 +227,7 @@ fun CacheHeader(offsetCount: Int) {
 @Composable
 fun DMCacheView(memory: DMCache<*, *>, pc: IntNumber<*>) {
     val theme = UIState.Theme.value
-    val scale = UIState.Scale.value
+    UIState.Scale.value
     val pcColor = theme.COLOR_GREEN
     val codeStyle = UIState.CodeStyle.current
 
@@ -332,7 +332,7 @@ fun DMCacheView(memory: DMCache<*, *>, pc: IntNumber<*>) {
 @Composable
 fun FACacheView(memory: FACache<*, *>, pc: IntNumber<*>) {
     val theme = UIState.Theme.value
-    val scale = UIState.Scale.value
+    UIState.Scale.value
     val pcColor = theme.COLOR_GREEN
     val codeStyle = UIState.CodeStyle.current
 
@@ -431,7 +431,7 @@ fun FACacheView(memory: FACache<*, *>, pc: IntNumber<*>) {
 @Composable
 fun SACacheView(memory: SACache<*, *>, pc: IntNumber<*>) {
     val theme = UIState.Theme.value
-    val scale = UIState.Scale.value
+    UIState.Scale.value
     val pcColor = theme.COLOR_GREEN
     val codeStyle = UIState.CodeStyle.current
 

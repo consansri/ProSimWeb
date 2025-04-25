@@ -1,4 +1,4 @@
-package ui
+package ikr.prosim.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,8 +19,8 @@ fun ProjectViewScreen(state: ProjectState, close: () -> Unit) {
     val viewType = remember { mutableStateOf(state.viewType) }
 
     when (viewType.value) {
-        ViewType.IDE -> IDEView(project, viewType,  close)
-        ViewType.EMU -> EmulatorView(project, viewType, architecture,  close)
+        ViewType.IDE -> IDEView(project, viewType, close)
+        ViewType.EMU -> EmulatorView(project, viewType, architecture, close)
     }
 
     LaunchedEffect(viewType.value) {

@@ -28,8 +28,8 @@ interface IndentationProvider {
             selector.caret += indentAtIndex(selector.caret.index)
         } else {
             // Selection Indentation
-            val (firstLine, firstCol) = selector.caret.model.getLineAndColumn(range.first)
-            val (lastLine, lastCol) = selector.caret.model.getLineAndColumn(range.last + 1)
+            val (firstLine, _) = selector.caret.model.getLineAndColumn(range.first)
+            val (lastLine, _) = selector.caret.model.getLineAndColumn(range.last + 1)
 
             var insideSelectionSpaceChange = 0
             var beforeSelectionSpaceChange = 0
@@ -67,7 +67,7 @@ interface IndentationProvider {
             // Selection Unindent
             // Selection Indentation
             val (firstLine, firstCol) = selector.caret.model.getLineAndColumn(range.first)
-            val (lastLine, lastCol) = selector.caret.model.getLineAndColumn(range.last + 1)
+            val (lastLine, _) = selector.caret.model.getLineAndColumn(range.last + 1)
 
             var insideSelectionSpaceChange = 0
             var beforeSelectionSpaceChange = 0

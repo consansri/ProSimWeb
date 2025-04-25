@@ -1,4 +1,4 @@
-package ui.ide.editor
+package ikr.prosim.ui.ide.editor
 
 
 import androidx.compose.foundation.*
@@ -42,11 +42,11 @@ import cengine.psi.style.CodeStyle
 import cengine.vfs.ActualFileSystem
 import cengine.vfs.VirtualFile
 import kotlinx.coroutines.*
-import ui.uilib.interactable.CButton
-import ui.uilib.interactable.CHorizontalScrollBar
-import ui.uilib.interactable.CVerticalScrollBar
-import ui.uilib.layout.CornerLayout
-import ui.uilib.params.IconType
+import uilib.interactable.CButton
+import uilib.interactable.CHorizontalScrollBar
+import uilib.interactable.CVerticalScrollBar
+import uilib.layout.CornerLayout
+import uilib.params.IconType
 import uilib.ComposeTools
 import uilib.UIState
 import kotlin.math.roundToInt

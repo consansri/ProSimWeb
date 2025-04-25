@@ -10,6 +10,4 @@ import cengine.util.integer.UInt32
  * backed by a [MutableList] of [UInt32] values and provides methods to interact with
  * the buffer.
  */
-class Buffer32(endianness: Endianness) : Buffer<UInt32>(endianness, UInt32){
-
-}
+class Buffer32(endianness: Endianness) : Buffer<UInt32>(endianness, UInt32)

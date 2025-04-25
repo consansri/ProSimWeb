@@ -1,4 +1,4 @@
-package ui.uilib.text
+package uilib.text
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

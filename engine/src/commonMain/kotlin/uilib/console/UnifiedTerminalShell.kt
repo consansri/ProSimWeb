@@ -1,4 +1,4 @@
-package ui.uilib.console
+package uilib.console
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize

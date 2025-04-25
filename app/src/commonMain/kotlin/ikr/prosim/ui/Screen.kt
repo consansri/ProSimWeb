@@ -1,4 +1,4 @@
-package ui
+package ikr.prosim.ui
 
 import cengine.project.ProjectState
 

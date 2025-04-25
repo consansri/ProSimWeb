@@ -1,4 +1,4 @@
-package ui.uilib.params
+package uilib.params
 
 import androidx.compose.ui.unit.Dp
 import uilib.UIState

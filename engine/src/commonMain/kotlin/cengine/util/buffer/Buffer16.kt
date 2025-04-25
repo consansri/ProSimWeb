@@ -10,6 +10,4 @@ import cengine.util.integer.UInt16
  * backed by a [MutableList] of [UInt16] values and provides methods to interact with
  * the buffer.
  */
-class Buffer16(endianness: Endianness) : Buffer<UInt16>(endianness, UInt16){
-
-}
+class Buffer16(endianness: Endianness) : Buffer<UInt16>(endianness, UInt16)

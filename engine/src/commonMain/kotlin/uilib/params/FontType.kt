@@ -1,4 +1,4 @@
-package ui.uilib.params
+package uilib.params
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity

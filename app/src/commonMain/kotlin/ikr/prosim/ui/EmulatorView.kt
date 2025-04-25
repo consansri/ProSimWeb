@@ -1,4 +1,4 @@
-package ui
+package ikr.prosim.ui
 
 
 import Performance
@@ -25,18 +25,18 @@ import cengine.project.EmulatorContentView
 import cengine.project.Project
 import cengine.project.ViewType
 import emulator.kit.Architecture
-import ui.emulator.ArchitectureOverview
-import ui.emulator.ExecutionView
-import ui.emulator.MemView
-import ui.emulator.RegView
-import ui.uilib.filetree.FileTree
-import ui.uilib.interactable.CButton
-import ui.uilib.interactable.CToggle
-import ui.uilib.label.CLabel
-import ui.uilib.layout.BorderLayout
-import ui.uilib.layout.HorizontalToolBar
-import ui.uilib.layout.ResizableBorderPanels
-import ui.uilib.layout.VerticalToolBar
+import ikr.prosim.ui.emulator.ArchitectureOverview
+import ikr.prosim.ui.emulator.ExecutionView
+import ikr.prosim.ui.emulator.MemView
+import ikr.prosim.ui.emulator.RegView
+import uilib.filetree.FileTree
+import uilib.interactable.CButton
+import uilib.interactable.CToggle
+import uilib.label.CLabel
+import uilib.layout.BorderLayout
+import uilib.layout.HorizontalToolBar
+import uilib.layout.ResizableBorderPanels
+import uilib.layout.VerticalToolBar
 import uilib.UIState
 
 @Composable
@@ -88,7 +88,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
         onFinish(null)
     }
 
-    var initializer: AsmBinaryProvider? by remember { mutableStateOf<AsmBinaryProvider?>(null) }
+    var initializer: AsmBinaryProvider? by remember { mutableStateOf(null) }
 
     val archOverview: (@Composable BoxScope.() -> Unit) = {
         ArchitectureOverview(architecture, baseStyle, baseLargeStyle)
@@ -234,7 +234,7 @@ fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architectur
                                 state = rememberScrollableState { delta ->
                                     accumulatedScroll += delta
 
-                                    // Increment stepCount when scroll threshold is crossed
+                                    // Increment stepCount when a scroll threshold is crossed
                                     if (accumulatedScroll <= -scrollThreshold) {
                                         stepCount = stepCount.dec().coerceAtLeast(1U)
                                         accumulatedScroll = 0f // Reset after increment

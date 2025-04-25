@@ -12,7 +12,7 @@ import cengine.psi.visitor.PsiElementVisitor
  * @param value The value of the token.
  * @param range The range of the token.
  */
-class PsiToken(val value: String, override val type: PsiTokenType, final override var range: IntRange) : PsiElement(type), Formatable {
+class PsiToken(val value: String, override val type: PsiTokenType, override var range: IntRange) : PsiElement(type), Formatable {
 
     override val additionalInfo: String
         get() = ""

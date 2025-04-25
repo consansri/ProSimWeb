@@ -9,7 +9,7 @@ import kotlin.math.pow
 
 fun AsmBinaryProvider.toMif(context: IOContext, addrBitWidth: Int, dataBitWidth: Int, chunkSize: Int): String {
     val sections = contents()
-    val entry = entry()
+    entry()
     val type = sections.values.firstOrNull()?.first?.firstOrNull()?.type ?: return buildString {
         context.error("Content is empty!")
         appendLine("-- ${Constants.sign()}")

@@ -1,4 +1,4 @@
-package ui.ide.editor
+package ikr.prosim.ui.ide.editor
 
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -15,7 +15,7 @@ fun insertIndentationForSelectedLines(value: TextFieldValue, layoutResult: TextL
     val lines = value.text.lines().toMutableList()
 
     for (lineIndex in startLine..endLine) {
-        val lineStart = layoutResult?.getLineStart(lineIndex) ?: 0
+        layoutResult?.getLineStart(lineIndex) ?: 0
         lines[lineIndex] = indent + lines[lineIndex]
     }
 
@@ -39,7 +39,7 @@ fun removeIndentationForSelectedLines(value: TextFieldValue, layoutResult: TextL
     val lines = value.text.lines().toMutableList()
 
     for (lineIndex in startLine..endLine) {
-        val lineStart = layoutResult?.getLineStart(lineIndex) ?: 0
+        layoutResult?.getLineStart(lineIndex) ?: 0
         if (lines[lineIndex].startsWith(indent)) {
             lines[lineIndex] = lines[lineIndex].removePrefix(indent)
         }
@@ -77,7 +77,7 @@ fun insertNewlineAndIndent(value: TextFieldValue, layoutResult: TextLayoutResult
     // Extract the leading whitespace (indentation) from the current line
     val leadingWhitespace = currentLineText.takeWhile { it.isWhitespace() }
 
-    // Insert newline + leading whitespace
+    // Insert a newline and leading whitespace
     val newText = value.text.substring(0, caretPosition) +
             "\n" +
             leadingWhitespace +

@@ -1,4 +1,4 @@
-package ui.ide.editor
+package ikr.prosim.ui.ide.editor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

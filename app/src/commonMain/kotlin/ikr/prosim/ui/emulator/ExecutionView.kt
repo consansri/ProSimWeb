@@ -1,4 +1,4 @@
-package ui.emulator
+package ikr.prosim.ui.emulator
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,8 +21,9 @@ import cengine.editor.highlighting.HighlightProvider.Companion.spanStyles
 import cengine.lang.asm.AsmDisassembler
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.Architecture
-import ui.uilib.label.CLabel
+import uilib.label.CLabel
 import uilib.UIState
+import kotlin.collections.get
 
 @Composable
 fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvider?, baseStyle: TextStyle, codeStyle: TextStyle) {
@@ -90,7 +91,7 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
 
                 items(decodedRenderingValues, key = {
                     /**
-                     * @throws Exception (WebAssembly.Exception) if key isn't unique!
+                     * @throws Exception (WebAssembly.Exception) if the key isn't unique!
                      */
                     "${it.first.addr.toString(16)}:${it.second.offset.toString(16)}"
                 }) { (segment, decoded) ->
@@ -150,7 +151,7 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
                 segment.decodedContent.map { segment to it }
             }
 
-            decodedRenderingLabels = decodedRenderingValues.flatMap { (segment, decoded) ->
+            decodedRenderingLabels = decodedRenderingValues.flatMap { (segment, _) ->
                 segment.labels.map { label -> segment.addr + label.offset to label }
             }.toMap()
         }

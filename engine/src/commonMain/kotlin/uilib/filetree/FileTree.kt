@@ -1,4 +1,4 @@
-package ui.uilib.filetree
+package uilib.filetree
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,11 +26,11 @@ import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import ui.uilib.dialog.ConfirmDialog
-import ui.uilib.dialog.InputDialog
-import ui.uilib.interactable.CButton
-import ui.uilib.label.CLabel
-import ui.uilib.params.IconType
+import uilib.dialog.ConfirmDialog
+import uilib.dialog.InputDialog
+import uilib.interactable.CButton
+import uilib.label.CLabel
+import uilib.params.IconType
 import uilib.UIState
 
 @Composable
@@ -274,7 +274,7 @@ fun LazyListScope.node(
                                     }
 
                                     event.type == PointerEventType.Press && event.buttons.isPrimaryPressed -> {
-                                        val offset = event.changes.firstOrNull()?.position ?: Offset.Zero
+                                        event.changes.firstOrNull()?.position ?: Offset.Zero
 
                                         event.changes.forEach { it.consume() }
                                         onLeftClick(file)

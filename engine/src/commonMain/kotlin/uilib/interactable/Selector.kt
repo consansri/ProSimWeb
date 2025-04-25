@@ -1,4 +1,4 @@
-package ui.uilib.interactable
+package uilib.interactable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

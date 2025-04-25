@@ -1,4 +1,4 @@
-package ui.uilib.scale
+package uilib.scale
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.em
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import ui.uilib.interactable.CButton
+import uilib.interactable.CButton
 import uilib.UIState
 import kotlin.math.roundToInt
 

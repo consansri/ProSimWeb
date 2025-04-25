@@ -1,4 +1,4 @@
-package ui.emulator
+package ikr.prosim.ui.emulator
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,15 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import emulator.kit.ArchConfig
 import emulator.kit.Architecture
-import ui.uilib.interactable.Selector
-import ui.uilib.label.CLabel
+import uilib.interactable.Selector
+import uilib.label.CLabel
 import uilib.UIState
 
 @Composable
 fun ArchitectureOverview(arch: Architecture<*, *>?, baseStyle: TextStyle, baseLargeStyle: TextStyle) {
 
     val theme = UIState.Theme.value
-    val scale = UIState.Scale.value
+    UIState.Scale.value
     val vScrollState = rememberScrollState()
 
     if (arch != null) {
@@ -49,7 +49,7 @@ fun ArchitectureOverview(arch: Architecture<*, *>?, baseStyle: TextStyle, baseLa
                             is ArchConfig.Setting.Bool -> TODO()
                             is ArchConfig.Setting.Enumeration -> {
                                 Selector(
-                                    it.enumValues, initial = it.state.value as? Enum<*>, itemContent = { isSelected, value ->
+                                    it.enumValues, initial = it.state.value, itemContent = { isSelected, value ->
                                         CLabel(text = value.name, textStyle = baseStyle)
                                     },
                                     onSelectionChanged = { newVal ->

@@ -1,4 +1,4 @@
-package ui.uilib.console
+package uilib.console
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn

@@ -9,7 +9,7 @@ data class ELF64_Ehdr(
     override var e_ident: E_IDENT,
     override var e_type: Elf_Half,
     override var e_machine: Elf_Half,
-    override var e_version: Elf_Word = Ehdr.EV_CURRENT,
+    override var e_version: Elf_Word = EV_CURRENT,
     var e_entry: Elf64_Addr,
     var e_phoff: Elf64_Off,
     var e_shoff: Elf64_Off,
@@ -53,8 +53,8 @@ data class ELF64_Ehdr(
                 " Version:                           ${e_ident.ei_version}\n" +
                 " OS/ABI:                            ${E_IDENT.getOsAbi(e_ident.ei_osabi)}\n" +
                 " ABI Version:                       ${e_ident.ei_abiversion}\n" +
-                " Type:                              ${Ehdr.getELFType(e_type)}\n" +
-                " Machine:                           ${Ehdr.getELFMachine(e_machine)}\n" +
+                " Type:                              ${getELFType(e_type)}\n" +
+                " Machine:                           ${getELFMachine(e_machine)}\n" +
                 " Version:                           $e_version\n" +
                 " Entry point address:               $e_entry\n" +
                 " Start of program headers:          $e_phoff (bytes into file)\n" +

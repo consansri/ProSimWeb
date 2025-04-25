@@ -12,7 +12,7 @@ import cengine.editor.text.Informational
 class BasicIndenation(private val editable: Editable, private val informational: Informational, override val spaces: Int = 4) : IndentationProvider {
 
     override fun indentAtIndex(index: Int): Int {
-        val (line, column) = informational.getLineAndColumn(index)
+        val (_, column) = informational.getLineAndColumn(index)
         val location = column % spaces
         val spacesToIndent = spaces - location
         editable.insert(index, " ".repeat(spacesToIndent))
