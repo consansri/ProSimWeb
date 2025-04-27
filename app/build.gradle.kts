@@ -299,6 +299,6 @@ tasks.register<Zip>("releaseZip") {
 
     from(project.layout.buildDirectory.dir("release-bundle")) // Zip the contents of the release-bundle dir
     destinationDirectory.set(project.layout.buildDirectory.dir("distributions")) // Output zip to build/distributions
-    archiveFileName.set("${DIST_NAME}-${DIST_VERSION}-release.zip") // Set the output zip file name
+    archiveFileName.set("${DIST_NAME}-${DIST_VERSION}.zip") // Set the output zip file name
 }
 
