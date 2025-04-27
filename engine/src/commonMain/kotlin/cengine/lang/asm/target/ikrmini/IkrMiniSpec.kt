@@ -1,6 +1,7 @@
 package cengine.lang.asm.target.ikrmini
 
 import cengine.lang.asm.AsmSpec
+import cengine.lang.asm.psi.AsmDirective
 import cengine.lang.asm.psi.AsmDirectiveT
 import cengine.lang.asm.psi.AsmInstructionT
 import cengine.lang.mif.MifGenerator
@@ -17,15 +18,13 @@ data object IkrMiniSpec : AsmSpec<MifGenerator<Buffer16>> {
     override val name: String = "IKR Mini"
     override val emuLink: EmuLink = EmuLink.IKRMINI
 
-
-    override val dirTypes: List<AsmDirectiveT>
-        get() = TODO("Not yet implemented")
-    override val instrTypes: List<AsmInstructionT>
-        get() = TODO("Not yet implemented")
+    override val dirTypes: List<AsmDirectiveT> = AsmDirective.all
+    override val instrTypes: List<AsmInstructionT> = IkrMiniInstrT.entries
 
     override val commentSlAlt: String = ";"
     override val litIntBinPrefix: String = "%"
     override val litIntHexPrefix: String = "$"
+    override val addPunctuations: Set<String> = setOf("#")
 
     override fun createGenerator(): MifGenerator<Buffer16> = MifGenerator(object : LinkerScript {
         override val textStart: BigInt = BigInt.ZERO

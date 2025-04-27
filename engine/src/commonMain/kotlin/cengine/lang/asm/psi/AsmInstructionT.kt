@@ -26,7 +26,7 @@ interface AsmInstructionT : PsiStatement.PsiStatementTypeDef {
 
     /**
      * Parses the arguments/parameters following a specific instruction mnemonic.
-     * @param marker Already consumed the instruction mnemonic token. Don't finish it or drop it [marker.done]! The caller will do this.
+     * @param marker Already consumed the instruction mnemonic token. Don't finish or drop [marker]! The caller will do this.
      */
     fun PsiBuilder.parse(asmTreeParser: AsmTreeParser, marker: PsiBuilder.Marker): Boolean
 
