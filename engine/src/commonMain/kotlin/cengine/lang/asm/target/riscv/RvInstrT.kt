@@ -278,12 +278,12 @@ sealed interface RvInstrT : AsmInstructionT {
                 // Zicsr - System Instructions (CSR access)
                 CSRRW, CSRRS, CSRRC -> {
                     val rd = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 (rd) for $keyWord")
-                    val csrVal = exprs.getOrNull(0) ?: throw Exception("Missing CSR address for $keyWord")
-                    val rs1 = regs.getOrNull(1) ?: throw Exception("Missing required register operand 1 (rs1) for $keyWord")
+                    val csrVal = regs.getOrNull(1) ?: throw Exception("Missing CSR address for $keyWord")
+                    val rs1 = regs.getOrNull(2) ?: throw Exception("Missing required register operand 1 (rs1) for $keyWord")
                     if (!csrVal.fitsInUnsigned(12)) {
                         throw Exception("CSR address $csrVal does not fit in 12 unsigned bits")
                     }
-                    val csr = (csrVal.toUInt32() and 0xFFFu.toUInt32())
+                    val csr = (csrVal and 0xFFFu.toUInt32())
                     val funct3 = when (this@BaseT) {
                         CSRRW -> RvConst.FUNCT3_CSR_RW
                         CSRRS -> RvConst.FUNCT3_CSR_RS
@@ -295,15 +295,15 @@ sealed interface RvInstrT : AsmInstructionT {
 
                 CSRRWI, CSRRSI, CSRRCI -> {
                     val rd = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 (rd) for $keyWord")
-                    val csrVal = exprs.getOrNull(0) ?: throw Exception("Missing CSR address for $keyWord")
-                    val uimmVal = exprs.getOrNull(1) ?: throw Exception("Missing immediate value (uimm5) for $keyWord")
+                    val csrVal = regs.getOrNull(1) ?: throw Exception("Missing CSR address for $keyWord")
+                    val uimmVal = exprs.getOrNull(2) ?: throw Exception("Missing immediate value (uimm5) for $keyWord")
                     if (!csrVal.fitsInUnsigned(12)) {
                         throw Exception("CSR address $csrVal does not fit in 12 unsigned bits")
                     }
                     if (!uimmVal.fitsInUnsigned(5)) {
                         throw Exception("Immediate $uimmVal does not fit in 5 unsigned bits for $keyWord")
                     }
-                    val csr = (csrVal.toUInt32() and 0xFFFu.toUInt32())
+                    val csr = (csrVal and 0xFFFu.toUInt32())
                     val uimm = (uimmVal.toUInt32() and 0x1Fu.toUInt32())
                     val funct3 = when (this@BaseT) {
                         CSRRWI -> RvConst.FUNCT3_CSR_RWI
@@ -885,68 +885,68 @@ sealed interface RvInstrT : AsmInstructionT {
                         // Pseudo CSR Access (expand to base CSR using x0)
                         CSRR -> { // csrrs rd, csr, x0
                             val rd = regs[0]
-                            val csrVal = exprs[0]
+                            val csrVal = regs[1]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
-                            val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
+                            val csr = csrVal and 0xFFFu.toUInt32()
                             val binary = (csr shl 20) or (RvRegT.IntT.ZERO.uint32 shl 15) or (RvConst.FUNCT3_CSR_RS shl 12) or (rd shl 7) or RvConst.OPC_SYSTEM
                             context.section.content.put(binary)
                         }
 
                         CSRW -> { // csrrw x0, csr, rs1
-                            val csrVal = exprs[0]
-                            val rs1 = regs[0]
+                            val csrVal = regs[0]
+                            val rs1 = regs[1]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
-                            val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
+                            val csr = csrVal and 0xFFFu.toUInt32()
                             val binary = (csr shl 20) or (rs1 shl 15) or (RvConst.FUNCT3_CSR_RW shl 12) or (RvRegT.IntT.ZERO.uint32 shl 7) or RvConst.OPC_SYSTEM
                             context.section.content.put(binary)
                         }
 
                         CSRS -> { // csrrs x0, csr, rs1
-                            val csrVal = exprs[0]
-                            val rs1 = regs[0]
+                            val csrVal = regs[0]
+                            val rs1 = regs[1]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
-                            val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
+                            val csr = csrVal and 0xFFFu.toUInt32()
                             val binary = (csr shl 20) or (rs1 shl 15) or (RvConst.FUNCT3_CSR_RS shl 12) or (RvRegT.IntT.ZERO.uint32 shl 7) or RvConst.OPC_SYSTEM
                             context.section.content.put(binary)
                         }
 
                         CSRC -> { // csrrc x0, csr, rs1
-                            val csrVal = exprs[0]
-                            val rs1 = regs[0]
+                            val csrVal = regs[0]
+                            val rs1 = regs[1]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
-                            val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
+                            val csr = csrVal and 0xFFFu.toUInt32()
                             val binary = (csr shl 20) or (rs1 shl 15) or (RvConst.FUNCT3_CSR_RC shl 12) or (RvRegT.IntT.ZERO.uint32 shl 7) or RvConst.OPC_SYSTEM
                             context.section.content.put(binary)
                         }
                         // Note: Parameter types changed to CSR_UIMM5 for these
                         CSRWI -> { // csrrwi x0, csr, uimm5
-                            val csrVal = exprs[0]
-                            val uimmVal = exprs[1]
+                            val csrVal = regs[0]
+                            val uimmVal = exprs[0]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             if (!uimmVal.fitsInUnsigned(5)) instr.addError("Immediate $uimmVal out of 5-bit range")
-                            val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
+                            val csr = csrVal and 0xFFFu.toUInt32()
                             val uimm = uimmVal.toUInt32() and 0x1Fu.toUInt32()
                             val binary = (csr shl 20) or (uimm shl 15) or (RvConst.FUNCT3_CSR_RWI shl 12) or (RvRegT.IntT.ZERO.uint32 shl 7) or RvConst.OPC_SYSTEM
                             context.section.content.put(binary)
                         }
 
                         CSRSI -> { // csrrsi x0, csr, uimm5
-                            val csrVal = exprs[0]
-                            val uimmVal = exprs[1]
+                            val csrVal = regs[0]
+                            val uimmVal = exprs[0]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             if (!uimmVal.fitsInUnsigned(5)) instr.addError("Immediate $uimmVal out of 5-bit range")
-                            val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
+                            val csr = csrVal and 0xFFFu.toUInt32()
                             val uimm = uimmVal.toUInt32() and 0x1Fu.toUInt32()
                             val binary = (csr shl 20) or (uimm shl 15) or (RvConst.FUNCT3_CSR_RSI shl 12) or (RvRegT.IntT.ZERO.uint32 shl 7) or RvConst.OPC_SYSTEM
                             context.section.content.put(binary)
                         }
 
                         CSRCI -> { // csrrci x0, csr, uimm5
-                            val csrVal = exprs[0]
-                            val uimmVal = exprs[1]
+                            val csrVal = regs[0]
+                            val uimmVal = exprs[0]
                             if (!csrVal.fitsInUnsigned(12)) instr.addError("CSR address $csrVal out of 12-bit range")
                             if (!uimmVal.fitsInUnsigned(5)) instr.addError("Immediate $uimmVal out of 5-bit range")
-                            val csr = csrVal.toUInt32() and 0xFFFu.toUInt32()
+                            val csr = csrVal and 0xFFFu.toUInt32()
                             val uimm = uimmVal.toUInt32() and 0x1Fu.toUInt32()
                             val binary = (csr shl 20) or (uimm shl 15) or (RvConst.FUNCT3_CSR_RCI shl 12) or (RvRegT.IntT.ZERO.uint32 shl 7) or RvConst.OPC_SYSTEM
                             context.section.content.put(binary)
