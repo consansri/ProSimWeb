@@ -196,8 +196,8 @@ val generateManifestTask = tasks.register("generateManifest") {
 
         // 5. Create JSON structure
         val manifestData = mapOf("available" to availableDistributions)
-        var jsonOutput: String? = null
-        var prettyJsonOutput: String? = null
+        val jsonOutput: String?
+        val prettyJsonOutput: String?
         try {
             jsonOutput = JsonOutput.toJson(manifestData)
             prettyJsonOutput = JsonOutput.prettyPrint(jsonOutput)
@@ -252,7 +252,7 @@ tasks.register<Copy>("release") {
     // 1. Copy WasmJS files (no 'into' needed here, copies directly to root of destination)
     from(project.layout.buildDirectory.dir("dist/wasmJs/productionExecutable"))
 
-    // 2. Copy Fat JAR into 'desktop/jar' subfolder
+    // 2. Copy Fat JAR into 'desktop' subfolder
     from(fatJarTask) { // Reference the fatJarTask directly
         into("desktop/jar")
     }
@@ -261,23 +261,9 @@ tasks.register<Copy>("release") {
     // Base directory where native packages are found
     val nativeDistBaseDir = project.layout.buildDirectory.dir("compose/binaries/main-release")
 
-    // Copy DMG if it exists
+    // Copy Desktop Distributions if they exist
     from(nativeDistBaseDir) {
-        include("*.dmg")
-        into("desktop/dmg") // Place in specific subfolder
-        // onlyIf { packageDmgTask != null && !packageDmgTask.outputs.files.isEmpty } // Optional: Condition
-    }
-    // Copy MSI if it exists
-    from(nativeDistBaseDir) {
-        include("*.msi")
-        into("desktop/msi")
-        // onlyIf { packageMsiTask != null && !packageMsiTask.outputs.files.isEmpty } // Optional: Condition
-    }
-    // Copy DEB if it exists
-    from(nativeDistBaseDir) {
-        include("*.deb")
-        into("desktop/deb")
-        // onlyIf { packageDebTask != null && !packageDebTask.outputs.files.isEmpty } // Optional: Condition
+        into("desktop") // Place in specific subfolder
     }
 
     // Optional: Log the final structure (useful for debugging)

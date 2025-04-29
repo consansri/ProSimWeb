@@ -28,13 +28,13 @@ expect fun appTarget(): AppTarget
 /**
  * DesktopDistribution Type which is possible to download
  */
-enum class DesktopDistribution(val fileSuffix: String, val subfolder: String) {
+enum class DesktopDistribution(val fileSuffix: String, val subfolder: String? = null) {
     JAR(".jar", "jar"),
     MSI(".msi", "msi"),
     DEB(".deb", "deb"),
     DMG(".dmg", "dmg");
 
-    val path = "desktop/$subfolder/"
+    val path = "desktop/" + if(subfolder != null) "$subfolder/" else ""
     val fileName = "${Constants.NAME}-${Constants.VERSION}$fileSuffix"
 }
 
