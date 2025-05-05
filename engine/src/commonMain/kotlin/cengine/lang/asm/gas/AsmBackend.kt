@@ -214,15 +214,18 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                     if (labelName != null) {
                         // Offset calculation is now simpler: it's always the current size of the *current* section
                         val offset = codeGenerator.currentSection.content.size.toBigInt()
-                        val existing = codeGenerator.symbols.firstOrNull { it.name == labelName && it is AsmCodeGenerator.Symbol.Label }
-                        if (existing != null) {
+                        val existingLabel = codeGenerator.symbols.firstOrNull { it.name == labelName && it is AsmCodeGenerator.Symbol.Label }
+
+                        if (existingLabel != null) {
                             labelDecl.addError("Label '$labelName' already defined.")
                             success = false
                         } else {
+                            val existingBinding = codeGenerator.symbols.firstOrNull { it.name == labelName }?.binding
+
                             val symbol = AsmCodeGenerator.Symbol.Label(
                                 labelName,
                                 codeGenerator.currentSection,
-                                AsmCodeGenerator.Symbol.Binding.LOCAL,
+                                existingBinding ?: AsmCodeGenerator.Symbol.Binding.LOCAL,
                                 offset
                             )
                             if (!codeGenerator.symbols.add(symbol)) {
