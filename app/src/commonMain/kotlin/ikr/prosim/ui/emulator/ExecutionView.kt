@@ -7,23 +7,37 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
+import cengine.console.SysOut
 import cengine.editor.highlighting.HighlightProvider
 import cengine.editor.highlighting.HighlightProvider.Companion.spanStyles
 import cengine.lang.asm.AsmDisassembler
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.Architecture
+import kotlinx.coroutines.launch
 import uilib.label.CLabel
 import uilib.UIState
+import uilib.interactable.CButton
+import uilib.interactable.CToggle
+import uilib.params.IconType
 import kotlin.collections.get
+import kotlin.math.roundToInt
 
 @Composable
 fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvider?, baseStyle: TextStyle, codeStyle: TextStyle) {
@@ -36,6 +50,12 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
 
     var decodedRenderingValues by remember { mutableStateOf<List<Pair<AsmDisassembler.DecodedSegment, AsmDisassembler.Decoded>>>(emptyList()) }
     var decodedRenderingLabels by remember { mutableStateOf<Map<UnsignedFixedSizeIntNumber<*>, AsmDisassembler.Label>>(emptyMap()) }
+    var breakpointUpdateToggle by remember { mutableStateOf(false) } // State to trigger recomposition when breakpoints are toggled
+
+    // Tooling States
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    var followPCEnabled by remember { mutableStateOf(true) } // Default to true
 
     if (disassembler == null || architecture == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -61,9 +81,84 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
             Triple(targetGroup.value.map { it.first }, targetGroup.key, theme.getRandom())
         }
 
+        // Effect for "Follow PC"
+        LaunchedEffect(
+            architecture.pcState.value,
+            followPCEnabled,
+            decodedRenderingValues
+        ) {
+            if (followPCEnabled) {
+                val pcAddr = architecture.pcState.value
+                val itemIndex = decodedRenderingValues.indexOfFirst { (segment, decoded) ->
+                    (segment.addr + decoded.offset).toBigInt() == pcAddr.toBigInt()
+                }
+                if (itemIndex != -1) {
+                    val viewportHeight = listState.layoutInfo.viewportSize.height
+                    if (viewportHeight > 0) { // Ensure viewportHeight is available
+                        val targetOffset = -(viewportHeight / 3F).roundToInt()
+                        listState.animateScrollToItem(index = itemIndex, scrollOffset = targetOffset)
+                    } else {
+                        // Fallback if viewportHeight is not yet available (e.g., initial composition)
+                        listState.animateScrollToItem(index = itemIndex) // Scroll to top as fallback
+                    }
+                }
+            }
+        }
+
         Column(Modifier.fillMaxSize()) {
 
+            // --- Control Bar for Tooling ---
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(theme.COLOR_BG_0) // Optional: give it a slight background
+                    .padding(horizontal = scale.SIZE_INSET_SMALL, vertical = scale.SIZE_INSET_SMALL),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Follow PC Controls
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CToggle(
+                        onClick = {
+                            followPCEnabled = !followPCEnabled
+                        },
+                        followPCEnabled,
+                        iconType = IconType.SMALL,
+                        icon = UIState.Icon.value.autoscroll
+                    )
+                    Spacer(Modifier.width(scale.SIZE_INSET_MEDIUM))
+                    CButton(
+                        // "Go to PC" Button
+                        onClick = {
+                            scope.launch {
+                                val pcAddr = architecture.pcState.value
+                                val itemIndex = decodedRenderingValues.indexOfFirst { (segment, decoded) ->
+                                    (segment.addr + decoded.offset).toBigInt() == pcAddr.toBigInt()
+                                }
+                                if (itemIndex != -1) {
+                                    val viewportHeight = listState.layoutInfo.viewportSize.height
+                                    if (viewportHeight > 0) {
+                                        val targetOffset = -(viewportHeight / 3F).roundToInt()
+                                        listState.animateScrollToItem(index = itemIndex, scrollOffset = targetOffset)
+                                    } else {
+                                        listState.animateScrollToItem(index = itemIndex) // Fallback
+                                    }
+                                }
+                            }
+                        },
+                        text = "Go to PC"
+                    )
+                }
+
+            }
+
+            Box(Modifier.fillMaxWidth().height(scale.SIZE_BORDER_THICKNESS).background(theme.COLOR_BORDER)) // Separator
+
+            // --- Header ---
             Row(Modifier.fillMaxWidth()) {
+                Box(Modifier.width(scale.SIZE_CONTROL_MEDIUM + scale.SIZE_INSET_MEDIUM), contentAlignment = Alignment.Center) { // Adjusted width for BP
+                    Text("BP", fontFamily = baseStyle.fontFamily, fontSize = baseStyle.fontSize, color = theme.COLOR_FG_1)
+                }
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text("ADDR", fontFamily = baseStyle.fontFamily, fontSize = baseStyle.fontSize, color = theme.COLOR_FG_1)
                 }
@@ -87,7 +182,11 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
 
             Box(Modifier.fillMaxWidth().height(scale.SIZE_BORDER_THICKNESS).background(theme.COLOR_BORDER))
 
-            LazyColumn(Modifier.fillMaxSize()) {
+            // --- Content ---
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                state = listState
+            ) {
 
                 items(decodedRenderingValues, key = {
                     /**
@@ -100,17 +199,51 @@ fun ExecutionView(architecture: Architecture<*, *>?, highlighter: HighlightProvi
                     val destOf = targetLinks.firstOrNull { it.second == decoded }
                     val pcPointsOn = architecture.pcState.value.toBigInt() == address
 
-                    val interactionSource = remember { MutableInteractionSource() }
+                    val interactionSourceRow = remember { MutableInteractionSource() }
+                    val interactionSourceBreakpoint = remember { MutableInteractionSource() }
+
+                    val isBreakpointSet = remember(address, breakpointUpdateToggle) {
+                        architecture.isBreakpointSet(address)
+                    }
 
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .background(if (pcPointsOn) theme.COLOR_SELECTION else Color.Transparent)
-                            .hoverable(interactionSource)
+                            .hoverable(interactionSourceRow)
                             .clickable {
                                 architecture.exeUntilAddress(address)
                             }, verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Breakpoint Indicator Column
+                        Box(
+                            modifier = Modifier
+                                .width(scale.SIZE_CONTROL_MEDIUM + scale.SIZE_INSET_MEDIUM) // Ensure consistent width with header
+                                .padding(end = scale.SIZE_INSET_MEDIUM) // Add padding to separate from address
+                                .clickable(
+                                    interactionSource = interactionSourceBreakpoint,
+                                    indication = null, // No ripple for the breakpoint toggle itself
+                                    onClick = {
+                                        if (isBreakpointSet) {
+                                            architecture.clearBreakpoint(address)
+                                        } else {
+                                            architecture.setBreakpoint(address)
+                                        }
+                                        breakpointUpdateToggle = !breakpointUpdateToggle // Trigger recomposition
+                                    }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                Modifier
+                                    .size(scale.SIZE_CONTROL_SMALL) // Size of the dot
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isBreakpointSet) theme.COLOR_RED else Color.Transparent
+                                    )
+                            )
+                        }
+
                         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                             Text(address.toString(16), fontFamily = codeStyle.fontFamily, fontSize = codeStyle.fontSize, color = if (pcPointsOn) theme.COLOR_GREEN else theme.COLOR_FG_0)
                         }

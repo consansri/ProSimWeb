@@ -62,12 +62,15 @@ kotlin {
 
         commonMain.dependencies {
 
+
             implementation(libs.kotlinx.coroutines)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.ktor)
             implementation(libs.ionspin.bignum)
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
+
 
             // Compose
             implementation(compose.runtime)

@@ -8,6 +8,7 @@ import cengine.util.integer.IntNumber
 import cengine.util.integer.IntNumberT
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.common.IConsole
+import emulator.kit.debugger.DebugInterface
 import emulator.kit.memory.MainMemory
 
 
@@ -36,7 +37,10 @@ import emulator.kit.memory.MainMemory
  *
  *
  */
-abstract class Architecture<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(val addrType: IntNumberT<ADDR>, val instanceType: IntNumberT<INSTANCE>) {
+abstract class Architecture<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(val addrType: IntNumberT<ADDR>, val instanceType: IntNumberT<INSTANCE>) : DebugInterface {
+
+    // Set of addresses where breakpoints are set
+    protected val breakpoints = mutableSetOf<IntNumber<*>>()
 
     abstract val config: ArchConfig
 
@@ -140,4 +144,90 @@ abstract class Architecture<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : 
         MicroSetup.append(memory)
     }
 
+    // DebugInterface implementation
+
+    /**
+     * Sets a breakpoint at the specified address.
+     * @param address The address where the breakpoint should be set.
+     * @return True if the breakpoint was set successfully, false otherwise.
+     */
+    override fun setBreakpoint(address: IntNumber<*>): Boolean {
+        return breakpoints.add(address)
+    }
+
+    /**
+     * Clears a breakpoint at the specified address.
+     * @param address The address where the breakpoint should be cleared.
+     * @return True if the breakpoint was cleared successfully, false otherwise.
+     */
+    override fun clearBreakpoint(address: IntNumber<*>): Boolean {
+        return breakpoints.remove(address)
+    }
+
+    /**
+     * Clears all breakpoints.
+     */
+    override fun clearAllBreakpoints() {
+        breakpoints.clear()
+    }
+
+    /**
+     * Checks if a breakpoint is set at the specified address.
+     * @param address The address to check.
+     * @return True if a breakpoint is set at the specified address, false otherwise.
+     */
+    override fun isBreakpointSet(address: IntNumber<*>): Boolean {
+        return breakpoints.contains(address)
+    }
+
+    /**
+     * Continues execution until a breakpoint is hit or the program terminates.
+     * This is a default implementation that delegates to exeContinuous().
+     * Specific architectures should override this method to implement breakpoint handling.
+     */
+    override fun continueExecution() {
+        exeContinuous()
+    }
+
+    /**
+     * Executes a single instruction.
+     * This is a default implementation that delegates to exeSingleStep().
+     */
+    override fun step() {
+        exeSingleStep()
+    }
+
+    /**
+     * Executes a specified number of instructions.
+     * This is a default implementation that delegates to exeMultiStep().
+     * @param steps The number of instructions to execute.
+     */
+    override fun step(steps: Long) {
+        exeMultiStep(steps)
+    }
+
+    /**
+     * Pauses the execution of the emulator.
+     * This is a default implementation that does nothing.
+     * Specific architectures should override this method if they support pausing.
+     */
+    override fun pause() {
+        // Default implementation does nothing
+    }
+
+    /**
+     * Resets the emulator to its initial state.
+     * This is a default implementation that delegates to exeReset().
+     */
+    override fun reset() {
+        exeReset()
+    }
+
+    /**
+     * Checks if the current program counter is at a breakpoint.
+     * @return True if the current program counter is at a breakpoint, false otherwise.
+     */
+    protected fun isAtBreakpoint(): Boolean {
+        return breakpoints.contains(pcState.value)
+    }
 }

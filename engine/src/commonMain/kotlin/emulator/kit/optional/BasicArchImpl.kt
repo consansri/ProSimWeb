@@ -5,11 +5,12 @@ import cengine.console.SysOut
 import cengine.util.integer.IntNumber
 import cengine.util.integer.IntNumberT
 import cengine.util.integer.UnsignedFixedSizeIntNumber
+import emulator.kit.Architecture
 import emulator.kit.memory.Memory
 
 import kotlin.time.measureTime
 
-abstract class BasicArchImpl<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(addrType: IntNumberT<ADDR>, instanceType: IntNumberT<INSTANCE>) : emulator.kit.Architecture<ADDR, INSTANCE>(addrType, instanceType) {
+abstract class BasicArchImpl<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE : UnsignedFixedSizeIntNumber<INSTANCE>>(addrType: IntNumberT<ADDR>, instanceType: IntNumberT<INSTANCE>) : Architecture<ADDR, INSTANCE>(addrType, instanceType) {
     override fun exeContinuous() {
         var instrCount = 0L
         val tracker = Memory.AccessTracker()
@@ -19,6 +20,12 @@ abstract class BasicArchImpl<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE :
             var result: ExecutionResult? = null
 
             while (result?.valid != false && instrCount <= Performance.MAX_INSTR_EXE_AMOUNT) {
+                // Check if we're at a breakpoint before executing the next instruction
+                if (isAtBreakpoint()) {
+                    console.exeInfo("Breakpoint hit at ${pcState.value.toString(16)}")
+                    break
+                }
+
                 instrCount++
                 result = executeNext(tracker)
             }
@@ -52,6 +59,12 @@ abstract class BasicArchImpl<ADDR : UnsignedFixedSizeIntNumber<ADDR>, INSTANCE :
             var result: ExecutionResult? = null
 
             while (result?.valid != false && instrCount < steps) {
+                // Check if we're at a breakpoint before executing the next instruction
+                if (isAtBreakpoint()) {
+                    console.exeInfo("Breakpoint hit at ${pcState.value.toString(16)}")
+                    break
+                }
+
                 instrCount++
                 result = executeNext(tracker)
             }
