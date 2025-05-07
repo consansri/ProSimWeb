@@ -17,7 +17,8 @@ class PsiBuilder(initialTokens: List<PsiToken>, val psiFileType: PsiFileTypeDef 
     @OptIn(ExperimentalAtomicApi::class)
     private val markerIdCounter = AtomicLong(0)
 
-    private val tokens: List<PsiToken> = initialTokens // Consider filtering whitespace/comments upfront? Or handle dynamically. Current approach is flexible.
+    private val tokens: List<PsiToken> =
+        initialTokens // Consider filtering whitespace/comments upfront? Or handle dynamically. Current approach is flexible.
 
     var current: Int = 0
         private set
@@ -30,9 +31,13 @@ class PsiBuilder(initialTokens: List<PsiToken>, val psiFileType: PsiFileTypeDef 
     val completedMarkers = mutableListOf<CompletedMarkerInfo>()
     val errors = mutableListOf<IndexedParseError>()
 
+    init {
+        io.debug { "PsiBuilder received $initialTokens tokens" }
+    }
+
     // --- Token Access ---
 
-    fun isAtEnd(): Boolean = current >= tokens.size || tokens[current].type == PsiTokenType.EOF
+    fun isAtEnd(): Boolean = current >= tokens.size
 
     fun peek(lookAhead: Int = 0): PsiToken? {
         val idx = current + lookAhead
@@ -72,7 +77,8 @@ class PsiBuilder(initialTokens: List<PsiToken>, val psiFileType: PsiFileTypeDef 
 
     fun error(message: String) {
         val errorTokenIndex = current // Capture the index *before* potential peeking/advancing
-        val range = peek()?.range ?: tokens.getOrNull(errorTokenIndex - 1)?.range ?: (0..0) // Adjusted range finding slightly
+        val range =
+            peek()?.range ?: tokens.getOrNull(errorTokenIndex - 1)?.range ?: (0..0) // Adjusted range finding slightly
         // Ensure tokenIndex is valid
         val validTokenIndex = if (errorTokenIndex < tokens.size) errorTokenIndex else tokens.size - 1
 
@@ -84,32 +90,43 @@ class PsiBuilder(initialTokens: List<PsiToken>, val psiFileType: PsiFileTypeDef 
      * NOTE: This does NOT skip whitespace/comments. The parser should call skipWhitespaceAndComments() first if needed.
      */
     fun expect(expected: PsiTokenType, errorMessage: String? = null): Boolean = currentIs(expected).apply {
-        if (this) advance() else error(errorMessage ?: "Expected ${expected.typeName} but found ${getTokenType()?.typeName}")
+        if (this) advance() else error(
+            errorMessage ?: "Expected ${expected.typeName} but found ${getTokenType()?.typeName}"
+        )
     }
 
     /**
      * Consumes the next token if it matches the expected [PsiTokenType]s, otherwise reports an error.
      * NOTE: This does NOT skip whitespace/comments.
      */
-    fun expect(vararg expectedTypes: PsiTokenType, errorMessage: String? = null): Boolean = currentIs(*expectedTypes).apply {
-        if (this) advance() else error(errorMessage ?: "Expected one of ${expectedTypes.joinToString(" or ") { it.typeName }} but found ${getTokenType()?.typeName}")
-    }
+    fun expect(vararg expectedTypes: PsiTokenType, errorMessage: String? = null): Boolean =
+        currentIs(*expectedTypes).apply {
+            if (this) advance() else error(
+                errorMessage
+                    ?: "Expected one of ${expectedTypes.joinToString(" or ") { it.typeName }} but found ${getTokenType()?.typeName}"
+            )
+        }
 
     /**
      * Consumes the next token if it matches the expected value (as String), otherwise reports an error.
      * NOTE: This does NOT skip whitespace/comments.
      */
-    fun expect(expectedValue: String, errorMessage: String? = null, ignoreCase: Boolean = false): Boolean = currentIs(expectedValue, ignoreCase = ignoreCase).apply {
-        if (this) advance() else error(errorMessage ?: "Expected '$expectedValue' but found '${getTokenText()}'")
-    }
+    fun expect(expectedValue: String, errorMessage: String? = null, ignoreCase: Boolean = false): Boolean =
+        currentIs(expectedValue, ignoreCase = ignoreCase).apply {
+            if (this) advance() else error(errorMessage ?: "Expected '$expectedValue' but found '${getTokenText()}'")
+        }
 
     /**
      * Consumes the next token if it matches the expected [PsiTokenType]s, otherwise reports an error.
      * NOTE: This does NOT skip whitespace/comments.
      */
-    fun expect(vararg expectedValues: String, errorMessage: String? = null): Boolean = currentIs(*expectedValues).apply {
-        if (this) advance() else error(errorMessage ?: "Expected one of ${expectedValues.joinToString(" or ") { "'$it'" }} but found '${getTokenText()}'.")
-    }
+    fun expect(vararg expectedValues: String, errorMessage: String? = null): Boolean =
+        currentIs(*expectedValues).apply {
+            if (this) advance() else error(
+                errorMessage
+                    ?: "Expected one of ${expectedValues.joinToString(" or ") { "'$it'" }} but found '${getTokenText()}'."
+            )
+        }
 
     // --- Marker API ---
 
@@ -307,7 +324,9 @@ class PsiBuilder(initialTokens: List<PsiToken>, val psiFileType: PsiFileTypeDef 
 
     fun advanceIf(type: PsiTokenType): Boolean = currentIs(type).apply { if (this) advance() }
     fun advanceIf(vararg types: PsiTokenType): Boolean = currentIs(*types).apply { if (this) advance() }
-    fun advanceIf(value: String, ignoreCase: Boolean = false): Boolean = currentIs(value, ignoreCase).apply { if (this) advance() }
+    fun advanceIf(value: String, ignoreCase: Boolean = false): Boolean =
+        currentIs(value, ignoreCase).apply { if (this) advance() }
+
     fun advanceIf(vararg values: String) = currentIs(*values).apply { if (this) advance() }
 
     // --- Result ---
