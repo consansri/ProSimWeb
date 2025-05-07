@@ -40,7 +40,7 @@ open class AsmTreeParser(
     private fun PsiBuilder.parseLine() {
         skipWhitespaceAndComments()
         // Skip empty lines efficiently
-        if (currentIs(PsiTokenType.LINEBREAK)) {
+        if (currentIs(PsiTokenType.LINEBREAK, PsiTokenType.EOF)) {
             advance() // Consume the linebreak
             return
         }
@@ -68,25 +68,26 @@ open class AsmTreeParser(
         if (!currentIs(PsiTokenType.LINEBREAK, PsiTokenType.EOF)) {
             if (parseInstructionOrDirective()) { // This now returns true if something was attempted/parsed
                 contentParsed = true
+                skipWhitespaceAndComments()
             }
             // If it returned false, it means nothing could be parsed at the current position
             // (e.g., unexpected token at the start of instruction/directive/expression part)
         }
 
         // 3. End of Line Handling & Error Recovery
-        skipWhitespaceAndComments()
-        if (currentIs(PsiTokenType.LINEBREAK)) {
+        if (currentIs(PsiTokenType.LINEBREAK, PsiTokenType.EOF)) {
+            io.debug { "parseLine ending at: ${peek()}" }
             advance() // Consume the expected linebreak
         } else if (!isAtEnd()) {
             // Found unexpected tokens before EOF. This indicates a syntax error on the line.
             error("Unexpected token(s): '${peek()?.value}'. Expected linebreak or end of file.")
             contentParsed = true // Mark line as having content, even if erroneous
             // Consume tokens until the end of the line or file is reached
-            while (!isAtEnd() && !currentIs(PsiTokenType.LINEBREAK)) {
+            while (!currentIs(PsiTokenType.LINEBREAK, PsiTokenType.EOF)) {
                 advance()
             }
 
-            if (currentIs(PsiTokenType.LINEBREAK)) {
+            if (currentIs(PsiTokenType.LINEBREAK, PsiTokenType.EOF)) {
                 advance() // Consume the terminating linebreak
             }
         }

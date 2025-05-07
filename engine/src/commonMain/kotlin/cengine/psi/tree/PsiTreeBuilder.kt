@@ -33,7 +33,7 @@ class PsiTreeBuilder(
 
         // 1. Identify top-level markers
         val topLevelMarkers = findTopLevelMarkers()
-        io.debug { "Identified ${topLevelMarkers.size} top-level markers: ${topLevelMarkers.map { "${it.id}(${it.elementType.typeName})" }}" }
+        io.debug { "Identified ${topLevelMarkers.size} top-level markers: ${topLevelMarkers.map { "${it.id}(${it.elementType.typeName}:${it.start}..<${it.end})" }}" }
 
         // 2. Build nodes for top-level markers (This populates builtNodes and consumedTokenIndices)
         val topLevelParsedNodes = topLevelMarkers.map { markerInfo ->

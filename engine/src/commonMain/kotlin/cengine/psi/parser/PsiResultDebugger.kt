@@ -47,7 +47,6 @@ object PsiResultDebugger {
             }
         }
 
-
         appendErrors(sb, result.errors)
         return sb.toString()
     }
