@@ -3,6 +3,7 @@ package cengine.lang.asm.gas
 import cengine.console.IOContext
 import cengine.console.SysOut
 import cengine.lang.asm.AsmSpec
+import cengine.lang.asm.gas.AsmCodeGenerator
 import cengine.lang.asm.gas.AsmEvaluator.evaluate
 import cengine.lang.asm.psi.AsmDirective
 import cengine.lang.asm.psi.AsmInstruction
@@ -39,7 +40,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
     }
 
     // Instantiate the integer evaluator with the specific resolver lambda for assembly
-    val integerEvaluator = IntegerExpressionEvaluator<AsmEvaluationContext>(
+    val absIntEvaluator = IntegerExpressionEvaluator<AsmEvaluationContext>(
         processAssignment = { expr, value, context ->
             if (expr !is PsiStatement.Expr.Identifier) return@IntegerExpressionEvaluator
             val name = expr.name ?: return@IntegerExpressionEvaluator
@@ -78,6 +79,43 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
         }
 
         // Handle other symbol types if they exist (e.g., Common Symbols)
+    }
+
+    val relIntEvaluator = IntegerExpressionEvaluator<AsmEvaluationContext>(
+        processAssignment = { expr, value, context ->
+            if (expr !is PsiStatement.Expr.Identifier) return@IntegerExpressionEvaluator
+            val name = expr.name ?: return@IntegerExpressionEvaluator
+            val symbol = codeGenerator.symbols.firstOrNull { it.name == expr.name && it is AsmCodeGenerator.Symbol.Abs } as? AsmCodeGenerator.Symbol.Abs
+            if (symbol != null) {
+                symbol.value = value
+            } else {
+                codeGenerator.createAbsSymbolInCurrentSection(name, value)
+            }
+        }
+    ) { name, element, context ->
+        // Handle '.' for current address
+        if (name == ".") {
+            return@IntegerExpressionEvaluator BigInt.ZERO
+        }
+
+        val symbol = context.symbols.firstOrNull { it.name == name } ?: return@IntegerExpressionEvaluator null // Symbol not found in this context/pass
+
+        when (symbol) {
+            is AsmCodeGenerator.Symbol.Abs -> symbol.value
+            is AsmCodeGenerator.Symbol.Label -> {
+                // Labels depend on section addresses, which are resolved *before* Pass 2
+                if (context.pass == PASS_1_LAYOUT) {
+                    // In Pass 1, we generally cannot resolve label addresses reliably,
+                    // especially forward references or labels in sections whose base address is unknown.
+                    // Return null to indicate it's unresolved in this pass.
+                    // Specific directives like .size might try anyway and handle the exception.
+                    null
+                } else {
+                    // In Pass 2, section addresses MUST be resolved.
+                    symbol.address() - context.currentAddress
+                }
+            }
+        }
     }
 
     // Stores the sequence after preprocessing
@@ -253,7 +291,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                 } // End directive handling
 
                 line.expr?.let { expr ->
-                    integerEvaluator.evaluate(expr, createPass1Context())
+                    absIntEvaluator.evaluate(expr, createPass1Context())
                 }
 
             } // End loop through statement sequence
@@ -402,7 +440,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
 
                 return try {
                     // Evaluate expression in Pass 1 context
-                    val value = integerEvaluator.evaluate(expr, createPass1Context())
+                    val value = absIntEvaluator.evaluate(expr, createPass1Context())
 
                     // Evaluate expression *now* during preprocessing
                     val existing = codeGenerator.symbols.firstOrNull { it.name == symName }
@@ -539,21 +577,21 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
 
                 when (type) {
                     AsmDirective.Emissive.EmissiveT.BYTE -> {
-                        val value = integerEvaluator.evaluate(argExpr, context)
+                        val value = absIntEvaluator.evaluate(argExpr, context)
                         context.section.content.put(value.toUInt8())
                     }
 
                     AsmDirective.Emissive.EmissiveT.SHORT, AsmDirective.Emissive.EmissiveT.HALF -> {
-                        val value = integerEvaluator.evaluate(argExpr, context)
+                        val value = absIntEvaluator.evaluate(argExpr, context)
                         context.section.content.put(value.toUInt16())
                     } // Check names
                     AsmDirective.Emissive.EmissiveT.WORD, AsmDirective.Emissive.EmissiveT.LONG -> {
-                        val value = integerEvaluator.evaluate(argExpr, context)
+                        val value = absIntEvaluator.evaluate(argExpr, context)
                         context.section.content.put(value.toUInt32())
                     }
 
                     AsmDirective.Emissive.EmissiveT.QUAD -> {
-                        val value = integerEvaluator.evaluate(argExpr, context)
+                        val value = absIntEvaluator.evaluate(argExpr, context)
                         context.section.content.put(value.toUInt64())
                     }
 
@@ -643,7 +681,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                 val binding = if (type == AsmDirective.SymbolManagement.SymbolManagementT.LCOMM) AsmCodeGenerator.Symbol.Binding.LOCAL else AsmCodeGenerator.Symbol.Binding.GLOBAL // Or WEAK for .comm? Check spec.
 
                 try {
-                    val size = integerEvaluator.evaluate(sizeExpr, createPass1Context())
+                    val size = absIntEvaluator.evaluate(sizeExpr, createPass1Context())
                     // TODO: How to represent COMMON symbols? Often put in .bss section.
                     // Need a way in AsmCodeGenerator to handle this. Maybe a dedicated section type or flag.
                     io.warn("Directive '.$type' handling for symbol '$name' size $size is not fully implemented (allocation in BSS).")
@@ -692,7 +730,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                     // Evaluate the size expression. This often happens *after* the symbol is defined.
                     // Evaluation might need to be deferred until the second pass if it involves forward references.
                     // For now, try to evaluate in the symbol pass context.
-                    val size = integerEvaluator.evaluate(expr, createPass1Context())
+                    val size = absIntEvaluator.evaluate(expr, createPass1Context())
                     // TODO: Store this size information. Extend Symbol class or use a separate map?
                     io.warn("Directive '.size' handling for symbol '$name' size $size not fully implemented (info not stored).")
                     val symbol = codeGenerator.symbols.firstOrNull { it.name == name }
@@ -760,7 +798,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
 
                     // Evaluate using a temporary resolver/evaluator context (offset only)
                     // Evaluate alignment relative to offset 0 within the section for Phase 3 prediction
-                    val alignment = integerEvaluator.evaluate(alignExpr, createPass1Context()).toInt()
+                    val alignment = absIntEvaluator.evaluate(alignExpr, createPass1Context()).toInt()
                     val boundary = if (type == AsmDirective.Alignment.AlignmentT.ALIGN) alignment else (1 shl alignment.toInt())
 
                     if (boundary <= 0) { /* Error */ return false
@@ -769,8 +807,8 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                     val context = createPass1Context()
                     val type = context.section.content.type
 
-                    val fillValue = type.to(fillExpr?.let { integerEvaluator.evaluate(it, context) } ?: type.ZERO) // Default fill 0
-                    val maxSkip = maxSkipExpr?.let { integerEvaluator.evaluate(it, context).toInt() }
+                    val fillValue = type.to(fillExpr?.let { absIntEvaluator.evaluate(it, context) } ?: type.ZERO) // Default fill 0
+                    val maxSkip = maxSkipExpr?.let { absIntEvaluator.evaluate(it, context).toInt() }
 
                     // Calculate padding based on current buffer size (offset)
                     val misalignment = currentOffsetBigInt % boundary
@@ -803,9 +841,9 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                     if (args.size < 3) { /* Error */ return false
                     }
                     val context = createPass1Context()
-                    val repeatCount = integerEvaluator.evaluate(args[0], context).toInt()
-                    val itemSize = integerEvaluator.evaluate(args[1], context).toInt()
-                    val value = integerEvaluator.evaluate(args[2], context) // Keep as BigInt initially
+                    val repeatCount = absIntEvaluator.evaluate(args[0], context).toInt()
+                    val itemSize = absIntEvaluator.evaluate(args[1], context).toInt()
+                    val value = absIntEvaluator.evaluate(args[2], context) // Keep as BigInt initially
 
                     if (repeatCount < 0 || itemSize <= 0 || itemSize > 8) { /* Error */ return false
                     } // Size must be > 0
@@ -847,8 +885,8 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                     if (args.isEmpty()) { /* Error */ return false
                     }
                     val context = createPass1Context()
-                    val sizeToSkip = integerEvaluator.evaluate(args[0], context).toInt() // Evaluate size
-                    val fillValue = args.getOrNull(1)?.let { integerEvaluator.evaluate(it, context).toUInt8() } ?: 0u.toUInt8() // Default fill 0
+                    val sizeToSkip = absIntEvaluator.evaluate(args[0], context).toInt() // Evaluate size
+                    val fillValue = args.getOrNull(1)?.let { absIntEvaluator.evaluate(it, context).toUInt8() } ?: 0u.toUInt8() // Default fill 0
 
                     if (sizeToSkip < 0) { /* Error */ return false
                     }
@@ -872,7 +910,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                     if (args.isEmpty()) { /* Error */ return false
                     }
                     val context = createPass1Context()
-                    val sizeToZero = integerEvaluator.evaluate(args[0], context).toInt()
+                    val sizeToZero = absIntEvaluator.evaluate(args[0], context).toInt()
 
                     if (sizeToZero < 0) { /* Error */ return false
                     }
@@ -905,7 +943,7 @@ class AsmBackend<T : AsmCodeGenerator.Section>(
                 directive.addError("Directive '.$type' requires a size argument."); return false
             }
             val context = createPass1Context()
-            val size = integerEvaluator.evaluate(args[0], context).toInt() // Evaluate size
+            val size = absIntEvaluator.evaluate(args[0], context).toInt() // Evaluate size
 
             if (size < 0) {
                 args[0].addError("Size for '.$type' must be non-negative."); return false

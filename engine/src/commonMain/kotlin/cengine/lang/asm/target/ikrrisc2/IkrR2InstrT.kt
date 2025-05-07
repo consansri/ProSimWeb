@@ -98,7 +98,7 @@ enum class IkrR2InstrT(override val keyWord: String, val paramType: IkrR2ParamTy
             return
         }
 
-        val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) }
+        val exprs = instr.exprs.map { absIntEvaluator.evaluate(it, context) }
         val regs = instr.regs.map { it.type.address.toUInt32() }
 
         when (paramType) {
@@ -296,20 +296,18 @@ enum class IkrR2InstrT(override val keyWord: String, val paramType: IkrR2ParamTy
     }
 
     override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass2BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {
-        val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) }
+        val relExprs = instr.exprs.map { relIntEvaluator.evaluate(it, context) }
         val regs = instr.regs.map { it.type.address.toUInt32() }
 
         when (paramType) {
             B_DISP26_TYPE -> {
-                val target = exprs[0]
+                val displacement = relExprs[0]
 
                 val opc = when (this@IkrR2InstrT) {
                     BRA -> IkrR2Const.B_OP6_BRA
                     BSR -> IkrR2Const.B_OP6_BSR
                     else -> UInt32.ZERO
                 }
-
-                val displacement = target - context.currentAddress
 
                 if (!displacement.fitsInSignedOrUnsigned(26)) {
                     instr.addError("$displacement exceeds 26 bits")
@@ -320,7 +318,7 @@ enum class IkrR2InstrT(override val keyWord: String, val paramType: IkrR2ParamTy
             }
 
             B_DISP18_TYPE -> {
-                val target = exprs[0]
+                val displacement = relExprs[0]
 
                 val opc = IkrR2Const.B_OP6_COND_BRA
                 val rc = regs[0]
@@ -334,8 +332,6 @@ enum class IkrR2InstrT(override val keyWord: String, val paramType: IkrR2ParamTy
                     BGE -> IkrR2Const.B_FUNCT3_BGE
                     else -> UInt32.ZERO
                 }
-
-                val displacement = target - context.currentAddress
 
                 if (!displacement.fitsInSignedOrUnsigned(18)) {
                     instr.addError("$displacement exceeds 18 bits")

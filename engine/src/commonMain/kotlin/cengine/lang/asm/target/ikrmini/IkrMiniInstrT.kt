@@ -197,7 +197,7 @@ enum class IkrMiniInstrT(override val keyWord: String, val opcode: UInt16, val p
             return
         }
 
-        val exprs = instr.exprs.map { it to integerEvaluator.evaluate(it, context) }
+        val exprs = instr.exprs.map { it to absIntEvaluator.evaluate(it, context) }
 
         when (paramType) {
             IND -> {
@@ -248,16 +248,14 @@ enum class IkrMiniInstrT(override val keyWord: String, val opcode: UInt16, val p
     }
 
     override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass2BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {
-        val exprs = instr.exprs.map { it to integerEvaluator.evaluate(it, context) }
+        val relExprs = instr.exprs.map { it to relIntEvaluator.evaluate(it, context) }
 
         when (paramType) {
             DEST -> {
                 context.section.content.set(context.offsetInSection, opcode)
-                val (targetExpr, targetEval) = exprs.getOrNull(0) ?: run { instr.addError("No expression given"); return }
-                if (!targetEval.fitsInUnsigned(16)) targetExpr.addError("$targetEval does not fit in 16 bits")
-                val target = targetEval.toUInt16()
-                val relative = target - context.currentAddress.toUInt16()
-                context.section.content.set(context.offsetInSection + 1, relative)
+                val (targetExpr, relative) = relExprs.getOrNull(0) ?: run { instr.addError("No expression given"); return }
+                if (!relative.fitsInUnsigned(16)) targetExpr.addError("$relative does not fit in 16 bits")
+                context.section.content.set(context.offsetInSection + 1, relative.toUInt16())
             }
 
             else -> {} // Nothing to do

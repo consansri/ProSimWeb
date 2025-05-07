@@ -134,7 +134,7 @@ sealed interface RvInstrT : AsmInstructionT {
             val spec = context.spec as? RvSpec ?: throw Exception("Internal error: RISC-V backend requires RvSpec")
 
             // Evaluate expressions - expect simple integers or constants here
-            val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) }
+            val exprs = instr.exprs.map { absIntEvaluator.evaluate(it, context) }
             // Get register numbers
             val regs = instr.regs.map { it.type.address.toUInt32() }
             // --- Generate binary for instructions resolvable in Pass 1 ---
@@ -359,15 +359,19 @@ sealed interface RvInstrT : AsmInstructionT {
             try {
                 val regs = instr.regs.map { it.type.address.toUInt32() }
                 // Evaluate expressions - label references MUST be resolved here
-                val exprs = instr.exprs.map {
-                    integerEvaluator.evaluate(it, context) // Pass 2 context resolves labels
+                val absExprs = instr.exprs.map {
+                    absIntEvaluator.evaluate(it, context) // Pass 2 context resolves labels
+                }
+
+                val relExprs = instr.exprs.map {
+                    relIntEvaluator.evaluate(it, context)
                 }
 
                 binary = when (this@BaseT) {
                     // U-Type (only if deferred due to label in expression, e.g. %pcrel_hi)
                     LUI -> {
                         val rd = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 for $keyWord")
-                        val immVal = exprs.getOrNull(0) ?: throw Exception("Missing immediate for LUI")
+                        val immVal = absExprs.getOrNull(0) ?: throw Exception("Missing immediate for LUI")
                         // WARNING: Assumes evaluator handled %hi correctly or it's simple. Relocations are better.
                         val imm = immVal.toInt32().toUInt32()
                         RvConst.packImmU(imm) or (rd shl 7) or RvConst.OPC_LUI
@@ -375,9 +379,8 @@ sealed interface RvInstrT : AsmInstructionT {
 
                     AUIPC -> { // Handles deferred case (label in expression)
                         val rd = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 for $keyWord")
-                        val targetAddrVal = exprs.getOrNull(0) ?: throw Exception("Missing immediate/label for AUIPC")
+                        val offset = relExprs.getOrNull(0) ?: throw Exception("Missing immediate/label for AUIPC")
                         // Calculate PC-relative offset
-                        val offset = targetAddrVal - instructionAddress // IntNumber arithmetic
                         // Need upper 20 bits of offset, potentially adjusted.
                         // WARNING: Correct handling involves R_RISCV_PCREL_HI20 relocation.
                         // Simple approximation (may fail edge cases handled by linker):
@@ -394,8 +397,7 @@ sealed interface RvInstrT : AsmInstructionT {
                     JAL -> {
                         val rd = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 for $keyWord")
                         instr.exprs.getOrNull(0) ?: throw Exception("Missing label expression for JAL") // Get original expr for range
-                        val targetAddr = exprs[0] // Already evaluated IntNumber
-                        val relativeOffset = targetAddr - instructionAddress // IntNumber result
+                        val relativeOffset = relExprs[0] // Already evaluated IntNumber
                         if (!relativeOffset.fitsInSigned(21)) {
                             throw Exception("Jump target out of range for JAL (21-bit signed offset: $relativeOffset)")
                         }
@@ -412,8 +414,7 @@ sealed interface RvInstrT : AsmInstructionT {
                         val rs1 = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 (rs1) for $keyWord")
                         val rs2 = regs.getOrNull(1) ?: throw Exception("Missing required register operand 1 (rs2) for $keyWord")
                         instr.exprs.getOrNull(0) ?: throw Exception("Missing label expression for $keyWord") // Get original expr for range
-                        val targetAddr = exprs[0] // Already evaluated IntNumber
-                        val relativeOffset = targetAddr - instructionAddress // IntNumber result
+                        val relativeOffset = relExprs[0] // Already evaluated IntNumber
                         if (!relativeOffset.fitsInSigned(13)) {
                             throw Exception("Branch target out of range for $keyWord (13-bit signed offset: $relativeOffset)")
                         }
@@ -438,7 +439,7 @@ sealed interface RvInstrT : AsmInstructionT {
                     JALR -> { // Handles deferred case (label in immediate)
                         val rd = regs.getOrNull(0) ?: throw Exception("Missing required register operand 0 (rd) for $keyWord")
                         val rs1 = regs.getOrNull(1) ?: throw Exception("Missing required register operand 1 (rs1) for $keyWord")
-                        val immVal = exprs.getOrNull(0) ?: throw Exception("Missing immediate offset for JALR")
+                        val immVal = absExprs.getOrNull(0) ?: throw Exception("Missing immediate offset for JALR")
                         // WARNING: Assumes evaluator handled %pcrel_lo or similar. Relocations are better.
                         if (!immVal.fitsInSigned(12)) {
                             throw Exception("Immediate offset $immVal does not fit in 12 signed bits for JALR")
@@ -482,7 +483,7 @@ sealed interface RvInstrT : AsmInstructionT {
 
             if (context.spec != Rv64Spec) throw Exception("Internal error: I64 extension does need $Rv64Spec as context.")
 
-            val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) } // Evaluate expressions
+            val exprs = instr.exprs.map { absIntEvaluator.evaluate(it, context) } // Evaluate expressions
             val regs = instr.regs.map { it.type.address.toUInt32() } // Get register numbers
 
             var binary: UInt32 = UInt32.ZERO
@@ -803,7 +804,7 @@ sealed interface RvInstrT : AsmInstructionT {
                     return
                 }
 
-                val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) } // Evaluate expressions
+                val exprs = instr.exprs.map { absIntEvaluator.evaluate(it, context) } // Evaluate expressions
                 val regs = instr.regs.map { it.type.address.toUInt32() } // Get register numbers
 
                 // Handle non-deferred pseudo-instructions by expanding them now
@@ -1172,7 +1173,7 @@ sealed interface RvInstrT : AsmInstructionT {
             override fun <T : AsmCodeGenerator.Section> AsmBackend<T>.pass2BinaryGeneration(instr: AsmInstruction, context: AsmBackend<T>.AsmEvaluationContext) {
                 // Handle deferred pseudo-instructions (Branches, Jumps, LA, CALL, TAIL)
                 val instructionAddress = context.currentAddress
-                val exprs = instr.exprs.map { integerEvaluator.evaluate(it, context) } // Evaluate expressions
+                val exprs = instr.exprs.map { absIntEvaluator.evaluate(it, context) } // Evaluate expressions
                 val regs = instr.regs.map { it.type.address.toUInt32() } // Get register numbers
 
                 try {
