@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.buildconfig.kmp)
+    alias(libs.plugins.atomicfu)
 }
 
 buildConfig {
@@ -66,11 +67,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.ktor)
             implementation(libs.ionspin.bignum)
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
-
 
             // Compose
             implementation(compose.runtime)
