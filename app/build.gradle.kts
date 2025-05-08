@@ -66,6 +66,7 @@ kotlin {
 
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
 
             implementation(project(":engine"))
         }
@@ -79,11 +80,10 @@ compose.desktop {
         mainClass = "ikr.prosim.AppKt"
 
 
-
         // === ProGuard / release build settings ===
         buildTypes.release.proguard {
             // Turn on minification & obfuscation
-            isEnabled = true
+            isEnabled = false
 
             obfuscate.set(false)
 
