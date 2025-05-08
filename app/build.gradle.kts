@@ -43,6 +43,8 @@ kotlin {
         val desktopMain by getting
 
         commonMain.dependencies {
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines)
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
             implementation(libs.kotlinx.datetime)
@@ -75,6 +77,22 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "ikr.prosim.AppKt"
+
+
+
+        // === ProGuard / release build settings ===
+        buildTypes.release.proguard {
+            // Turn on minification & obfuscation
+            isEnabled = true
+
+            obfuscate.set(false)
+
+            // Reference your ProGuard rules file(s)
+            // You can list multiple .pro files if needed
+            configurationFiles.from(
+                project.file("proguard-rules.pro")
+            )
+        }
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

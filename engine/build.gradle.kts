@@ -63,7 +63,6 @@ kotlin {
 
         commonMain.dependencies {
 
-
             implementation(libs.kotlinx.coroutines)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
@@ -79,13 +78,14 @@ kotlin {
             implementation(compose.components.resources)
         }
 
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
+
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
         }
 
-    }
-    sourceSets.commonTest.dependencies {
-        implementation(kotlin("test"))
     }
 }
 
