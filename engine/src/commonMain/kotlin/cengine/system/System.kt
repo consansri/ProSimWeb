@@ -32,7 +32,8 @@ enum class DesktopDistribution(val fileSuffix: String, val subfolder: String? = 
     JAR(".jar", "jar"),
     MSI(".msi", "msi"),
     DEB(".deb", "deb"),
-    DMG(".dmg", "dmg");
+    DMG(".dmg", "dmg"),
+    EXE(".exe", "exe");
 
     val path = "desktop/" + if(subfolder != null) "$subfolder/" else ""
     val fileName = "${Constants.NAME}-${Constants.VERSION}$fileSuffix"

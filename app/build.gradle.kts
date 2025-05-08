@@ -95,7 +95,7 @@ compose.desktop {
         }
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
             packageName = DIST_NAME
             packageVersion = DIST_VERSION
         }
@@ -142,12 +142,14 @@ val generateManifestTask = tasks.register("generateManifest") {
     val packageDmgTask = tasks.findByName("packageReleaseDmg")
     val packageMsiTask = tasks.findByName("packageReleaseMsi")
     val packageDebTask = tasks.findByName("packageReleaseDeb")
+    val packageExeTask = tasks.findByName("packageReleaseExe")
 
     // Explicitly declare task dependencies for clarity and correctness
     dependsOn(fatJarTask)
     if (packageDmgTask != null) dependsOn(packageDmgTask)
     if (packageMsiTask != null) dependsOn(packageMsiTask)
     if (packageDebTask != null) dependsOn(packageDebTask)
+    if (packageExeTask != null) dependsOn(packageExeTask)
 
 
     // Define Output: The manifest file itself
@@ -204,6 +206,17 @@ val generateManifestTask = tasks.register("generateManifest") {
                 availableDistributions.add("DEB")
             } else {
                 logger.warn("DEB file not found in ${nativeDistBaseDir.get().asFile.path}")
+            }
+        }
+
+        // 5. Check for EXE (if task exists)
+        if (packageExeTask != null) {
+            val exeFile = nativeDistBaseDir.get().asFileTree.find { it.name.endsWith(".exe") }
+            if (exeFile != null && exeFile.exists()) {
+                logger.info("Found distribution: EXE")
+                availableDistributions.add("EXE")
+            } else {
+                logger.warn("EXE file not found in ${nativeDistBaseDir.get().asFile.path}")
             }
         }
 
