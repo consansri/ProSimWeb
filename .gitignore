@@ -3,7 +3,6 @@ build/
 .gradle/
 .idea/
 /shell/
-/versions/
 .kotlin
 .classpath
 .project
