@@ -3,6 +3,7 @@ package cengine.vfs
 import Constants
 import cengine.console.SysOut
 import cengine.vfs.FPath.Companion.toFPath
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -11,6 +12,8 @@ import java.nio.file.Paths
  */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual object ActualFileSystem {
+
+    actual val DELIMITER: String = FileSystems.getDefault().separator
 
     /**
      * Reads the content of a file.
@@ -119,7 +122,7 @@ actual object ActualFileSystem {
         val companyName = Constants.ORG
 
         return when {
-            os.contains("mac") -> userHome.toFPath() + "Library" + "Application Support" + appName
+            os.contains("mac") -> FPath( userHome) + "Library" + "Application Support" + appName
             os.contains("win") -> System.getenv("LOCALAPPDATA").toFPath() + companyName + appName
             os.contains("nux") || os.contains("linux") -> userHome.toFPath() + ".local" + "share" + appName
             else -> userHome.toFPath() + ".$appName"
@@ -127,6 +130,5 @@ actual object ActualFileSystem {
     }
 
     private fun FPath.toNioPath() = Paths.get(first(), *withoutFirst().parts)
-
 
 }

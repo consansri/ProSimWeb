@@ -1,6 +1,6 @@
 package cengine.vfs
 
-import cengine.vfs.FPath.Companion.DELIMITER
+import cengine.vfs.ActualFileSystem.DELIMITER
 import kotlinx.serialization.Serializable
 
 /**
@@ -14,12 +14,11 @@ class FPath(vararg val parts: String) : Collection<String> {
      * Creates a new [FPath] with [VFileSystem.root] as the first element.
      */
     companion object {
-        const val DELIMITER = "/"
 
         /**
          * Creates a new [FPath] from a String, where elements are split by [DELIMITER].
          */
-        fun String.toFPath(): FPath = FPath(*split(DELIMITER, "\\").filter { it.isNotEmpty() }.toTypedArray())
+        fun String.toFPath(): FPath = FPath(*split(DELIMITER, "\\").toTypedArray())
 
     }
 

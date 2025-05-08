@@ -14,6 +14,8 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 @OptIn(ExperimentalEncodingApi::class)
 actual object ActualFileSystem {
+    
+    actual val DELIMITER: String = "/"
 
     /**
      * Reads the content of a file.
@@ -140,18 +142,18 @@ actual object ActualFileSystem {
      * @return A list of names of files and directories in the given directory.
      */
     actual fun listDirectory(path: FPath): List<String> {
-        val filePrefix = getFileKey(path) + FPath.DELIMITER
-        val dirPrefix = getDirKey(path) + FPath.DELIMITER
+        val filePrefix = getFileKey(path) + DELIMITER
+        val dirPrefix = getDirKey(path) + DELIMITER
 
         val allKeys = getLocalStorageKeys()
 
         val dirPaths = allKeys
             .filter { it.startsWith(dirPrefix) }
-            .mapNotNull { it.removePrefix(dirPrefix).split(FPath.DELIMITER).firstOrNull() }
+            .mapNotNull { it.removePrefix(dirPrefix).split(DELIMITER).firstOrNull() }
 
         val filePaths = allKeys
             .filter { it.startsWith(filePrefix) }
-            .mapNotNull { it.removePrefix(filePrefix).split(FPath.DELIMITER).firstOrNull() }
+            .mapNotNull { it.removePrefix(filePrefix).split(DELIMITER).firstOrNull() }
 
         val allPaths = (dirPaths + filePaths).distinct()
 

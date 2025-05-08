@@ -40,7 +40,7 @@ actual class FileWatcher actual constructor(actual val vfs: VFileSystem) {
                         val kind = event.kind()
                         val fileName = event.context() as? FPath
                         if (fileName != null) {
-                            val path = dir.pathString.replace(separator, FPath.DELIMITER).toFPath()
+                            val path = dir.pathString.replace(separator, ActualFileSystem.DELIMITER).toFPath()
                             when (kind) {
                                 StandardWatchEventKinds.ENTRY_CREATE -> {
                                     SysOut.debug { "FILE-$path-CREATED" }
