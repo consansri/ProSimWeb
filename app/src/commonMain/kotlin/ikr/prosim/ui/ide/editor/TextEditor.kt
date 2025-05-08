@@ -26,10 +26,10 @@ import cengine.editor.completion.Completion
 import cengine.vfs.VirtualFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import uilib.UIState
 import uilib.interactable.CHorizontalScrollBar
 import uilib.interactable.CVerticalScrollBar
 import uilib.layout.CornerLayout
-import uilib.UIState
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.measureTime

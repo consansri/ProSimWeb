@@ -17,8 +17,8 @@ import cengine.lang.obj.elf.*
 import cengine.psi.PsiManager
 import cengine.vfs.ActualFileSystem
 import cengine.vfs.VirtualFile
-import uilib.interactable.CToggle
 import uilib.UIState
+import uilib.interactable.CToggle
 
 @Composable
 fun BinaryEditor(

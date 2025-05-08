@@ -11,12 +11,12 @@ import cengine.editor.annotation.Severity.*
 import cengine.psi.PsiManager
 import cengine.psi.core.PsiService
 import cengine.psi.elements.PsiFile
+import uilib.UIState
 import uilib.interactable.CButton
 import uilib.label.CLabel
 import uilib.layout.TabItem
 import uilib.layout.TabbedPane
 import uilib.layout.VerticalToolBar
-import uilib.UIState
 
 @Composable
 fun PsiAnalyzerView(

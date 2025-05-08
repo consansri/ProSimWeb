@@ -20,6 +20,7 @@ import cengine.vfs.ActualFileSystem
 import cengine.vfs.FPath.Companion.toFPath
 import io.github.vinceglb.filekit.core.FileKit
 import kotlinx.coroutines.launch
+import uilib.UIState
 import uilib.interactable.CButton
 import uilib.interactable.Selector
 import uilib.label.CLabel
@@ -27,7 +28,6 @@ import uilib.layout.BorderLayout
 import uilib.scale.Scaling
 import uilib.text.CTextField
 import uilib.theme.ThemeDef
-import uilib.UIState
 
 @Composable
 fun CreateNewProjectScreen(onProjectCreated: (ProjectState) -> Unit, onCancel: () -> Unit) {

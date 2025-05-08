@@ -14,8 +14,8 @@ import androidx.compose.ui.unit.em
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import uilib.interactable.CButton
 import uilib.UIState
+import uilib.interactable.CButton
 import kotlin.math.roundToInt
 
 @Immutable

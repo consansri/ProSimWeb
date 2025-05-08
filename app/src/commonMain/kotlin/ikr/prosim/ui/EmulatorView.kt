@@ -29,6 +29,7 @@ import ikr.prosim.ui.emulator.ArchitectureOverview
 import ikr.prosim.ui.emulator.ExecutionView
 import ikr.prosim.ui.emulator.MemView
 import ikr.prosim.ui.emulator.RegView
+import uilib.UIState
 import uilib.filetree.FileTree
 import uilib.interactable.CButton
 import uilib.interactable.CToggle
@@ -37,7 +38,6 @@ import uilib.layout.BorderLayout
 import uilib.layout.HorizontalToolBar
 import uilib.layout.ResizableBorderPanels
 import uilib.layout.VerticalToolBar
-import uilib.UIState
 
 @Composable
 fun EmulatorView(project: Project, viewType: MutableState<ViewType>, architecture: Architecture<*, *>?, close: () -> Unit) {

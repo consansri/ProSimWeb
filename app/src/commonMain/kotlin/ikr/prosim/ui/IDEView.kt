@@ -17,23 +17,18 @@ import cengine.project.ViewType
 import cengine.psi.PsiManager
 import cengine.psi.core.PsiElement
 import cengine.vfs.VirtualFile
-import kotlinx.coroutines.launch
 import ikr.prosim.ui.ide.analyze.PsiAnalyzerView
 import ikr.prosim.ui.ide.editor.BinaryEditor
 import ikr.prosim.ui.ide.editor.CodeEditor
 import ikr.prosim.ui.ide.editor.TextEditor
+import kotlinx.coroutines.launch
+import uilib.UIState
 import uilib.console.UnifiedTerminalShell
 import uilib.filetree.FileTree
 import uilib.interactable.CButton
 import uilib.interactable.CToggle
 import uilib.label.CLabel
-import uilib.UIState
-import uilib.layout.BorderLayout
-import uilib.layout.HorizontalToolBar
-import uilib.layout.ResizableBorderPanels
-import uilib.layout.TabItem
-import uilib.layout.TabbedPane
-import uilib.layout.VerticalToolBar
+import uilib.layout.*
 import kotlin.time.Duration
 
 @Composable

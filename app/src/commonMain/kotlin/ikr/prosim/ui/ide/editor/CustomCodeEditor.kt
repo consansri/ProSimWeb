@@ -1,52 +1,24 @@
 package ikr.prosim.ui.ide.editor
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.focusable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.TextSelectionColors
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
-import androidx.compose.ui.input.key.utf16CodePoint
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.Paragraph
-import androidx.compose.ui.text.ParagraphIntrinsics
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextGranularity.Companion.Character
-import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -57,7 +29,6 @@ import cengine.psi.style.CodeStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import org.jetbrains.skia.TextLine
 import uilib.UIState
 
 fun buildAnnotatedStringFromPsi(
@@ -137,7 +108,7 @@ fun CustomCodeEditor(
     // Use TextFieldValue for richer state
     textFieldValueState: MutableState<TextFieldValue>,
     psiFileState: MutableState<PsiFile?>,
-    baseTextStyle: androidx.compose.ui.text.TextStyle,
+    baseTextStyle: TextStyle,
     modifier: Modifier = Modifier,
     // For Undo/Redo
     undoStack: MutableList<TextFieldValue> = remember { mutableListOf() },
@@ -304,7 +275,7 @@ fun CustomCodeEditor(
                         translate(top = -verticalScrollState.value.toFloat()) {
                             for (i in 0 until p.lineCount) {
                                 val lineNumText = (i + 1).toString()
-                                val yOffset = p.getLineTop(i) + p.getLineBaseline(i) - (textMeasurer.measure(lineNumText, baseTextStyle).size.height / 2)
+                                p.getLineTop(i) + p.getLineBaseline(i) - (textMeasurer.measure(lineNumText, baseTextStyle).size.height / 2)
 
 
                                 // Simple Text draw, can be replaced with textMeasurer.measure & drawText(layoutResult)
@@ -431,7 +402,7 @@ fun CustomCodeEditor(
                                             redoStack.add(tfv)
                                             applyTfvChange(undoStack.removeLast(), recordForUndo = false)
                                         }
-                                        handled = true;
+                                        handled = true
                                         // }
                                     }
 
@@ -441,7 +412,7 @@ fun CustomCodeEditor(
                                             undoStack.add(tfv)
                                             applyTfvChange(redoStack.removeLast(), recordForUndo = false)
                                         }
-                                        handled = true;
+                                        handled = true
                                         // }
                                     }
 

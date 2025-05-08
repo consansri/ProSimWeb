@@ -8,13 +8,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import cengine.system.downloadDesktopApp
 import cengine.system.presentDistributions
+import uilib.UIState
 import uilib.interactable.CButton
 import uilib.label.CLabel
 import uilib.layout.BorderLayout
 import uilib.params.IconType
 import uilib.scale.Scaling
 import uilib.theme.ThemeDef
-import uilib.UIState
 
 @Composable
 fun AboutScreen(onCloseAbout: () -> Unit) {

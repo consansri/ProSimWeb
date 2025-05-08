@@ -22,12 +22,12 @@ import emulator.kit.Architecture
 import emulator.kit.MicroSetup
 import emulator.kit.register.FieldProvider
 import emulator.kit.register.RegFile
+import uilib.UIState
 import uilib.interactable.CButton
 import uilib.interactable.CToggle
 import uilib.layout.TabItem
 import uilib.layout.TabbedPane
 import uilib.params.IconType
-import uilib.UIState
 
 @Composable
 fun RegView(arch: Architecture<*, *>) {

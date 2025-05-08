@@ -10,9 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import emulator.kit.ArchConfig
 import emulator.kit.Architecture
+import uilib.UIState
 import uilib.interactable.Selector
 import uilib.label.CLabel
-import uilib.UIState
 
 @Composable
 fun ArchitectureOverview(arch: Architecture<*, *>?, baseStyle: TextStyle, baseLargeStyle: TextStyle) {

@@ -353,7 +353,6 @@ sealed interface RvInstrT : AsmInstructionT {
             // ... (Pass 2 implementation using RvConst and IntNumber checks as before) ...
             // It retrieves regs and evaluates exprValues locally within pass 2 context
             var binary: UInt32 = UInt32.ZERO
-            val instructionAddress = context.currentAddress // This is IntNumber<*> usually
             context.spec as? RvSpec ?: throw Exception("Internal error: RISC-V backend requires RvSpec")
 
             try {

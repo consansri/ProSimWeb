@@ -14,9 +14,9 @@ import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.Architecture
 import emulator.kit.MicroSetup
 import emulator.kit.memory.*
+import uilib.UIState
 import uilib.layout.TabItem
 import uilib.layout.TabbedPane
-import uilib.UIState
 import kotlin.math.log2
 import kotlin.math.roundToInt
 

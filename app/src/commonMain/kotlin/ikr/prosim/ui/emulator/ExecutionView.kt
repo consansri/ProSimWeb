@@ -10,11 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.Switch
-import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,20 +19,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
-import cengine.console.SysOut
 import cengine.editor.highlighting.HighlightProvider
 import cengine.editor.highlighting.HighlightProvider.Companion.spanStyles
 import cengine.lang.asm.AsmDisassembler
 import cengine.util.integer.UnsignedFixedSizeIntNumber
 import emulator.kit.Architecture
 import kotlinx.coroutines.launch
-import uilib.label.CLabel
 import uilib.UIState
 import uilib.interactable.CButton
 import uilib.interactable.CToggle
+import uilib.label.CLabel
 import uilib.params.IconType
-import kotlin.collections.get
 import kotlin.math.roundToInt
 
 @Composable

@@ -4,7 +4,6 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import cengine.console.SysOut
-import kotlin.ranges.coerceIn
 
 object TextEditing {
 

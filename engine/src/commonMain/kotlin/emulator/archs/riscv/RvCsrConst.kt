@@ -1,4 +1,3 @@
 package emulator.archs.riscv
 
-class RvCsrConst {
-}
+class RvCsrConst

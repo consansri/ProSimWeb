@@ -16,8 +16,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import uilib.params.IconType
 import uilib.UIState
+import uilib.params.IconType
 
 @Composable
 fun CLabel(

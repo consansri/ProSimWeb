@@ -47,15 +47,14 @@ import ikr.prosim.ui.ide.editor.TextEditing.duplicateSelectionOrLine
 import ikr.prosim.ui.ide.editor.TextEditing.moveLines
 import ikr.prosim.ui.ide.editor.TextEditing.toggleLineComments
 import ikr.prosim.ui.ide.editor.state.TextStateModelImpl
-import ikr.prosim.ui.ide.editor.state.UndoRedoState
 import kotlinx.coroutines.*
+import uilib.ComposeTools
+import uilib.UIState
 import uilib.interactable.CButton
 import uilib.interactable.CHorizontalScrollBar
 import uilib.interactable.CVerticalScrollBar
 import uilib.layout.CornerLayout
 import uilib.params.IconType
-import uilib.ComposeTools
-import uilib.UIState
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.measureTime
