@@ -11,11 +11,14 @@ fun loadAppState(): AppState? {
     if (!ActualFileSystem.exists(appStatePath)) {
         AppState.initial.storeAppState()
     }
+
+    val path = ActualFileSystem.getAppStateDir() + AppState.APPSTATE_NAME
     return try {
-        val fileContent = ActualFileSystem.readFile(ActualFileSystem.getAppStateDir() + AppState.APPSTATE_NAME).decodeToString()
+        val fileContent = ActualFileSystem.readFile(path).decodeToString()
+        SysOut.log("Loaded app state from $path!")
         Json.decodeFromString<AppState>(fileContent)
     } catch (e: Exception) {
-        SysOut.error("Couldn't load/create app state!")
+        SysOut.error("Couldn't load/create app state from $path!")
         null
     }
 }
@@ -28,7 +31,8 @@ fun AppState.storeAppState() {
         }
 
         ActualFileSystem.writeFile(path, Json.encodeToString(this).encodeToByteArray())
+        SysOut.log("Stored app state to $path!")
     } catch (e: Exception) {
-        SysOut.error("Couldn't store app state!")
+        SysOut.error("Couldn't store app state to $path!")
     }
 }
