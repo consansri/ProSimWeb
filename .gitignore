@@ -12,3 +12,4 @@ appstate.json
 *.userlibraries
 /qodana.yaml
 .qodo
+/versions/
