@@ -3,7 +3,7 @@ build/
 .gradle/
 .idea/
 shell/
-premu/
+versions/
 .kotlin
 .classpath
 .project
@@ -12,4 +12,3 @@ appstate.json
 *.userlibraries
 /qodana.yaml
 .qodo
-/versions/
